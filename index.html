@@ -140,7 +140,7 @@
 
     const { data, error } = await supabaseClient
       .from("products")
-      .select("*")
+      .select("id, name, description, category, image, price, stock")
       .order("id", { ascending: false });
 
     const container = document.getElementById("products");
