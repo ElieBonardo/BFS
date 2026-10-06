@@ -148,11 +148,11 @@
     const container = document.getElementById("products");
 
     if (error) {
-      container.innerHTML =
-        "<p>Impossible de charger les produits.</p>";
-      console.error(error);
-      return;
-    }
+  container.innerHTML =
+    `<p>Erreur Supabase : ${error.message}</p>`;
+  console.error(error);
+  return;
+}
 
     if (!data || data.length === 0) {
       container.innerHTML =
