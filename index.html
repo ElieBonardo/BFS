@@ -173,7 +173,7 @@ alert(JSON.stringify(data));
 
       const whatsappMessage =
         encodeURIComponent(
-          `Bonjour BFS, je voudrais commander : ${product.name} à ${product.price}$`
+          `Bonjour BFS, je voudrais commander : ${product.Name} à ${product.Price}$`
         );
 
       card.innerHTML = `
@@ -181,14 +181,14 @@ alert(JSON.stringify(data));
 
         <div class="product-info">
 
-          <h2>${product.name}</h2>
+          <h2>${product.Name}</h2>
 
           <div class="description">
             ${product.description || ""}
           </div>
 
        <div class="price">
-  PRIX REÇU : ${JSON.stringify(product.price)}$
+  PRIX REÇU : ${JSON.stringify(product.Price)}$
 </div>
 
           <div class="category">
