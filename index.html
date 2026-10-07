@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -105,15 +105,6 @@
       text-align: center;
       padding: 40px;
     }
-
-    .error {
-      background: #fff;
-      color: #b00020;
-      padding: 20px;
-      border-radius: 12px;
-      margin-top: 20px;
-      word-break: break-word;
-    }
   </style>
 </head>
 
@@ -136,55 +127,38 @@
 
 <script>
 
-const SUPABASE_URL = "https://eulbdrwxyhdvosbmxnwy.supabase.co";
+  const SUPABASE_URL = "https://eulbdrwxyhdvosbmxnwy.supabase.co";
 
-/*
-  IMPORTANT :
-  Ici tu dois remettre TON publishable key Supabase.
-  Ne mets surtout pas une clé sb_secret.
-*/
-const SUPABASE_KEY = "sb_publishable_LfwW5XWa2C_3WPArJvEsbQ_Klth7gNl";
+  const SUPABASE_KEY = "sb_publishable_LfwW5XWa2C_3WPArJvEsbQ_Klth7gNl";
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
 
-async function loadProducts() {
+  async function loadProducts() {
 
-  const container = document.getElementById("products");
-
-  try {
 
     const { data, error } = await supabaseClient
-      .from("products")
-      .select("*")
-      .order("id", { ascending: false });
+  .from("products")
+  .select("*")
+  .order("id", { ascending: false });
+  
+  console.log("DONNÉES SUPABASE :", data);
+    
 
-    console.log("DATA :", data);
-    console.log("ERROR :", error);
+    const container = document.getElementById("products");
 
     if (error) {
-
-      container.innerHTML = `
-        <div class="error">
-          <h3>Erreur Supabase</h3>
-          <p><strong>Message :</strong> ${error.message || ""}</p>
-          <p><strong>Code :</strong> ${error.code || ""}</p>
-          <p><strong>Détails :</strong> ${error.details || ""}</p>
-          <p><strong>Indice :</strong> ${error.hint || ""}</p>
-        </div>
-      `;
-
-      return;
-    }
+  container.innerHTML =
+    `<p>Erreur Supabase : ${error.message}</p>`;
+  console.error(error);
+  return;
+}
 
     if (!data || data.length === 0) {
-
-      container.innerHTML = `
-        <p>Aucun produit disponible.</p>
-      `;
-
+      container.innerHTML =
+        "<p>Aucun produit disponible.</p>";
       return;
     }
 
@@ -193,31 +167,37 @@ async function loadProducts() {
     data.forEach(product => {
 
       const card = document.createElement("div");
-
       card.className = "product";
 
-      const image = product.image_url
-        ? `<img src="${product.image_url.trim()}" alt="${product.Name || "Produit"}">`
-        : "";
+      const image = product.image
+  ? `<img src="${product.image}" alt="${product.name}">`
+  : "<p>IMAGE MANQUANTE</p>";
+        
+        console.log("PRODUIT :", product);
+        
+        console.log("PRIX :", product.price);
+        
+        console.log("TOUTES LES DONNÉES :", Object.keys(product));
 
-      const whatsappMessage = encodeURIComponent(
-        `Bonjour BFS, je voudrais commander : ${product.Name || "Produit"} à ${product.Price || 0}$`
-      );
+      const whatsappMessage =
+        encodeURIComponent(
+          `Bonjour BFS, je voudrais commander : ${product.name} à ${product.price}$`
+        );
 
       card.innerHTML = `
         ${image}
 
         <div class="product-info">
 
-          <h2>${product.Name || ""}</h2>
+          <h2>${product.name}</h2>
 
           <div class="description">
-            ${product.Description || ""}
+            ${product.description || ""}
           </div>
 
           <div class="price">
-            ${product.Price ?? 0}$
-          </div>
+  ${product.price ?? "PRIX MANQUANT"}$
+</div>
 
           <div class="category">
             ${product.category || ""}
@@ -225,9 +205,8 @@ async function loadProducts() {
 
           <a
             class="whatsapp"
-            href="https://wa.me/243900820722?text=${whatsappMessage}"
-            target="_blank"
-            rel="noopener">
+            href="https://wa.me/243900820742?text=${whatsappMessage}"
+            target="_blank">
             Commander sur WhatsApp
           </a>
 
@@ -235,22 +214,10 @@ async function loadProducts() {
       `;
 
       container.appendChild(card);
-
     });
-
-  } catch (e) {
-
-    container.innerHTML = `
-      <div class="error">
-        <h3>Erreur JavaScript</h3>
-        <p>${e.message || e}</p>
-      </div>
-    `;
-
   }
-}
 
-loadProducts();
+  loadProducts();
 
 </script>
 
