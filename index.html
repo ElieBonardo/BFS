@@ -137,11 +137,29 @@
   );
 
   async function loadProducts() {
+  const container = document.getElementById("products");
 
-    const { data, error } = await supabaseClient
-  .from("products")
-  .select('*')
-  .order("id", { ascending: false });
+  container.innerHTML = "<p>TEST : JavaScript fonctionne</p>";
+
+  try {
+    const result = await supabaseClient
+      .from("products")
+      .select("*");
+
+    container.innerHTML = `
+      <p>TEST SUPABASE</p>
+      <pre>${JSON.stringify(result, null, 2)}</pre>
+    `;
+
+  } catch (e) {
+    container.innerHTML = `
+      <p>ERREUR JAVASCRIPT</p>
+      <pre>${e.message}</pre>
+    `;
+  }
+}
+
+loadProducts();
 
 console.log("DATA =", data);
 console.log("ERROR =", error);
