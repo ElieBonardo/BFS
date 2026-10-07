@@ -140,7 +140,7 @@
 
     const { data, error } = await supabaseClient
   .from("products")
-  .select("id, name, description, category, image_url, stock, Price")
+  .select('*')
   .order("id", { ascending: false });
 
     const container = document.getElementById("products");
@@ -183,11 +183,11 @@
 
           <h2>${product.Name}</h2>
 
-          <div class="description">
-            ${product.description || ""}
+          <div class="Description">
+            ${product.Description || ""}
           </div>
 
-       <div class="price">
+       <div class="Price">
   PRIX REÇU : ${JSON.stringify(product.Price)}$
 </div>
 
