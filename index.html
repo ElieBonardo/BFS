@@ -145,9 +145,6 @@
 
    const container = document.getElementById("products");
 
-alert(JSON.stringify(data));
-    
-
 
     if (error) {
   alert(JSON.stringify(error, null, 2));
@@ -174,7 +171,7 @@ alert(JSON.stringify(data));
 
       const whatsappMessage =
   encodeURIComponent(
-    `Bonjour BFS, je voudrais commander : ${product.Name} à ${product.Price}$`
+    `Bonjour BFS, je voudrais commander : ${product.Name || ""} à ${product.Price || 0}$`
   );
 
       card.innerHTML = `
@@ -182,16 +179,15 @@ alert(JSON.stringify(data));
 
         <div class="product-info">
 
-          <h2>${product.Name}</h2>
+       <h2>${product.Name || ""}</h2>
 
           <div class="Description">
             ${product.Description || ""}
           </div>
 
-      <div class="price">
-  ${product.Price}$
+   <div class="price">
+  ${product.Price || 0}$
 </div>
-
           <div class="category">
             ${product.category || ""}
           </div>
