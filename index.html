@@ -150,11 +150,10 @@ alert(JSON.stringify(data));
 
 
     if (error) {
-      container.innerHTML =
-        "<p>Impossible de charger les produits.</p>";
-      console.error(error);
-      return;
-    }
+  alert(JSON.stringify(error, null, 2));
+  console.error(error);
+  return;
+}
 
     if (!data || data.length === 0) {
       container.innerHTML =
