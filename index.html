@@ -105,6 +105,15 @@
       text-align: center;
       padding: 40px;
     }
+
+    .error {
+      background: #fff;
+      color: #b00020;
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+      word-break: break-word;
+    }
   </style>
 </head>
 
@@ -127,74 +136,55 @@
 
 <script>
 
-  const SUPABASE_URL = "https://eulbdrwxyhdvosbmxnwy.supabase.co";
+const SUPABASE_URL = "https://eulbdrwxyhdvosbmxnwy.supabase.co";
 
-  const SUPABASE_KEY = "sb_publishable_LfwW5XWa2C_3WPArJvEsbQ_Klth7gNl";
+/*
+  IMPORTANT :
+  Ici tu dois remettre TON publishable key Supabase.
+  Ne mets surtout pas une clé sb_secret.
+*/
+const SUPABASE_KEY = "sb_publishable_LfwW5XWa2C_3WPArJvEsbQ_Klth7gNl";
 
-  const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
-  async function loadProducts() {
+async function loadProducts() {
+
   const container = document.getElementById("products");
 
-  container.innerHTML = "<p>TEST : JavaScript fonctionne</p>";
-
   try {
-    const result = await supabaseClient
+
+    const { data, error } = await supabaseClient
       .from("products")
-      .select("*");
+      .select("*")
+      .order("id", { ascending: false });
 
-    container.innerHTML = `
-      <p>TEST SUPABASE</p>
-      <pre>${JSON.stringify(result, null, 2)}</pre>
-    `;
-
-  } catch (e) {
-    container.innerHTML = `
-      <p>ERREUR JAVASCRIPT</p>
-      <pre>${e.message}</pre>
-    `;
-  }
-}
-
-loadProducts();
-
-console.log("DATA =", data);
-console.log("ERROR =", error);
-
-if (error) {
-  document.getElementById("products").innerHTML = `
-    <div style="padding:20px;color:red;">
-      <h3>Erreur Supabase</h3>
-      <p><b>Message :</b> ${error.message || "aucun"}</p>
-      <p><b>Code :</b> ${error.code || "aucun"}</p>
-      <p><b>Détails :</b> ${error.details || "aucun"}</p>
-      <p><b>Indice :</b> ${error.hint || "aucun"}</p>
-    </div>
-  `;
-  return;
-}
-
-   const container = document.getElementById("products");
-
+    console.log("DATA :", data);
+    console.log("ERROR :", error);
 
     if (error) {
-  container.innerHTML = `
-    <p>Erreur Supabase</p>
-    <p>Message : ${error.message}</p>
-    <p>Code : ${error.code}</p>
-    <p>Détails : ${error.details}</p>
-    <p>Indice : ${error.hint}</p>
-  `;
-  return;
-}
-}
+
+      container.innerHTML = `
+        <div class="error">
+          <h3>Erreur Supabase</h3>
+          <p><strong>Message :</strong> ${error.message || ""}</p>
+          <p><strong>Code :</strong> ${error.code || ""}</p>
+          <p><strong>Détails :</strong> ${error.details || ""}</p>
+          <p><strong>Indice :</strong> ${error.hint || ""}</p>
+        </div>
+      `;
+
+      return;
+    }
 
     if (!data || data.length === 0) {
-      container.innerHTML =
-        "<p>Aucun produit disponible.</p>";
+
+      container.innerHTML = `
+        <p>Aucun produit disponible.</p>
+      `;
+
       return;
     }
 
@@ -203,39 +193,41 @@ if (error) {
     data.forEach(product => {
 
       const card = document.createElement("div");
+
       card.className = "product";
 
       const image = product.image_url
-        ? `<img src="${product.image_url}" alt="${product.Name}">`
+        ? `<img src="${product.image_url.trim()}" alt="${product.Name || "Produit"}">`
         : "";
 
-      const whatsappMessage =
-  encodeURIComponent(
-    `Bonjour BFS, je voudrais commander : ${product.Name || ""} à ${product.Price || 0}$`
-  );
+      const whatsappMessage = encodeURIComponent(
+        `Bonjour BFS, je voudrais commander : ${product.Name || "Produit"} à ${product.Price || 0}$`
+      );
 
       card.innerHTML = `
         ${image}
 
         <div class="product-info">
 
-       <h2>${product.Name || ""}</h2>
+          <h2>${product.Name || ""}</h2>
 
-          <div class="Description">
+          <div class="description">
             ${product.Description || ""}
           </div>
 
-   <div class="price">
-  ${product.Price || 0}$
-</div>
+          <div class="price">
+            ${product.Price ?? 0}$
+          </div>
+
           <div class="category">
             ${product.category || ""}
           </div>
 
           <a
             class="whatsapp"
-            href="https://wa.me/243900820742?text=${whatsappMessage}"
-            target="_blank">
+            href="https://wa.me/243900820722?text=${whatsappMessage}"
+            target="_blank"
+            rel="noopener">
             Commander sur WhatsApp
           </a>
 
@@ -243,10 +235,22 @@ if (error) {
       `;
 
       container.appendChild(card);
-    });
-  }
 
-  loadProducts();
+    });
+
+  } catch (e) {
+
+    container.innerHTML = `
+      <div class="error">
+        <h3>Erreur JavaScript</h3>
+        <p>${e.message || e}</p>
+      </div>
+    `;
+
+  }
+}
+
+loadProducts();
 
 </script>
 
