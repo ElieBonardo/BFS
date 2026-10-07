@@ -147,9 +147,15 @@
 
 
     if (error) {
-  alert(JSON.stringify(error, null, 2));
-  console.error(error);
+  container.innerHTML = `
+    <p>Erreur Supabase</p>
+    <p>Message : ${error.message}</p>
+    <p>Code : ${error.code}</p>
+    <p>Détails : ${error.details}</p>
+    <p>Indice : ${error.hint}</p>
+  `;
   return;
+}
 }
 
     if (!data || data.length === 0) {
