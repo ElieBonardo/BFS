@@ -8,10 +8,42 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+ <style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    color: #111;
+  }
+
+  /* tes autres codes CSS */
+
+  .site-header {
+    background: #111;
+    color: white;
+    padding: 20px 16px;
+    text-align: center;
+  }
+
+  .logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .logo {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    display: block;
+  }
+
+</style>
 
     body {
       margin: 0;
@@ -110,7 +142,15 @@
 
 <body>
 
-<header>
+<header class="site-header">
+  <div class="logo-container">
+    <img
+      src="LOGO_BONARDO_ICI"
+      alt="Logo Bonardo Fashion"
+      class="logo"
+    >
+  </div>
+
   <h1>Bonardo Fashion Store BFS</h1>
   <p>Élégance • Qualité • Propreté</p>
 </header>
