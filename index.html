@@ -209,35 +209,33 @@
       const card = document.createElement("div");
       card.className = "product";
 
-      const image = product.image
-  ? `<img src="${product.image}" alt="${product.name}">`
+      const image = product.image_url
+  ? `<img src="${product.image_url}" alt="${product.Name}">`
   : "<p>IMAGE MANQUANTE</p>";
-        
-        console.log("PRODUIT :", product);
-        
-        console.log("PRIX :", product.price);
-        
-        console.log("TOUTES LES DONNÉES :", Object.keys(product));
 
-      const whatsappMessage =
-        encodeURIComponent(
-          `Bonjour BFS, je voudrais commander : ${product.name} à ${product.price}$`
-        );
+console.log("PRODUIT :", product);
+console.log("PRIX :", product.Price);
+console.log("TOUTES LES DONNÉES :", Object.keys(product));
 
-      card.innerHTML = `
-        ${image}
+const whatsappMessage =
+  encodeURIComponent(
+    `Bonjour BFS, je voudrais commander : ${product.Name} à ${product.Price}$`
+  );
 
-        <div class="product-info">
+card.innerHTML = `
+  ${image}
 
-          <h2>${product.name}</h2>
+  <div class="product-info">
 
-          <div class="description">
-            ${product.description || ""}
-          </div>
+    <h2>${product.Name}</h2>
 
-          <div class="price">
-  ${product.price ?? "PRIX MANQUANT"}$
-</div>
+    <div class="description">
+      ${product.Description || ""}
+    </div>
+
+    <div class="price">
+      ${product.Price ?? "PRIX MANQUANT"}$
+    </div>
 
           <div class="category">
             ${product.category || ""}
