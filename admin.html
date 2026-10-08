@@ -207,48 +207,68 @@ loadAdminProducts();
 
   async function loadAdminProducts() {
 
-    const { data, error } = await supabaseClient
+  const container =
+    document.getElementById("adminProducts");
+
+  container.innerHTML =
+    "<p>Connexion à la base de données...</p>";
+
+  const { data, error } =
+    await supabaseClient
       .from("products")
       .select("*")
       .order("id", { ascending: false });
 
-    const container =
-      document.getElementById("adminProducts");
+  if (error) {
 
-    if (error) {
-      container.innerHTML =
-        `<p>Erreur : ${error.message}</p>`;
-      console.error(error);
-      return;
-    }
+    container.innerHTML = `
+      <div style="
+        background:#ffe5e5;
+        color:#b00020;
+        padding:15px;
+        border-radius:10px;
+      ">
+        <strong>Erreur Supabase :</strong><br><br>
+        ${error.message}
+      </div>
+    `;
 
-    if (!data || data.length === 0) {
-      container.innerHTML =
-        "<p>Aucun produit disponible.</p>";
-      return;
-    }
+    console.error("ERREUR SUPABASE :", error);
 
-    container.innerHTML = "";
-
-    data.forEach(product => {
-
-      const item =
-        document.createElement("div");
-
-      item.style.padding = "15px";
-      item.style.marginBottom = "12px";
-      item.style.background = "#f5f5f5";
-      item.style.borderRadius = "10px";
-
-      item.innerHTML = `
-        <strong>${product.Name}</strong><br>
-        Prix : ${product.Price}$<br>
-        Catégorie : ${product.category || ""}
-      `;
-
-      container.appendChild(item);
-    });
+    return;
   }
+
+  if (!data || data.length === 0) {
+
+    container.innerHTML =
+      "<p>Aucun produit disponible.</p>";
+
+    return;
+  }
+
+  container.innerHTML = "";
+
+  data.forEach(product => {
+
+    const item =
+      document.createElement("div");
+
+    item.style.padding = "15px";
+    item.style.marginBottom = "12px";
+    item.style.background = "#f5f5f5";
+    item.style.borderRadius = "10px";
+
+    item.innerHTML = `
+      <strong>${product.Name || ""}</strong><br>
+      Prix : ${product.Price ?? ""}$<br>
+      Catégorie : ${product.category || ""}
+    `;
+
+    container.appendChild(item);
+
+  });
+
+}
 
 
   document
@@ -260,7 +280,7 @@ loadAdminProducts();
       window.location.reload();
 
     });
-loadAdminProducts();
+    
 </body>
 </html>
 
