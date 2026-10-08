@@ -79,45 +79,60 @@
 
 <div class="admin">
 
-  <h1>🔐 BFS Admin</h1>
+  <!-- CONNEXION -->
+  <div id="loginSection">
 
-  <p>Connexion administrateur</p>
+    <h1>🔐 BFS Admin</h1>
 
-  <label for="email">E-mail</label>
+    <p>Connexion administrateur</p>
 
-  <input
-    type="email"
-    id="email"
-    placeholder="Votre e-mail"
-    autocomplete="email"
-  >
+    <label for="email">E-mail</label>
 
-  <label for="password">Mot de passe</label>
+    <input
+      type="email"
+      id="email"
+      placeholder="Votre e-mail"
+      autocomplete="email"
+    >
 
-  <input
-    type="password"
-    id="password"
-    placeholder="Votre mot de passe"
-    autocomplete="current-password"
-  >
+    <label for="password">Mot de passe</label>
 
-  <button id="loginButton">
-    Se connecter
-  </button>
+    <input
+      type="password"
+      id="password"
+      placeholder="Votre mot de passe"
+      autocomplete="current-password"
+    >
 
-  <div id="message"></div>
+    <button id="loginButton">
+      Se connecter
+    </button>
 
-<hr>
+    <div id="message"></div>
 
-<h2>Gestion des produits</h2>
+  </div>
 
-<div id="adminProducts">
-  Chargement des produits...
-</div>
 
-<button id="logoutButton">
-  Se déconnecter
-</button>
+  <!-- TABLEAU DE BORD -->
+  <div id="dashboard" style="display:none;">
+
+    <h1>🏪 BFS Admin</h1>
+
+    <p>Gestion de Bonardo Fashion Store</p>
+
+    <hr>
+
+    <h2>Gestion des produits</h2>
+
+    <div id="adminProducts">
+      Chargement des produits...
+    </div>
+
+    <button id="logoutButton">
+      Se déconnecter
+    </button>
+
+  </div>
 
 </div>
 
@@ -168,16 +183,21 @@
 
     if (error) {
 
-      message.textContent =
-        "Erreur : " + error.message;
+  message.textContent =
+    "Erreur : " + error.message;
 
-      console.error(error);
+  console.error(error);
 
-      return;
-    }
+  return;
+}
 
-    message.textContent =
-      "Connexion réussie.";
+document.getElementById("loginSection").style.display = "none";
+
+document.getElementById("dashboard").style.display = "block";
+
+message.textContent = "";
+
+loadAdminProducts();
 
     console.log("ADMIN CONNECTÉ :", data.user);
 
