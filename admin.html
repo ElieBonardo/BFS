@@ -3,14 +3,175 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Administration BFS</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #111;
+    }
+
+    .admin {
+      width: 100%;
+      max-width: 450px;
+      margin: 60px auto;
+      padding: 25px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+    }
+
+    .admin h1 {
+      text-align: center;
+      margin-top: 0;
+    }
+
+    .admin p {
+      text-align: center;
+      color: #666;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      margin-top: 7px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 20px;
+      border: 0;
+      border-radius: 8px;
+      background: #111;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    #message {
+      margin-top: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
 </head>
 
 <body>
 
-  <h1>Administration Bonardo Fashion Store BFS</h1>
+<div class="admin">
+
+  <h1>🔐 BFS Admin</h1>
 
   <p>Connexion administrateur</p>
+
+  <label for="email">E-mail</label>
+
+  <input
+    type="email"
+    id="email"
+    placeholder="Votre e-mail"
+    autocomplete="email"
+  >
+
+  <label for="password">Mot de passe</label>
+
+  <input
+    type="password"
+    id="password"
+    placeholder="Votre mot de passe"
+    autocomplete="current-password"
+  >
+
+  <button id="loginButton">
+    Se connecter
+  </button>
+
+  <div id="message"></div>
+
+</div>
+
+<script>
+
+  const SUPABASE_URL =
+    "https://eulbdrwxyhdvosbmxnwy.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_LfwW5XWa2C_3WPArJvEsbQ_Klth7gNl";
+
+  const supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+  const loginButton =
+    document.getElementById("loginButton");
+
+  const message =
+    document.getElementById("message");
+
+  loginButton.addEventListener("click", async () => {
+
+    const email =
+      document.getElementById("email").value.trim();
+
+    const password =
+      document.getElementById("password").value;
+
+    if (!email || !password) {
+
+      message.textContent =
+        "Veuillez remplir les deux champs.";
+
+      return;
+    }
+
+    message.textContent =
+      "Connexion en cours...";
+
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+    if (error) {
+
+      message.textContent =
+        "Erreur : " + error.message;
+
+      console.error(error);
+
+      return;
+    }
+
+    message.textContent =
+      "Connexion réussie.";
+
+    console.log("ADMIN CONNECTÉ :", data.user);
+
+  });
+
+</script>
 
 </body>
 </html>
