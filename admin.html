@@ -480,17 +480,6 @@ async function saveProductChanges(id, name, price, description, category) {
   await loadAdminProducts();
 }
 
-    .eq("id", id);
-
-  if (error) {
-    alert("Erreur de modification : " + error.message);
-    console.error(error);
-    return;
-  }
-
-  alert("Produit modifié avec succès !");
-  await loadAdminProducts();
-}
 
 
 
