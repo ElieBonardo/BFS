@@ -474,6 +474,66 @@
 
 </script>
 
+
+document.getElementById("addProductForm").addEventListener("submit", async function(event) {
+  event.preventDefault();
+
+  const status = document.getElementById("addProductMessage");
+  const name = document.getElementById("productName").value.trim();
+  const price = Number(document.getElementById("productPrice").value);
+  const description = document.getElementById("productDescription").value.trim();
+  const category = document.getElementById("productCategory").value.trim();
+  const file = document.getElementById("productImage").files[0];
+
+  if (!name || !file || !Number.isFinite(price) || price < 0) {
+    status.textContent = "Remplis le nom, le prix et choisis une photo.";
+    return;
+  }
+
+  status.textContent = "Enregistrement en cours...";
+
+  try {
+    const extension = file.name.split(".").pop().toLowerCase();
+    const filePath = `${Date.now()}-${crypto.randomUUID()}.${extension}`;
+
+    const { data: uploaded, error: uploadError } = await supabaseClient
+      .storage
+      .from("products")
+      .upload(filePath, file, {
+        contentType: file.type,
+        upsert: false
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data: publicData } = supabaseClient
+      .storage
+      .from("products")
+      .getPublicUrl(uploaded.path);
+
+    const { error: insertError } = await supabaseClient
+      .from("products")
+      .insert({
+        Name: name,
+        Price: price,
+        Description: description,
+        category: category,
+        image_url: publicData.publicUrl
+      });
+
+    if (insertError) throw insertError;
+
+    status.textContent = "Produit ajouté avec succès !";
+    document.getElementById("addProductForm").reset();
+    await loadAdminProducts();
+
+  } catch (error) {
+    console.error("Erreur ajout produit :", error);
+    status.textContent = "Erreur : " + error.message;
+  }
+});
+
+
 </body>
 
 </html>
