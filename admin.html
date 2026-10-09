@@ -452,8 +452,9 @@ async function loadAdminProducts() {
   });
 }
 
+
 async function saveProductChanges(id, name, price, description, category) {
-  const { error } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("products")
     .update({
       Name: name,
@@ -461,6 +462,24 @@ async function saveProductChanges(id, name, price, description, category) {
       Description: description,
       category: category
     })
+    .eq("id", id)
+    .select();
+
+  if (error) {
+    alert("Erreur de modification : " + error.message);
+    console.error(error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    alert("Aucun produit modifié. Vérifions la règle RLS UPDATE dans Supabase.");
+    return;
+  }
+
+  alert("Prix enregistré : " + data[0].Price + "$");
+  await loadAdminProducts();
+}
+
     .eq("id", id);
 
   if (error) {
