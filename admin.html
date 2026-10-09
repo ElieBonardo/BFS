@@ -149,13 +149,61 @@
 
     <hr>
 
-    <h2>
-      Gestion des produits
-    </h2>
+    <h2>Ajouter un produit</h2>
 
-    <div id="adminProducts">
-      Chargement des produits...
-    </div>
+<form id="addProductForm">
+
+  <label for="productName">Nom du produit</label>
+  <input
+    type="text"
+    id="productName"
+    required
+  >
+
+  <label for="productPrice">Prix en dollars</label>
+  <input
+    type="number"
+    id="productPrice"
+    min="0"
+    step="0.01"
+    required
+  >
+
+  <label for="productDescription">Description</label>
+  <textarea
+    id="productDescription"
+    rows="3"
+  ></textarea>
+
+  <label for="productCategory">Catégorie</label>
+  <input
+    type="text"
+    id="productCategory"
+  >
+
+  <label for="productImage">Photo du produit</label>
+  <input
+    type="file"
+    id="productImage"
+    accept="image/*"
+    required
+  >
+
+  <button type="submit">
+    Ajouter le produit
+  </button>
+
+  <p id="addProductMessage"></p>
+
+</form>
+
+<hr>
+
+<h2>Gestion des produits</h2>
+
+<div id="adminProducts">
+  Chargement des produits...
+</div>
 
     <button id="logoutButton">
       Se déconnecter
