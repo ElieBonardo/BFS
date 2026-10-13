@@ -391,81 +391,78 @@ document.getElementById("checkout").addEventListener("click", async () => {
   }
 });
 
+
 window.bfsProducts = [];
 
 async function loadProducts() {
+  const { data, error } = await supabaseClient
+    .from("products")
+    .select("*")
+    .order("id", { ascending: false });
 
-
-  window.bfsProducts = [];
-
-  async function loadProducts() {
-    const { data, error } = await supabaseClient
-      .from("products")
-      .select("*")
-      .order("id", { ascending: false });
-
-    if (error) {
-      productsContainer.textContent =
-        "Impossible de charger les produits : " + error.message;
-      console.error("Erreur Supabase :", error);
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      productsContainer.textContent = "Aucun produit disponible.";
-      return;
-    }
-
-    window.bfsProducts = data;
-    productsContainer.innerHTML = "";
-
-    data.forEach(product => {
-      const key = productKey(product);
-      const card = document.createElement("article");
-      card.className = "product";
-
-      const rawImage = String(product.image_url ?? "")
-        .trim()
-        .replace(/(%0A|%0D)+$/i, "");
-
-      const imageHTML = rawImage
-        ? `<img src="${escapeHTML(rawImage)}"
-             alt="${escapeHTML(product.Name)}"
-             loading="lazy">`
-        : "<p class='product-info'>Photo indisponible</p>";
-
-      card.innerHTML = `
-        ${imageHTML}
-        <div class="product-info">
-          <h2>${escapeHTML(product.Name || "Produit")}</h2>
-          <div class="description">
-            ${escapeHTML(product.Description || "")}
-          </div>
-          <div class="price">
-            ${product.Price !== null && product.Price !== undefined
-              && product.Price !== ""
-              ? escapeHTML(product.Price) + "$"
-              : "Prix indisponible"}
-          </div>
-          <div class="category">
-            ${escapeHTML(product.category || "")}
-          </div>
-          <button class="add-button" type="button">
-            Ajouter au panier
-          </button>
-        </div>
-      `;
-
-      card.querySelector(".add-button").addEventListener("click", () => {
-        addToCart(key);
-      });
-
-      productsContainer.appendChild(card);
-    });
+  if (error) {
+    productsContainer.textContent =
+      "Impossible de charger les produits : " + error.message;
+    console.error("Erreur Supabase :", error);
+    return;
   }
 
-  renderCart();
-  loadProducts();
+  if (!data || data.length === 0) {
+    productsContainer.textContent = "Aucun produit disponible.";
+    return;
+  }
+
+  window.bfsProducts = data;
+  productsContainer.innerHTML = "";
+
+  data.forEach(product => {
+    const key = productKey(product);
+    const card = document.createElement("article");
+    card.className = "product";
+
+    const rawImage = String(product.image_url ?? "")
+      .trim()
+      .replace(/(%0A|%0D)+$/i, "");
+
+    const imageHTML = rawImage
+      ? `<img src="${escapeHTML(rawImage)}"
+           alt="${escapeHTML(product.Name)}"
+           loading="lazy">`
+      : "<p class='product-info'>Photo indisponible</p>";
+
+    card.innerHTML = `
+      ${imageHTML}
+      <div class="product-info">
+        <h2>${escapeHTML(product.Name || "Produit")}</h2>
+        <div class="description">
+          ${escapeHTML(product.Description || "")}
+        </div>
+        <div class="price">
+          ${product.Price !== null && product.Price !== undefined
+            && product.Price !== ""
+            ? escapeHTML(product.Price) + "$"
+            : "Prix indisponible"}
+        </div>
+        <div class="category">
+          ${escapeHTML(product.category || "")}
+        </div>
+        <button class="add-button" type="button">
+          Ajouter au panier
+        </button>
+      </div>
+    `;
+
+    card.querySelector(".add-button").addEventListener("click", () => {
+      addToCart(key);
+    });
+
+    productsContainer.appendChild(card);
+  });
+}
+
+renderCart();
+loadProducts();
+
 </script>
 
 </body>
