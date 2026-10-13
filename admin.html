@@ -488,89 +488,101 @@ async function saveProductChanges(id, name, price, description, category) {
     return;
   }
   
-  async function loadAdminOrders() {
+  
+async function loadAdminOrders() {
   const container = document.getElementById("adminOrders");
 
   container.textContent = "Chargement des commandes...";
 
-  const { data, error } = await supabaseClient
-    .from("orders")
-    .select("id, created_at, items, total, status")
-    .order("created_at", { ascending: false });
+  try {
+    const request = supabaseClient
+      .from("orders")
+      .select("id, created_at, items, total, status")
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    container.textContent =
-      "Impossible de charger les commandes : " + error.message;
-    console.error(error);
-    return;
-  }
+    const timeout = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("Délai dépassé. Vérifie la connexion Internet."));
+      }, 12000);
+    });
 
-  if (!data || data.length === 0) {
-    container.textContent = "Aucune commande enregistrée.";
-    return;
-  }
+    const { data, error } = await Promise.race([request, timeout]);
 
-  container.innerHTML = "";
-
-  data.forEach(order => {
-    const card = document.createElement("div");
-    card.className = "admin-product";
-
-    const title = document.createElement("h3");
-    title.textContent = "Commande #" + order.id;
-    card.appendChild(title);
-
-    const date = document.createElement("p");
-    date.textContent = "Date : " +
-      new Date(order.created_at).toLocaleString("fr-FR");
-    card.appendChild(date);
-
-    const total = document.createElement("p");
-    total.textContent = "Total : " + order.total + "$";
-    card.appendChild(total);
-
-    const status = document.createElement("p");
-    status.textContent = "Statut : " + (order.status || "En attente");
-    card.appendChild(status);
-
-    const itemsTitle = document.createElement("p");
-    itemsTitle.textContent = "Articles commandés :";
-    card.appendChild(itemsTitle);
-
-    const itemsList = document.createElement("ul");
-
-    let items = order.items;
-
-    if (typeof items === "string") {
-      try {
-        items = JSON.parse(items);
-      } catch {
-        items = [];
-      }
+    if (error) {
+      throw error;
     }
 
-    if (Array.isArray(items)) {
-      items.forEach(product => {
-        const li = document.createElement("li");
+    if (!data || data.length === 0) {
+      container.textContent = "Aucune commande enregistrée.";
+      return;
+    }
 
-        if (product && typeof product === "object") {
-          li.textContent =
-            (product.name || product.Name || product.title || "Article") +
-            " × " +
-            (product.quantity || product.qty || product.count || 1);
-        } else {
-          li.textContent = String(product);
+    container.innerHTML = "";
+
+    data.forEach(order => {
+      const card = document.createElement("div");
+      card.className = "admin-product";
+
+      const title = document.createElement("h3");
+      title.textContent = "Commande #" + order.id;
+      card.appendChild(title);
+
+      const date = document.createElement("p");
+      date.textContent = "Date : " +
+        new Date(order.created_at).toLocaleString("fr-FR");
+      card.appendChild(date);
+
+      const total = document.createElement("p");
+      total.textContent = "Total : " + order.total + "$";
+      card.appendChild(total);
+
+      const status = document.createElement("p");
+      status.textContent = "Statut : " + (order.status || "En attente");
+      card.appendChild(status);
+
+      const itemsTitle = document.createElement("p");
+      itemsTitle.textContent = "Articles commandés :";
+      card.appendChild(itemsTitle);
+
+      const list = document.createElement("ul");
+      let items = order.items;
+
+      if (typeof items === "string") {
+        try {
+          items = JSON.parse(items);
+        } catch {
+          items = null;
         }
+      }
 
-        itemsList.appendChild(li);
-      });
-    } else {
-      itemsList.textContent = "Format des articles à vérifier.";
-    }
+      if (Array.isArray(items)) {
+        items.forEach(product => {
+          const li = document.createElement("li");
 
-    card.appendChild(itemsList);
-    container.appendChild(card);
-  });
+          if (product && typeof product === "object") {
+            li.textContent =
+              (product.name || product.Name || product.title || "Article") +
+              " × " +
+              (product.quantity || product.qty || product.count || 1);
+          } else {
+            li.textContent = String(product);
+          }
+
+          list.appendChild(li);
+        });
+      } else {
+        list.textContent = JSON.stringify(items ?? "Articles indisponibles");
+      }
+
+      card.appendChild(list);
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("Erreur de chargement des commandes :", error);
+    container.textContent =
+      "Erreur de chargement : " + (error.message || "Erreur inconnue");
+  }
 }
 
 document
