@@ -416,11 +416,16 @@ try {
 
     alert("Commande enregistrée avec succès ! Continuez sur WhatsApp.");
   } catch (error) {
-    console.error("Erreur :", error);
-    whatsappWindow.close();
-    alert("Erreur de connexion. La commande n'a pas été enregistrée.");
+    console.error("Erreur d'enregistrement :", error);
+    alert(
+      "WhatsApp est ouvert, mais l'enregistrement de la commande a échoué."
+    );
   }
 });
+
+window.bfsProducts = [];
+
+async function loadProducts() {
 
 
   window.bfsProducts = [];
