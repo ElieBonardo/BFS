@@ -204,6 +204,17 @@
 <div id="adminProducts">
   Chargement des produits...
 </div>
+<hr>
+
+<h2>Commandes clients</h2>
+
+<button id="refreshOrdersButton" type="button">
+  Actualiser les commandes
+</button>
+
+<div id="adminOrders">
+  Chargement des commandes...
+</div>
 
     <button id="logoutButton">
       Se déconnecter
@@ -324,6 +335,7 @@
 
 
       await loadAdminProducts();
+      await loadAdminOrders();
 
     }
   );
@@ -475,6 +487,95 @@ async function saveProductChanges(id, name, price, description, category) {
     alert("Aucun produit modifié. Vérifions la règle RLS UPDATE dans Supabase.");
     return;
   }
+  
+  async function loadAdminOrders() {
+  const container = document.getElementById("adminOrders");
+
+  container.textContent = "Chargement des commandes...";
+
+  const { data, error } = await supabaseClient
+    .from("orders")
+    .select("id, created_at, items, total, status")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    container.textContent =
+      "Impossible de charger les commandes : " + error.message;
+    console.error(error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    container.textContent = "Aucune commande enregistrée.";
+    return;
+  }
+
+  container.innerHTML = "";
+
+  data.forEach(order => {
+    const card = document.createElement("div");
+    card.className = "admin-product";
+
+    const title = document.createElement("h3");
+    title.textContent = "Commande #" + order.id;
+    card.appendChild(title);
+
+    const date = document.createElement("p");
+    date.textContent = "Date : " +
+      new Date(order.created_at).toLocaleString("fr-FR");
+    card.appendChild(date);
+
+    const total = document.createElement("p");
+    total.textContent = "Total : " + order.total + "$";
+    card.appendChild(total);
+
+    const status = document.createElement("p");
+    status.textContent = "Statut : " + (order.status || "En attente");
+    card.appendChild(status);
+
+    const itemsTitle = document.createElement("p");
+    itemsTitle.textContent = "Articles commandés :";
+    card.appendChild(itemsTitle);
+
+    const itemsList = document.createElement("ul");
+
+    let items = order.items;
+
+    if (typeof items === "string") {
+      try {
+        items = JSON.parse(items);
+      } catch {
+        items = [];
+      }
+    }
+
+    if (Array.isArray(items)) {
+      items.forEach(product => {
+        const li = document.createElement("li");
+
+        if (product && typeof product === "object") {
+          li.textContent =
+            (product.name || product.Name || product.title || "Article") +
+            " × " +
+            (product.quantity || product.qty || product.count || 1);
+        } else {
+          li.textContent = String(product);
+        }
+
+        itemsList.appendChild(li);
+      });
+    } else {
+      itemsList.textContent = "Format des articles à vérifier.";
+    }
+
+    card.appendChild(itemsList);
+    container.appendChild(card);
+  });
+}
+
+document
+  .getElementById("refreshOrdersButton")
+  .addEventListener("click", loadAdminOrders);
 
   alert("Prix enregistré : " + data[0].Price + "$");
   await loadAdminProducts();
