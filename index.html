@@ -365,26 +365,41 @@ document.getElementById("checkout").addEventListener("click", async () => {
     "?text=" + encodeURIComponent(lines.join("\n"));
 
   // Ouvrir une fenêtre pour WhatsApp pendant le clic du client.
-  const whatsappWindow = window.open("about:blank", "_blank");
+  
+const whatsappWindow = window.open(url, "_blank");
 
-  if (!whatsappWindow) {
-    alert("Autorisez les fenêtres pop-up pour continuer la commande.");
+if (!whatsappWindow) {
+  alert("Autorisez les fenêtres pop-up pour continuer la commande.");
+}
+
+try {
+  const { error } = await supabaseClient
+    .from("orders")
+    .insert([
+      {
+        items: orderItems,
+        total: total
+      }
+    ]);
+
+  if (error) {
+    console.error("Erreur Supabase :", error);
+    alert(
+      "WhatsApp est ouvert, mais la commande n'a pas pu être enregistrée. " +
+      "Contactez BFS pour confirmer votre commande."
+    );
     return;
   }
 
-  whatsappWindow.document.title = "Enregistrement de la commande BFS";
-  whatsappWindow.document.body.textContent =
-    "Enregistrement de votre commande en cours...";
+  console.log("Commande BFS enregistrée avec succès.");
+} catch (error) {
+  console.error("Erreur d'enregistrement :", error);
+  alert(
+    "WhatsApp est ouvert, mais l'enregistrement de la commande a échoué."
+  );
+}
+});
 
-  try {
-    const { error } = await supabaseClient
-      .from("orders")
-      .insert([
-        {
-          items: orderItems,
-          total: total
-        }
-      ]);
 
     if (error) {
       console.error("Erreur Supabase :", error);
