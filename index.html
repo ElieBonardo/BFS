@@ -377,7 +377,7 @@ document.getElementById("checkout").addEventListener("click", async () => {
     "Enregistrement de votre commande en cours...";
 
   try {
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from("orders")
       .insert([
         {
