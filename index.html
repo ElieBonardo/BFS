@@ -317,41 +317,96 @@
     }
   });
 
-  document.getElementById("checkout").addEventListener("click", () => {
-    if (cart.size === 0) {
-      alert("Votre panier est vide. Ajoutez d'abord un produit.");
+  
+document.getElementById("checkout").addEventListener("click", async () => {
+  if (cart.size === 0) {
+    alert("Votre panier est vide. Ajoutez d'abord un produit.");
+    return;
+  }
+
+  let total = 0;
+
+  const lines = [
+    "Bonjour BFS, je voudrais passer cette commande :",
+    ""
+  ];
+
+  const orderItems = [];
+
+  cart.forEach(item => {
+    const product = item.product;
+    const price = Number(productPrice(product));
+    const subtotal = price * item.quantity;
+
+    total += subtotal;
+
+    orderItems.push({
+      product_id: product.id ?? null,
+      name: product.Name,
+      price: price,
+      quantity: item.quantity,
+      subtotal: subtotal
+    });
+
+    lines.push(
+      "- " + product.Name +
+      " | Quantité : " + item.quantity +
+      " | Prix unitaire : " + formatPrice(price) + "$" +
+      " | Sous-total : " + formatPrice(subtotal) + "$"
+    );
+  });
+
+  lines.push("");
+  lines.push("TOTAL : " + formatPrice(total) + "$");
+  lines.push("");
+  lines.push("Merci de me confirmer la disponibilité.");
+
+  const url = "https://wa.me/" + WHATSAPP_NUMBER +
+    "?text=" + encodeURIComponent(lines.join("\n"));
+
+  // Ouvrir une fenêtre pour WhatsApp pendant le clic du client.
+  const whatsappWindow = window.open("about:blank", "_blank");
+
+  if (!whatsappWindow) {
+    alert("Autorisez les fenêtres pop-up pour continuer la commande.");
+    return;
+  }
+
+  whatsappWindow.document.title = "Enregistrement de la commande BFS";
+  whatsappWindow.document.body.textContent =
+    "Enregistrement de votre commande en cours...";
+
+  try {
+    const { error } = await supabase
+      .from("orders")
+      .insert([
+        {
+          items: orderItems,
+          total: total
+        }
+      ]);
+
+    if (error) {
+      console.error("Erreur Supabase :", error);
+      whatsappWindow.close();
+      alert(
+        "La commande n'a pas pu être enregistrée. " +
+        "Aucun message WhatsApp n'a été ouvert. " +
+        "Vérifiez la connexion Supabase."
+      );
       return;
     }
 
-    let total = 0;
-    const lines = [
-      "Bonjour BFS, je voudrais passer cette commande :",
-      ""
-    ];
+    whatsappWindow.location.href = url;
 
-    cart.forEach(item => {
-      const product = item.product;
-      const subtotal = productPrice(product) * item.quantity;
-      total += subtotal;
+    alert("Commande enregistrée avec succès ! Continuez sur WhatsApp.");
+  } catch (error) {
+    console.error("Erreur :", error);
+    whatsappWindow.close();
+    alert("Erreur de connexion. La commande n'a pas été enregistrée.");
+  }
+});
 
-      lines.push(
-        "- " + product.Name +
-        " | Quantité : " + item.quantity +
-        " | Prix unitaire : " + formatPrice(productPrice(product)) + "$" +
-        " | Sous-total : " + formatPrice(subtotal) + "$"
-      );
-    });
-
-    lines.push("");
-    lines.push("TOTAL : " + formatPrice(total) + "$");
-    lines.push("");
-    lines.push("Merci de me confirmer la disponibilité.");
-
-    const url = "https://wa.me/" + WHATSAPP_NUMBER +
-      "?text=" + encodeURIComponent(lines.join("\n"));
-
-    window.open(url, "_blank");
-  });
 
   window.bfsProducts = [];
 
