@@ -363,41 +363,95 @@ async function loadAdminProducts() {
       description.textContent = product.description || "";
       card.appendChild(description);
 
-      const editButton = document.createElement("button");
-      editButton.type = "button";
-      editButton.className = "edit-button";
-      editButton.textContent = "Modifier";
+      
+const editButton = document.createElement("button");
+editButton.type = "button";
+editButton.className = "edit-button";
+editButton.textContent = "Modifier";
 
-      editButton.addEventListener("click", async () => {
-        const newName = prompt("Nom du produit :", product.name || "");
-        if (newName === null) return;
+editButton.addEventListener("click", async () => {
+  const newName = prompt("Nom du produit :", product.Name || "");
+  if (newName === null) return;
 
-        const priceText = prompt("Prix en dollars :", product.price ?? "");
-        if (priceText === null) return;
+  const priceText = prompt("Prix en dollars :", product.Price ?? "");
+  if (priceText === null) return;
 
-        const newPrice = Number(priceText);
-        if (!newName.trim() || priceText.trim() === "" ||
-            !Number.isFinite(newPrice) || newPrice < 0) {
-          alert("Vérifiez le nom et le prix.");
-          return;
-        }
+  const newPrice = Number(priceText);
+  if (!newName.trim() || priceText.trim() === "" ||
+      !Number.isFinite(newPrice) || newPrice < 0) {
+    alert("Vérifiez le nom et le prix.");
+    return;
+  });
 
-        const newDescription = prompt(
-          "Description :", product.description || ""
-        );
-        if (newDescription === null) return;
 
-        const newCategory = prompt("Catégorie :", product.category || "");
-        if (newCategory === null) return;
+        
+const editButton = document.createElement("button");
+editButton.type = "button";
+editButton.className = "edit-button";
+editButton.textContent = "Modifier";
 
-        await saveProductChanges(
-          product.id,
-          newName.trim(),
-          newPrice,
-          newDescription.trim(),
-          newCategory.trim()
-        );
-      });
+editButton.addEventListener("click", async () => {
+  const newName = prompt("Nom du produit :", product.Name || "");
+  if (newName === null) return;
+
+  const priceText = prompt("Prix en dollars :", product.Price ?? "");
+  if (priceText === null) return;
+
+  const newPrice = Number(priceText);
+  if (!newName.trim() || priceText.trim() === "" ||
+      !Number.isFinite(newPrice) || newPrice < 0) {
+    alert("Vérifiez le nom et le prix.");
+    return;
+  }
+
+  const newDescription = prompt(
+    "Description :", product.description || ""
+  );
+  if (newDescription === null) return;
+
+  const newCategory = prompt("Catégorie :", product.category || "");
+  if (newCategory === null) return;
+
+  await saveProductChanges(
+    product.id,
+    newName.trim(),
+    newPrice,
+    newDescription.trim(),
+    newCategory.trim()
+  );
+});
+
+const deleteButton = document.createElement("button");
+deleteButton.type = "button";
+deleteButton.textContent = "Supprimer";
+deleteButton.style.backgroundColor = "#b91c1c";
+deleteButton.style.color = "white";
+deleteButton.style.marginLeft = "8px";
+
+deleteButton.addEventListener("click", async () => {
+  const confirmed = confirm(
+    `Voulez-vous vraiment supprimer le produit "${product.Name}" ? Cette action est définitive.`
+  );
+
+  if (!confirmed) return;
+
+  const { error } = await supabaseClient
+    .from("products")
+    .delete()
+    .eq("id", product.id);
+
+  if (error) {
+    alert("Suppression impossible : " + error.message);
+    return;
+  }
+
+  alert("Produit supprimé avec succès.");
+  await loadAdminProducts();
+});
+
+card.appendChild(editButton);
+card.appendChild(deleteButton);
+
 
       card.appendChild(editButton);
       container.appendChild(card);
