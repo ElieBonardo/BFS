@@ -1,58 +1,37 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BFS Admin</title>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
-
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f5f5f5;
       color: #111;
     }
-
     .admin {
       width: 100%;
       max-width: 600px;
       margin: 30px auto;
       padding: 20px;
     }
-
-    #loginSection,
-    #dashboard {
+    #loginSection, #dashboard {
       background: white;
       padding: 25px;
       border-radius: 15px;
       box-shadow: 0 3px 15px rgba(0,0,0,0.1);
     }
-
-    h1 {
-      text-align: center;
-    }
-
+    h1 { text-align: center; }
     label {
       display: block;
       margin-top: 15px;
       font-weight: bold;
     }
-
-    input {
+    input, textarea {
       width: 100%;
       padding: 13px;
       margin-top: 7px;
@@ -60,11 +39,9 @@
       border-radius: 8px;
       font-size: 16px;
     }
-
     button {
-      width: 100%;
       padding: 13px;
-      margin-top: 18px;
+      margin-top: 12px;
       border: none;
       border-radius: 8px;
       background: #111;
@@ -73,482 +50,291 @@
       font-weight: bold;
       cursor: pointer;
     }
-
-    #message {
+    #loginButton, #logoutButton, #refreshOrdersButton,
+    #addProductForm button {
+      width: 100%;
+    }
+    #message, #addProductMessage {
       margin-top: 15px;
       text-align: center;
       font-weight: bold;
+      overflow-wrap: anywhere;
     }
-
     .admin-product {
       padding: 15px;
       margin-top: 12px;
       background: #f5f5f5;
       border-radius: 10px;
+      overflow-wrap: anywhere;
     }
-
+    .admin-product img {
+      width: 100%;
+      max-width: 300px;
+      height: 220px;
+      object-fit: contain;
+      background: white;
+    }
+    .edit-button { background: #1769ff; margin-right: 5px; }
+    .delete-button { background: #c62828; }
+    .order-status { font-weight: bold; }
   </style>
-
 </head>
-
 <body>
-
 <div class="admin">
-
-  <!-- CONNEXION -->
-
   <div id="loginSection">
-
     <h1>🔐 BFS Admin</h1>
-
     <p>Connexion administrateur</p>
-
-    <label for="email">
-      E-mail
-    </label>
-
-    <input
-      type="email"
-      id="email"
-      placeholder="Votre e-mail"
-      autocomplete="email"
-    >
-
-    <label for="password">
-      Mot de passe
-    </label>
-
-    <input
-      type="password"
-      id="password"
-      placeholder="Votre mot de passe"
-      autocomplete="current-password"
-    >
-
-    <button id="loginButton">
-      Se connecter
-    </button>
-
+    <label for="email">E-mail</label>
+    <input type="email" id="email" placeholder="Votre e-mail"
+           autocomplete="email" required>
+    <label for="password">Mot de passe</label>
+    <input type="password" id="password" placeholder="Votre mot de passe"
+           autocomplete="current-password" required>
+    <button id="loginButton" type="button">Se connecter</button>
     <div id="message"></div>
-
   </div>
-
-
-  <!-- TABLEAU DE BORD -->
-
-  <div
-    id="dashboard"
-    style="display:none;"
-  >
-
+  <div id="dashboard" style="display:none;">
     <h1>🏪 BFS Admin</h1>
-
-    <p style="text-align:center;">
-      Gestion de Bonardo Fashion Store
-    </p>
-
+    <p style="text-align:center;">Gestion de Bonardo Fashion Store</p>
     <hr>
-
     <h2>Ajouter un produit</h2>
-
-<form id="addProductForm">
-
-  <label for="productName">Nom du produit</label>
-  <input
-    type="text"
-    id="productName"
-    required
-  >
-
-  <label for="productPrice">Prix en dollars</label>
-  <input
-    type="number"
-    id="productPrice"
-    min="0"
-    step="0.01"
-    required
-  >
-
-  <label for="productDescription">Description</label>
-  <textarea
-    id="productDescription"
-    rows="3"
-  ></textarea>
-
-  <label for="productCategory">Catégorie</label>
-  <input
-    type="text"
-    id="productCategory"
-  >
-
-  <label for="productImage">Photo du produit</label>
-  <input
-    type="file"
-    id="productImage"
-    accept="image/*"
-    required
-  >
-
-  <button type="submit">
-    Ajouter le produit
-  </button>
-
-  <p id="addProductMessage"></p>
-
-</form>
-
-<hr>
-
-<h2>Gestion des produits</h2>
-
-<div id="adminProducts">
-  Chargement des produits...
-</div>
-<hr>
-
-<h2>Commandes clients</h2>
-
-<button id="refreshOrdersButton" type="button">
-  Actualiser les commandes
-</button>
-
-<div id="adminOrders">
-  Chargement des commandes...
-</div>
-
-    <button id="logoutButton">
-      Se déconnecter
+    <form id="addProductForm">
+      <label for="productName">Nom du produit</label>
+      <input type="text" id="productName" required>
+      <label for="productPrice">Prix en dollars</label>
+      <input type="number" id="productPrice" min="0" step="0.01" required>
+      <label for="productDescription">Description</label>
+      <textarea id="productDescription" rows="3"></textarea>
+      <label for="productCategory">Catégorie</label>
+      <input type="text" id="productCategory">
+      <label for="productImage">Photo du produit</label>
+      <input type="file" id="productImage" accept="image/*" required>
+      <button type="submit">Ajouter le produit</button>
+      <p id="addProductMessage"></p>
+    </form>
+    <hr>
+    <h2>Gestion des produits</h2>
+    <div id="adminProducts">Chargement des produits...</div>
+    <hr>
+    <h2>Commandes clients</h2>
+    <button id="refreshOrdersButton" type="button">
+      Actualiser les commandes
     </button>
-
+    <div id="adminOrders">Les commandes apparaîtront ici.</div>
+    <button id="logoutButton" type="button">Se déconnecter</button>
   </div>
-
 </div>
-
-
 <script>
-
-  /* =========================
-     SUPABASE
-  ========================= */
-
-  const SUPABASE_URL =
-    "https://eulbdrwxyhdvosbmxnwy.supabase.co";
-
-  const SUPABASE_KEY =
-    "sb_publishable_LfwW5XWa2C_3WPArJvEsbQ_Klth7gNl";
-
-  const supabaseClient =
-    window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
-
-
-  /* =========================
-     ELEMENTS
-  ========================= */
-
-  const loginButton =
-    document.getElementById("loginButton");
-
-  const logoutButton =
-    document.getElementById("logoutButton");
-
-  const message =
-    document.getElementById("message");
-
-  const loginSection =
-    document.getElementById("loginSection");
-
-  const dashboard =
-    document.getElementById("dashboard");
-
-
-  /* =========================
-     CONNEXION
-  ========================= */
-
-  loginButton.addEventListener(
-    "click",
-    async () => {
-
-      const email =
-        document
-          .getElementById("email")
-          .value
-          .trim();
-
-      const password =
-        document
-          .getElementById("password")
-          .value;
-
-
-      if (!email || !password) {
-
-        message.textContent =
-          "Veuillez remplir les deux champs.";
-
-        return;
-      }
-
-
-      message.textContent =
-        "Connexion en cours...";
-
-
-      const { data, error } =
-        await supabaseClient.auth
-          .signInWithPassword({
-            email: email,
-            password: password
-          });
-
-
-      if (error) {
-
-        message.textContent =
-          "Erreur : " + error.message;
-
-        console.error(
-          "ERREUR CONNEXION :",
-          error
-        );
-
-        return;
-      }
-
-
-      console.log(
-        "ADMIN CONNECTÉ :",
-        data.user
-      );
-
-
-      loginSection.style.display =
-        "none";
-
-      dashboard.style.display =
-        "block";
-
-      message.textContent = "";
-
-
-            await loadAdminProducts();
-
-      loadAdminOrders().catch(error => {
-        console.error("Erreur commandes :", error);
-      });
+"use strict";
+/* 1. CONFIGURATION SUPABASE */
+const SUPABASE_URL = "https://eulbdrwxyhdvosbmxnwy.supabase.co";
+/* Remplace UNIQUEMENT le texte ci-dessous par ta clé publique anon
+   ou publishable actuelle. Ne mets jamais une clé service_role ici. */
+const SUPABASE_KEY = "REMPLACE_PAR_TA_CLE_PUBLIQUE_SUPABASE";
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+/* 2. ELEMENTS DE LA PAGE */
+const loginButton = document.getElementById("loginButton");
+const logoutButton = document.getElementById("logoutButton");
+const refreshOrdersButton = document.getElementById("refreshOrdersButton");
+const message = document.getElementById("message");
+const loginSection = document.getElementById("loginSection");
+const dashboard = document.getElementById("dashboard");
+/* 3. CONNEXION ADMINISTRATEUR */
+loginButton.addEventListener("click", async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  if (!email || !password) {
+    message.textContent = "Veuillez remplir les deux champs.";
+    return;
+  }
+  loginButton.disabled = true;
+  message.textContent = "Connexion en cours...";
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
+    if (error) throw error;
+    if (!data.user) {
+      throw new Error("Compte administrateur introuvable.");
     }
-  );
-
-
-  /* =========================
-     PRODUITS
-  ========================= */
-
-  
+    loginSection.style.display = "none";
+    dashboard.style.display = "block";
+    message.textContent = "";
+    await loadAdminProducts();
+    await loadAdminOrders();
+  } catch (error) {
+    console.error("Erreur de connexion :", error);
+    message.textContent = "Erreur : " + error.message;
+  } finally {
+    loginButton.disabled = false;
+  }
+});
+/* 4. CHARGER LES PRODUITS */
 async function loadAdminProducts() {
   const container = document.getElementById("adminProducts");
-
-  container.innerHTML = "<p>Chargement des produits...</p>";
-
-  const { data, error } = await supabaseClient
-    .from("products")
-    .select("*")
-    .order("id", { ascending: false });
-
-  if (error) {
-    container.textContent = "Erreur : " + error.message;
-    console.error(error);
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    container.innerHTML = "<p>Aucun produit disponible.</p>";
-    return;
-  }
-
-  container.innerHTML = "";
-
-  data.forEach(product => {
-    const item = document.createElement("div");
-    item.className = "admin-product";
-    item.style.cssText =
-      "padding:15px;margin-bottom:15px;background:#f5f5f5;border-radius:10px;";
-
-    const title = document.createElement("h3");
-    title.textContent = product.Name || "Sans nom";
-    item.appendChild(title);
-
-    if (product.image_url) {
-      const img = document.createElement("img");
-      img.src = product.image_url;
-      img.alt = product.Name || "Produit";
-      img.style.cssText =
-        "width:100%;max-width:300px;height:220px;object-fit:contain;background:white;";
-      item.appendChild(img);
+  container.textContent = "Chargement des produits...";
+  try {
+    const { data, error } = await supabaseClient
+      .from("products")
+      .select("*")
+      .order("id", { ascending: false });
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      container.textContent = "Aucun produit disponible.";
+      return;
     }
-
-    const details = document.createElement("p");
-    details.textContent =
-      `Prix : ${product.Price ?? ""}$ | Catégorie : ${product.category || ""}`;
-    item.appendChild(details);
-
-    const description = document.createElement("p");
-    description.textContent = product.Description || "";
-    item.appendChild(description);
-
-    const editButton = document.createElement("button");
-    editButton.textContent = "Modifier";
-    editButton.style.cssText =
-      "background:#1769ff;color:white;padding:10px 16px;border:0;border-radius:7px;margin:5px;";
-
-    editButton.addEventListener("click", () => {
-      const newName = prompt("Nom du produit :", product.Name || "");
-      if (newName === null) return;
-
-      const newPriceText = prompt("Prix en dollars :", product.Price ?? "");
-      if (newPriceText === null) return;
-
-      const newPrice = Number(newPriceText);
-      if (!newName.trim() || newPriceText.trim() === "" ||
-          !Number.isFinite(newPrice) || newPrice < 0) {
-        alert("Vérifie le nom et le prix.");
-        return;
+    container.innerHTML = "";
+    data.forEach(product => {
+      const item = document.createElement("div");
+      item.className = "admin-product";
+      const title = document.createElement("h3");
+      title.textContent = product.Name || "Sans nom";
+      item.appendChild(title);
+      if (product.image_url) {
+        const img = document.createElement("img");
+        img.src = product.image_url;
+        img.alt = product.Name || "Produit";
+        img.onerror = () => {
+          img.alt = "Photo indisponible";
+          img.style.display = "none";
+        };
+        item.appendChild(img);
       }
-
-      const newDescription = prompt(
-        "Description :", product.Description || ""
-      );
-      if (newDescription === null) return;
-
-      const newCategory = prompt(
-        "Catégorie :", product.category || ""
-      );
-      if (newCategory === null) return;
-
-      saveProductChanges(
-        product.id,
-        newName.trim(),
-        newPrice,
-        newDescription.trim(),
-        newCategory.trim()
-      );
+      const details = document.createElement("p");
+      details.textContent =
+        `Prix : ${product.Price ?? ""}$ | Catégorie : ${product.category || ""}`;
+      item.appendChild(details);
+      const description = document.createElement("p");
+      description.textContent = product.Description || "";
+      item.appendChild(description);
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.className = "edit-button";
+      editButton.textContent = "Modifier";
+      editButton.addEventListener("click", async () => {
+        const newName = prompt("Nom du produit :", product.Name || "");
+        if (newName === null) return;
+        const newPriceText = prompt("Prix en dollars :", product.Price ?? "");
+        if (newPriceText === null) return;
+        const newPrice = Number(newPriceText);
+        if (!newName.trim() || newPriceText.trim() === "" ||
+            !Number.isFinite(newPrice) || newPrice < 0) {
+          alert("Vérifie le nom et le prix.");
+          return;
+        }
+        const newDescription = prompt(
+          "Description :", product.Description || ""
+        );
+        if (newDescription === null) return;
+        const newCategory = prompt(
+          "Catégorie :", product.category || ""
+        );
+        if (newCategory === null) return;
+        await saveProductChanges(
+          product.id,
+          newName.trim(),
+          newPrice,
+          newDescription.trim(),
+          newCategory.trim()
+        );
+      });
+      item.appendChild(editButton);
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "delete-button";
+      deleteButton.textContent = "Supprimer";
+      deleteButton.addEventListener("click", async () => {
+        if (!confirm(`Supprimer définitivement « ${product.Name || "ce produit"} » ?`)) {
+          return;
+        }
+        const { error } = await supabaseClient
+          .from("products")
+          .delete()
+          .eq("id", product.id);
+        if (error) {
+          alert("Erreur de suppression : " + error.message);
+          return;
+        }
+        alert("Produit supprimé.");
+        await loadAdminProducts();
+      });
+      item.appendChild(deleteButton);
+      container.appendChild(item);
     });
-
-    item.appendChild(editButton);
-
-    const deleteButton = document.createElement("button");
-    deleteButton.textContent = "Supprimer";
-    deleteButton.style.cssText =
-      "background:#c62828;color:white;padding:10px 16px;border:0;border-radius:7px;margin:5px;";
-
-    deleteButton.addEventListener("click", async () => {
-      if (!confirm(`Supprimer définitivement « ${product.Name} » ?`)) return;
-
-      const { error } = await supabaseClient
-        .from("products")
-        .delete()
-        .eq("id", product.id);
-
-      if (error) {
-        alert("Erreur de suppression : " + error.message);
-        return;
-      }
-
-      alert("Produit supprimé.");
-      await loadAdminProducts();
-    });
-
-    item.appendChild(deleteButton);
-    container.appendChild(item);
-  });
+  } catch (error) {
+    console.error("Erreur produits :", error);
+    container.textContent = "Erreur de chargement des produits : " + error.message;
+  }
 }
-
-
+/* 5. MODIFIER UN PRODUIT */
 async function saveProductChanges(id, name, price, description, category) {
-  const { data, error } = await supabaseClient
-    .from("products")
-    .update({
-      Name: name,
-      Price: price,
-      Description: description,
-      category: category
-    })
-    .eq("id", id)
-    .select();
-
-  if (error) {
+  try {
+    const { data, error } = await supabaseClient
+      .from("products")
+      .update({
+        Name: name,
+        Price: price,
+        Description: description,
+        category: category
+      })
+      .eq("id", id)
+      .select();
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      alert("Aucun produit modifié. Vérifie la règle RLS UPDATE dans Supabase.");
+      return;
+    }
+    alert("Produit modifié avec succès.");
+    await loadAdminProducts();
+  } catch (error) {
+    console.error("Erreur modification :", error);
     alert("Erreur de modification : " + error.message);
-    console.error(error);
-    return;
   }
-
-  if (!data || data.length === 0) {
-    alert("Aucun produit modifié. Vérifions la règle RLS UPDATE dans Supabase.");
-    return;
-  }
-  
-  
+}
+/* 6. CHARGER LES COMMANDES */
 async function loadAdminOrders() {
   const container = document.getElementById("adminOrders");
-
   container.textContent = "Chargement des commandes...";
-
   try {
-    const request = supabaseClient
+    const { data, error } = await supabaseClient
       .from("orders")
       .select("id, created_at, items, total, status")
       .order("created_at", { ascending: false });
-
-    const timeout = new Promise((_, reject) => {
-      setTimeout(() => {
-        reject(new Error("Délai dépassé. Vérifie la connexion Internet."));
-      }, 12000);
-    });
-
-    const { data, error } = await Promise.race([request, timeout]);
-
-    if (error) {
-      throw error;
-    }
-
+    if (error) throw error;
     if (!data || data.length === 0) {
       container.textContent = "Aucune commande enregistrée.";
       return;
     }
-
     container.innerHTML = "";
-
     data.forEach(order => {
       const card = document.createElement("div");
       card.className = "admin-product";
-
       const title = document.createElement("h3");
       title.textContent = "Commande #" + order.id;
       card.appendChild(title);
-
       const date = document.createElement("p");
+      const parsedDate = new Date(order.created_at);
       date.textContent = "Date : " +
-        new Date(order.created_at).toLocaleString("fr-FR");
+        (Number.isNaN(parsedDate.getTime())
+          ? "Date inconnue"
+          : parsedDate.toLocaleString("fr-FR"));
       card.appendChild(date);
-
       const total = document.createElement("p");
       total.textContent = "Total : " + order.total + "$";
       card.appendChild(total);
-
       const status = document.createElement("p");
+      status.className = "order-status";
       status.textContent = "Statut : " + (order.status || "En attente");
       card.appendChild(status);
-
       const itemsTitle = document.createElement("p");
       itemsTitle.textContent = "Articles commandés :";
       card.appendChild(itemsTitle);
-
       const list = document.createElement("ul");
       let items = order.items;
-
       if (typeof items === "string") {
         try {
           items = JSON.parse(items);
@@ -556,109 +342,93 @@ async function loadAdminOrders() {
           items = null;
         }
       }
-
       if (Array.isArray(items)) {
         items.forEach(product => {
           const li = document.createElement("li");
-
           if (product && typeof product === "object") {
-            li.textContent =
-              (product.name || product.Name || product.title || "Article") +
-              " × " +
-              (product.quantity || product.qty || product.count || 1);
+            const name = product.name || product.Name ||
+              product.title || product.product_name || "Article";
+            const quantity = product.quantity ?? product.qty ??
+              product.count ?? 1;
+            li.textContent = name + " × " + quantity;
           } else {
             li.textContent = String(product);
           }
-
           list.appendChild(li);
         });
       } else {
-        list.textContent = JSON.stringify(items ?? "Articles indisponibles");
+        list.textContent = "Détails des articles indisponibles.";
       }
-
       card.appendChild(list);
       container.appendChild(card);
     });
-
   } catch (error) {
-    console.error("Erreur de chargement des commandes :", error);
-    container.textContent =
-      "Erreur de chargement : " + (error.message || "Erreur inconnue");
+    console.error("Erreur commandes :", error);
+    container.textContent = "Erreur de chargement des commandes : " + error.message;
   }
 }
-
-
-document
-  .getElementById("refreshOrdersButton")
-  .addEventListener("click", async () => {
-    const container = document.getElementById("adminOrders");
-    container.textContent = "TEST DU BOUTON : le clic fonctionne.";
-
+/* 7. BOUTON ACTUALISER LES COMMANDES */
+refreshOrdersButton.addEventListener("click", async () => {
+  refreshOrdersButton.disabled = true;
+  try {
     await loadAdminOrders();
-  });
-
-
-
-
-
-  /* =========================
-     DÉCONNEXION
-  ========================= */
-
-  logoutButton.addEventListener(
-    "click",
-    async () => {
-
-      await supabaseClient.auth.signOut();
-
-      dashboard.style.display =
-        "none";
-
-      loginSection.style.display =
-        "block";
-
-    }
-  );
-
-</script>
- <script>
-
-document.getElementById("addProductForm").addEventListener("submit", async function(event) {
+  } finally {
+    refreshOrdersButton.disabled = false;
+  }
+});
+/* 8. DECONNEXION */
+logoutButton.addEventListener("click", async () => {
+  logoutButton.disabled = true;
+  try {
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) throw error;
+    dashboard.style.display = "none";
+    loginSection.style.display = "block";
+    document.getElementById("password").value = "";
+    message.textContent = "";
+  } catch (error) {
+    console.error("Erreur déconnexion :", error);
+    alert("Erreur de déconnexion : " + error.message);
+  } finally {
+    logoutButton.disabled = false;
+  }
+});
+/* 9. AJOUTER UN PRODUIT AVEC SA PHOTO */
+document.getElementById("addProductForm").addEventListener("submit", async event => {
   event.preventDefault();
-
   const status = document.getElementById("addProductMessage");
   const name = document.getElementById("productName").value.trim();
-  const price = Number(document.getElementById("productPrice").value);
+  const priceText = document.getElementById("productPrice").value;
+  const price = Number(priceText);
   const description = document.getElementById("productDescription").value.trim();
   const category = document.getElementById("productCategory").value.trim();
   const file = document.getElementById("productImage").files[0];
-
-  if (!name || !file || !Number.isFinite(price) || price < 0) {
+  if (!name || !file || priceText.trim() === "" ||
+      !Number.isFinite(price) || price < 0) {
     status.textContent = "Remplis le nom, le prix et choisis une photo.";
     return;
   }
-
   status.textContent = "Enregistrement en cours...";
-
   try {
-    const extension = file.name.split(".").pop().toLowerCase();
+    const extension = file.name.includes(".")
+      ? file.name.split(".").pop().toLowerCase()
+      : "jpg";
     const filePath = `${Date.now()}-${crypto.randomUUID()}.${extension}`;
-
     const { data: uploaded, error: uploadError } = await supabaseClient
       .storage
       .from("products")
       .upload(filePath, file, {
-        contentType: file.type,
+        contentType: file.type || "image/jpeg",
         upsert: false
       });
-
     if (uploadError) throw uploadError;
-
     const { data: publicData } = supabaseClient
       .storage
       .from("products")
       .getPublicUrl(uploaded.path);
-
+    if (!publicData || !publicData.publicUrl) {
+      throw new Error("Impossible de récupérer l'adresse publique de la photo.");
+    }
     const { error: insertError } = await supabaseClient
       .from("products")
       .insert({
@@ -668,20 +438,15 @@ document.getElementById("addProductForm").addEventListener("submit", async funct
         category: category,
         image_url: publicData.publicUrl
       });
-
     if (insertError) throw insertError;
-
-    status.textContent = "Produit ajouté avec succès !";
+    status.textContent = "Produit ajouté avec succès.";
     document.getElementById("addProductForm").reset();
     await loadAdminProducts();
-
   } catch (error) {
     console.error("Erreur ajout produit :", error);
     status.textContent = "Erreur : " + error.message;
   }
 });
-
-
 </script>
 </body>
 </html>
