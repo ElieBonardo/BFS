@@ -833,11 +833,9 @@ function showBfsPanel(panelId) {
     panel.hidden = panel.id !== panelId;
   });
   bfsMenuLinks.forEach(link => {
-    link.classList.toggle("active", link.dataset.panel === panelId);
+    const isActive = link.dataset.panel === panelId;
+    link.classList.toggle("active", isActive);
   });
-  if (window.innerWidth < 900) {
-    dashboard.classList.remove("menu-open");
-  }
 }
 if (sidebarToggle) {
   sidebarToggle.addEventListener("click", () => {
@@ -848,9 +846,13 @@ bfsMenuLinks.forEach(link => {
   link.addEventListener("click", event => {
     event.preventDefault();
     showBfsPanel(link.dataset.panel);
+    dashboard.classList.remove("menu-open");
   });
 });
+/* Afficher uniquement le tableau de bord au démarrage */
 showBfsPanel("dashboardStats");
+/* Masquer complètement l'administration avant connexion */
+dashboard.style.display = "none";
 
 </script>
 </body>
