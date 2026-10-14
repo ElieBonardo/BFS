@@ -4,25 +4,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111111">
+  <meta name="description" content="Bonardo Fashion Store BFS : élégance, qualité et propreté. Découvrez nos produits et commandez sur WhatsApp.">
   <title>Bonardo Fashion Store BFS</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bfs-black: #111111;
+      --bfs-white: #ffffff;
+      --bfs-silver: #c0c0c0;
+      --bfs-light: #f5f5f5;
+      --bfs-gray: #666666;
+      --bfs-green: #25D366;
+    }
 
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      color: #111;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bfs-light);
+      color: var(--bfs-black);
     }
 
     .site-header {
-      background: #111;
-      color: white;
-      padding: 20px 15px;
+      background: var(--bfs-black);
+      color: var(--bfs-white);
+      padding: 24px 15px;
       text-align: center;
+      border-bottom: 3px solid var(--bfs-silver);
     }
 
     .logo-container {
@@ -34,87 +48,168 @@
     .logo {
       width: 220px;
       height: 140px;
+      max-width: 100%;
       object-fit: contain;
     }
 
-    .site-header h1 { margin: 0; font-size: 26px; }
-    .site-header p { color: #ddd; }
+    .site-header h1 {
+      margin: 0;
+      font-size: clamp(22px, 4vw, 30px);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .site-header p {
+      color: var(--bfs-silver);
+      letter-spacing: 1px;
+      margin-bottom: 0;
+    }
 
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: auto;
-      padding: 20px;
+      padding: 24px 20px;
+    }
+
+    .section-title {
+      margin: 28px 0 18px;
+      font-size: 25px;
     }
 
     .products {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 20px;
     }
 
-    .product, .cart {
-      background: white;
-      border-radius: 14px;
+    .product,
+    .cart {
+      background: var(--bfs-white);
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 3px 12px rgba(0,0,0,.08);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+    }
+
+    .product {
+      min-width: 0;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .product:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 9px 24px rgba(0, 0, 0, 0.12);
     }
 
     .product img {
-      width: 100%;
-      height: 280px;
-      object-fit: contain;
-      background: #f5f5f5;
       display: block;
+      width: 100%;
+      height: 250px;
+      object-fit: contain;
+      background: #ffffff;
     }
 
-    .product-info { padding: 15px; }
-    .product h2 { font-size: 20px; margin: 0 0 10px; }
-    .description { color: #666; line-height: 1.4; }
-    .price { font-size: 22px; font-weight: bold; margin: 12px 0; }
-    .category { color: #777; font-size: 14px; }
+    .product-info {
+      padding: 15px;
+    }
+
+    .product h2 {
+      font-size: 19px;
+      line-height: 1.35;
+      margin: 0 0 10px;
+      overflow-wrap: anywhere;
+    }
+
+    .description {
+      color: var(--bfs-gray);
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .price {
+      font-size: 22px;
+      font-weight: bold;
+      margin: 13px 0;
+      color: #333333;
+    }
+
+    .category {
+      color: #777777;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
 
     button {
       cursor: pointer;
       border: 0;
-      border-radius: 8px;
+      border-radius: 7px;
       padding: 12px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
+      transition: background 0.2s ease;
     }
 
-    .add-button, .checkout {
+    button:focus-visible {
+      outline: 3px solid var(--bfs-silver);
+      outline-offset: 3px;
+    }
+
+    .add-button {
       display: block;
       width: 100%;
-      margin-top: 12px;
-      background: #25D366;
-      color: white;
+      background: var(--bfs-black);
+      color: var(--bfs-white);
+      border: 1px solid var(--bfs-silver);
     }
 
-    .cart { padding: 18px; margin-bottom: 28px; }
-    .cart h2 { margin-top: 0; }
+    .add-button:hover {
+      background: #333333;
+    }
+
+    .cart {
+      padding: 20px;
+      margin-bottom: 28px;
+    }
+
+    .cart h2 {
+      margin-top: 0;
+    }
 
     .cart-item {
-      border-bottom: 1px solid #ddd;
-      padding: 12px 0;
+      border-bottom: 1px solid #e1e1e1;
+      padding: 14px 0;
     }
 
-    .cart-item-name { font-weight: bold; }
+    .cart-item-name {
+      font-weight: bold;
+      margin-bottom: 6px;
+      overflow-wrap: anywhere;
+    }
+
     .cart-controls {
       display: flex;
       align-items: center;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 8px;
+      margin-top: 10px;
     }
 
     .quantity-button {
-      background: #eee;
+      background: #eeeeee;
       min-width: 38px;
+    }
+
+    .quantity-button:hover {
+      background: #dddddd;
     }
 
     .remove-button {
       background: #ffe5e5;
-      color: #a00;
+      color: #a00000;
+    }
+
+    .remove-button:hover {
+      background: #ffd0d0;
     }
 
     .cart-total {
@@ -123,138 +218,111 @@
       margin-top: 18px;
     }
 
-    .empty-cart { color: #666; }
-    .loading { padding: 30px; text-align: center; }
+    .checkout {
+      display: block;
+      width: 100%;
+      margin-top: 15px;
+      background: var(--bfs-green);
+      color: #ffffff;
+    }
+
+    .checkout:hover {
+      background: #1fb957;
+    }
+
+    .empty-cart,
+    .loading {
+      color: var(--bfs-gray);
+      padding: 18px 0;
+    }
+
+    .loading {
+      text-align: center;
+      grid-column: 1 / -1;
+    }
+
+    .site-footer {
+      background: var(--bfs-black);
+      color: #dddddd;
+      border-top: 3px solid var(--bfs-silver);
+      text-align: center;
+      padding: 20px 12px;
+      margin-top: 30px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .products {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
 
     @media (max-width: 600px) {
-      .container { padding: 15px; }
-      .products { grid-template-columns: 1fr; }
-      .product img { height: 300px; }
+      .container {
+        padding: 16px 12px;
+      }
+
+      .products {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .product img {
+        height: 180px;
+      }
+
+      .product-info {
+        padding: 11px;
+      }
+
+      .product h2 {
+        font-size: 16px;
+      }
+
+      .description {
+        font-size: 13px;
+      }
+
+      .price {
+        font-size: 19px;
+      }
+
+      .add-button {
+        font-size: 13px;
+        padding: 11px 6px;
+      }
+
+      .cart {
+        padding: 15px;
+      }
+
+      .site-header {
+        padding: 18px 10px;
+      }
+
+      .logo {
+        height: 115px;
+        width: 190px;
+      }
     }
-    
-/* ===== BFS PREMIUM : NOIR, BLANC ET ARGENT ===== */
 
-:root {
-  --bfs-black: #111111;
-  --bfs-white: #ffffff;
-  --bfs-silver: #c0c0c0;
-  --bfs-light: #f5f5f5;
-}
+    @media (max-width: 350px) {
+      .products {
+        grid-template-columns: 1fr;
+      }
 
-body {
-  background: var(--bfs-light);
-  color: var(--bfs-black);
-  font-family: Arial, Helvetica, sans-serif;
-  margin: 0;
-}
+      .product img {
+        height: 230px;
+      }
+    }
 
-header {
-  background: var(--bfs-black);
-  color: var(--bfs-white);
-  border-bottom: 3px solid var(--bfs-silver);
-  padding: 24px 16px;
-  text-align: center;
-}
-
-header h1 {
-  color: var(--bfs-white);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-}
-
-header p {
-  color: var(--bfs-silver);
-  letter-spacing: 1px;
-}
-
-#products {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
-  gap: 22px;
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-  box-sizing: border-box;
-}
-
-#products > div {
-  background: var(--bfs-white);
-  border: 1px solid #e1e1e1;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-#products > div:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 9px 24px rgba(0, 0, 0, 0.12);
-}
-
-#products img {
-  display: block;
-  width: 100%;
-  height: 250px;
-  object-fit: contain;
-  background: #ffffff;
-}
-
-#products h2,
-#products h3 {
-  padding: 0 14px;
-  color: var(--bfs-black);
-}
-
-#products .price {
-  color: #777777;
-  font-size: 21px;
-  font-weight: 700;
-  padding: 8px 14px;
-}
-
-#products a[href*="wa.me"] {
-  display: block;
-  margin: 12px;
-  padding: 13px 10px;
-  background: var(--bfs-black);
-  color: var(--bfs-white);
-  border: 1px solid var(--bfs-silver);
-  border-radius: 7px;
-  text-align: center;
-  text-decoration: none;
-  font-weight: 700;
-  transition: background 0.2s ease;
-}
-
-#products a[href*="wa.me"]:hover {
-  background: #333333;
-}
-
-button {
-  cursor: pointer;
-}
-
-@media (max-width: 480px) {
-  #products {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    padding: 12px;
-  }
-
-  #products img {
-    height: 180px;
-  }
-
-  #products .price {
-    font-size: 18px;
-  }
-
-  header {
-    padding: 18px 10px;
-  }
-}
-
-    
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        transition: none !important;
+      }
+    }
   </style>
 </head>
 
@@ -268,38 +336,49 @@ button {
       class="logo"
     >
   </div>
+
   <h1>Bonardo Fashion Store BFS</h1>
   <p>Élégance • Qualité • Propreté</p>
 </header>
 
 <main class="container">
 
-  <section class="cart">
-    <h2>🛒 Mon panier (<span id="cart-count">0</span>)</h2>
+  <section class="cart" aria-labelledby="cart-title">
+    <h2 id="cart-title">
+      Mon panier (<span id="cart-count">0</span>)
+    </h2>
+
     <div id="cart-items">
       <p class="empty-cart">Votre panier est vide.</p>
     </div>
+
     <div class="cart-total">
       Total : <span id="cart-total">0</span>$
     </div>
+
     <button id="checkout" class="checkout" type="button">
       Commander sur WhatsApp
     </button>
   </section>
 
-  <h2>Nos produits</h2>
-  <div id="products" class="products">
+  <h2 class="section-title">Nos produits</h2>
+
+  <div id="products" class="products" aria-live="polite">
     <div class="loading">Chargement des produits...</div>
   </div>
 
 </main>
 
+<footer class="site-footer">
+  Bonardo Fashion Store BFS — Élégance • Qualité • Propreté
+</footer>
+
 <script>
   const SUPABASE_URL =
     "https://eulbdrwxyhdvosbmxnwy.supabase.co";
 
-  // Garde ici ta vraie clé Supabase actuelle.
-  // Ne remplace pas ta clé par le texte d'exemple.
+  // Conservez ici votre vraie clé publique Supabase actuelle.
+  // N'utilisez jamais une clé service_role dans une page publique.
   const SUPABASE_KEY = "sb_publishable_LfwW5XWa2C_3WPArJvEsbQ_Klth7gNl";
 
   const supabaseClient = window.supabase.createClient(
@@ -308,7 +387,9 @@ button {
   );
 
   const WHATSAPP_NUMBER = "243900820742";
+
   const cart = new Map();
+  window.bfsProducts = [];
 
   const productsContainer = document.getElementById("products");
   const cartItemsContainer = document.getElementById("cart-items");
@@ -323,13 +404,17 @@ button {
     })[char]);
   }
 
+  // Les noms de colonnes correspondent à public.products.
   function productKey(product) {
-    return String(product.id ?? product.Name);
+    return String(product.id ?? product.name);
   }
 
   function productPrice(product) {
-    const price = Number(product.Price);
-    return Number.isFinite(price) && price >= 0 ? price : 0;
+    const price = Number(product.price);
+
+    return Number.isFinite(price) && price >= 0
+      ? price
+      : 0;
   }
 
   function formatPrice(value) {
@@ -350,7 +435,10 @@ button {
 
       if (!product) return;
 
-      cart.set(key, { product, quantity: 1 });
+      cart.set(key, {
+        product,
+        quantity: 1
+      });
     }
 
     renderCart();
@@ -358,6 +446,7 @@ button {
 
   function changeQuantity(key, amount) {
     const item = cart.get(key);
+
     if (!item) return;
 
     item.quantity += amount;
@@ -401,25 +490,37 @@ button {
         return `
           <div class="cart-item">
             <div class="cart-item-name">
-              ${escapeHTML(product.Name)}
+              ${escapeHTML(product.name)}
             </div>
+
             <div>
               ${formatPrice(productPrice(product))}$ ×
               ${item.quantity} =
               <strong>${formatPrice(subtotal)}$</strong>
             </div>
+
             <div class="cart-controls">
-              <button class="quantity-button"
-                data-action="minus" data-key="${escapeHTML(key)}"
-                aria-label="Diminuer la quantité">−</button>
+              <button
+                class="quantity-button"
+                data-action="minus"
+                data-key="${escapeHTML(key)}"
+                aria-label="Diminuer la quantité"
+                type="button">−</button>
+
               <span>Quantité : ${item.quantity}</span>
-              <button class="quantity-button"
-                data-action="plus" data-key="${escapeHTML(key)}"
-                aria-label="Augmenter la quantité">+</button>
-              <button class="remove-button"
-                data-action="remove" data-key="${escapeHTML(key)}">
-                Retirer
-              </button>
+
+              <button
+                class="quantity-button"
+                data-action="plus"
+                data-key="${escapeHTML(key)}"
+                aria-label="Augmenter la quantité"
+                type="button">+</button>
+
+              <button
+                class="remove-button"
+                data-action="remove"
+                data-key="${escapeHTML(key)}"
+                type="button">Retirer</button>
             </div>
           </div>
         `;
@@ -428,6 +529,7 @@ button {
 
   cartItemsContainer.addEventListener("click", event => {
     const button = event.target.closest("button[data-action]");
+
     if (!button) return;
 
     const key = button.dataset.key;
@@ -441,152 +543,191 @@ button {
     }
   });
 
-  
+  document.getElementById("checkout").addEventListener(
+    "click",
+    async () => {
+      if (cart.size === 0) {
+        alert("Votre panier est vide. Ajoutez d'abord un produit.");
+        return;
+      }
 
-document.getElementById("checkout").addEventListener("click", async () => {
-  if (cart.size === 0) {
-    alert("Votre panier est vide. Ajoutez d'abord un produit.");
-    return;
-  }
+      let total = 0;
 
-  let total = 0;
-  const lines = [
-    "Bonjour BFS, je voudrais passer cette commande :",
-    ""
-  ];
-  const orderItems = [];
+      const lines = [
+        "Bonjour BFS, je voudrais passer cette commande :",
+        ""
+      ];
 
-  cart.forEach(item => {
-    const product = item.product;
-    const price = Number(productPrice(product));
-    const subtotal = price * item.quantity;
-    total += subtotal;
+      const orderItems = [];
 
-    orderItems.push({
-      product_id: product.id ?? null,
-      name: product.Name,
-      price,
-      quantity: item.quantity,
-      subtotal
-    });
+      cart.forEach(item => {
+        const product = item.product;
+        const price = productPrice(product);
+        const subtotal = price * item.quantity;
 
-    lines.push(
-      "- " + product.Name +
-      " | Quantité : " + item.quantity +
-      " | Prix unitaire : " + formatPrice(price) + "$" +
-      " | Sous-total : " + formatPrice(subtotal) + "$"
-    );
-  });
+        total += subtotal;
 
-  lines.push("");
-  lines.push("TOTAL : " + formatPrice(total) + "$");
-  lines.push("");
-  lines.push("Merci de me confirmer la disponibilité.");
+        orderItems.push({
+          product_id: product.id ?? null,
+          name: product.name,
+          price,
+          quantity: item.quantity,
+          subtotal
+        });
 
-  const url = "https://wa.me/" + WHATSAPP_NUMBER +
-    "?text=" + encodeURIComponent(lines.join("\n"));
+        lines.push(
+          "- " + product.name +
+          " | Quantité : " + item.quantity +
+          " | Prix unitaire : " + formatPrice(price) + "$" +
+          " | Sous-total : " + formatPrice(subtotal) + "$"
+        );
+      });
 
-  // Ouvrir WhatsApp immédiatement.
-  const whatsappWindow = window.open(url, "_blank");
+      lines.push("");
+      lines.push("TOTAL : " + formatPrice(total) + "$");
+      lines.push("");
+      lines.push("Merci de me confirmer la disponibilité.");
 
-  if (!whatsappWindow) {
-    alert("Autorisez les fenêtres pop-up pour continuer la commande.");
-  }
+      const url = "https://wa.me/" + WHATSAPP_NUMBER +
+        "?text=" + encodeURIComponent(lines.join("\n"));
 
-  // Enregistrer la commande dans Supabase.
-  try {
-    const { error } = await supabaseClient
-      .from("orders")
-      .insert([{
-        items: orderItems,
-        total: total
-      }]);
+      // WhatsApp s'ouvre directement lorsque le client clique.
+      const whatsappWindow = window.open(url, "_blank");
 
-    if (error) {
-      console.error("Erreur Supabase :", error);
-      alert("WhatsApp est ouvert, mais l'enregistrement de la commande a échoué.");
-      return;
+      if (!whatsappWindow) {
+        alert(
+          "WhatsApp n'a pas pu s'ouvrir. Autorisez les fenêtres pop-up ou ouvrez WhatsApp manuellement."
+        );
+      }
+
+      // L'enregistrement nécessite une table orders et une
+      // politique RLS autorisant cet INSERT.
+      try {
+        const { error } = await supabaseClient
+          .from("orders")
+          .insert([{
+            items: orderItems,
+            total: total
+          }]);
+
+        if (error) {
+          console.error("Erreur Supabase :", error);
+          alert(
+            "WhatsApp a été ouvert, mais l'enregistrement de la commande a échoué."
+          );
+          return;
+        }
+
+        console.log("Commande BFS enregistrée.");
+      } catch (error) {
+        console.error("Erreur d'enregistrement :", error);
+        alert(
+          "WhatsApp a été ouvert, mais la commande n'a pas pu être enregistrée."
+        );
+      }
     }
+  );
 
-    console.log("Commande BFS enregistrée.");
-  } catch (error) {
-    console.error("Erreur d'enregistrement :", error);
-    alert("WhatsApp est ouvert, mais la commande n'a pas pu être enregistrée.");
+  async function loadProducts() {
+    productsContainer.innerHTML =
+      '<div class="loading">Chargement des produits...</div>';
+
+    try {
+      const { data, error } = await supabaseClient
+        .from("products")
+        .select("*")
+        .order("id", { ascending: false });
+
+      if (error) {
+        console.error("Erreur Supabase :", error);
+        productsContainer.textContent =
+          "Impossible de charger les produits. Vérifiez la connexion Supabase.";
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        productsContainer.textContent = "Aucun produit disponible.";
+        return;
+      }
+
+      window.bfsProducts = data;
+      productsContainer.innerHTML = "";
+
+      data.forEach(product => {
+        const key = productKey(product);
+        const card = document.createElement("article");
+
+        card.className = "product";
+
+        // Dans Supabase, la colonne photo s'appelle image.
+        // image_url reste accepté comme solution de secours.
+        const rawImage = String(
+          product.image ?? product.image_url ?? ""
+        ).trim().replace(/(%0A|%0D)+$/i, "");
+
+        const imageHTML = rawImage
+          ? `<img
+               src="${escapeHTML(rawImage)}"
+               alt="${escapeHTML(product.name || "Produit BFS")}"
+               loading="lazy">`
+          : `<div class="product-info">Photo indisponible</div>`;
+
+        const priceHTML =
+          product.price !== null &&
+          product.price !== undefined &&
+          product.price !== ""
+            ? `${escapeHTML(product.price)}$`
+            : "Prix indisponible";
+
+        card.innerHTML = `
+          ${imageHTML}
+
+          <div class="product-info">
+            <h2>${escapeHTML(product.name || "Produit")}</h2>
+
+            <div class="description">
+              ${escapeHTML(product.description || "")}
+            </div>
+
+            <div class="price">${priceHTML}</div>
+
+            <div class="category">
+              ${escapeHTML(product.category || "")}
+            </div>
+
+            <button class="add-button" type="button">
+              Ajouter au panier
+            </button>
+          </div>
+        `;
+
+        const image = card.querySelector("img");
+
+        if (image) {
+          image.addEventListener("error", () => {
+            const replacement = document.createElement("div");
+            replacement.className = "product-info";
+            replacement.textContent = "Photo indisponible";
+            image.replaceWith(replacement);
+          }, { once: true });
+        }
+
+        card.querySelector(".add-button").addEventListener(
+          "click",
+          () => addToCart(key)
+        );
+
+        productsContainer.appendChild(card);
+      });
+    } catch (error) {
+      console.error("Erreur de chargement :", error);
+      productsContainer.textContent =
+        "Une erreur est survenue lors du chargement des produits.";
+    }
   }
-});
 
-
-window.bfsProducts = [];
-
-async function loadProducts() {
-  const { data, error } = await supabaseClient
-    .from("products")
-    .select("*")
-    .order("id", { ascending: false });
-
-  if (error) {
-    productsContainer.textContent =
-      "Impossible de charger les produits : " + error.message;
-    console.error("Erreur Supabase :", error);
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    productsContainer.textContent = "Aucun produit disponible.";
-    return;
-  }
-
-  window.bfsProducts = data;
-  productsContainer.innerHTML = "";
-
-  data.forEach(product => {
-    const key = productKey(product);
-    const card = document.createElement("article");
-    card.className = "product";
-
-    const rawImage = String(product.image_url ?? "")
-      .trim()
-      .replace(/(%0A|%0D)+$/i, "");
-
-    const imageHTML = rawImage
-      ? `<img src="${escapeHTML(rawImage)}"
-           alt="${escapeHTML(product.Name)}"
-           loading="lazy">`
-      : "<p class='product-info'>Photo indisponible</p>";
-
-    card.innerHTML = `
-      ${imageHTML}
-      <div class="product-info">
-        <h2>${escapeHTML(product.Name || "Produit")}</h2>
-        <div class="description">
-          ${escapeHTML(product.Description || "")}
-        </div>
-        <div class="price">
-          ${product.Price !== null && product.Price !== undefined
-            && product.Price !== ""
-            ? escapeHTML(product.Price) + "$"
-            : "Prix indisponible"}
-        </div>
-        <div class="category">
-          ${escapeHTML(product.category || "")}
-        </div>
-        <button class="add-button" type="button">
-          Ajouter au panier
-        </button>
-      </div>
-    `;
-
-    card.querySelector(".add-button").addEventListener("click", () => {
-      addToCart(key);
-    });
-
-    productsContainer.appendChild(card);
-  });
-}
-
-renderCart();
-loadProducts();
-
+  renderCart();
+  loadProducts();
 </script>
 
 </body>
