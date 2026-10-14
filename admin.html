@@ -226,6 +226,43 @@
 }
 
 
+.bfs-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  margin-top: 25px;
+}
+
+.bfs-stat-card {
+  background: #111111;
+  color: #ffffff;
+  border: 1px solid #d4af37;
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bfs-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 26px rgba(212, 175, 55, 0.15);
+}
+
+.bfs-stat-label {
+  display: block;
+  color: #e5c76b;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.bfs-stat-card strong {
+  display: block;
+  color: #d4af37;
+  font-size: 30px;
+  overflow-wrap: anywhere;
+}
+
 
     
   </style>
@@ -260,41 +297,41 @@
 </div>
 
 
-  <div id="dashboard" style="display:none;">
-    <button id="sidebarToggle" type="button" aria-label="Ouvrir le menu">☰</button>
 
-    <aside id="bfsSidebar" class="bfs-sidebar">
-      <h2>✨ BFS Admin</h2>
-      <p>Gestion de Bonardo Fashion Store</p>
-      <nav class="bfs-admin-menu">
-        <a href="#dashboardStats" data-panel="dashboardStats">📊 Tableau de bord</a>
-        <a href="#productsPanel" data-panel="productsPanel">🛍️ Produits</a>
-        <a href="#ordersPanel" data-panel="ordersPanel">📦 Commandes clients</a>
-      </nav>
-      <button id="logoutButton" type="button">Se déconnecter</button>
-    </aside>
+<section id="dashboardStats" class="bfs-panel">
+  <h1>📊 Tableau de bord BFS</h1>
+  <p>Vue générale de Bonardo Fashion Store</p>
 
-    <main id="bfsAdminContent">
-      <section id="dashboardStats" class="bfs-panel">
-        <h1>📊 Tableau de bord</h1>
-        <p>Vue générale de votre boutique BFS</p>
-        <div class="admin-product">
-          <h3>Total des commandes</h3>
-          <p id="statTotalOrders">0</p>
-        </div>
-        <div class="admin-product">
-          <h3>Nouvelles commandes</h3>
-          <p id="statNewOrders">0</p>
-        </div>
-        <div class="admin-product">
-          <h3>En préparation ou expédiées</h3>
-          <p id="statInProgressOrders">0</p>
-        </div>
-        <div class="admin-product">
-          <h3>Chiffre d’affaires</h3>
-          <p id="statRevenue">0 $</p>
-        </div>
-      </section>
+  <div class="bfs-stats-grid">
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">🛍️ Total des produits</span>
+      <strong id="statTotalProducts">—</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">📦 Total des commandes</span>
+      <strong id="statTotalOrders">0</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">🆕 Nouvelles commandes</span>
+      <strong id="statNewOrders">0</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">🚚 En préparation ou expédiées</span>
+      <strong id="statInProgressOrders">0</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">💰 Chiffre d’affaires</span>
+      <strong id="statRevenue">0 $</strong>
+    </div>
+
+  </div>
+</section>
+
 
       <section id="productsPanel" class="bfs-panel" hidden>
         <h1>🛍️ Gestion des produits</h1>
@@ -428,6 +465,8 @@ async function loadAdminProducts() {
       .order("id", { ascending: false });
 
     if (error) throw error;
+    document.getElementById("statTotalProducts").textContent =
+  (data || []).length;
 
     if (!data || data.length === 0) {
       container.textContent = "Aucun produit disponible.";
