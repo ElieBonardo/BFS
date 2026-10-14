@@ -76,7 +76,48 @@
     .edit-button { background: #1769ff; }
     .delete-button { background: #c62828; }
     .order-status { font-weight: bold; }
+    
+    
+.bfs-admin-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+  padding: 12px;
+  background: #172033;
+  border-radius: 14px;
+  position: sticky;
+  top: 8px;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.bfs-admin-menu a {
+  flex: 1 1 130px;
+  text-align: center;
+  text-decoration: none;
+  color: #ffffff;
+  background: #263650;
+  padding: 12px 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.bfs-admin-menu a:hover {
+  background: #4169e1;
+}
+
+#dashboardStats,
+#productsSection,
+#ordersSection {
+  scroll-margin-top: 100px;
+}
+
+    
   </style>
+  
 </head>
 <body>
 <div class="admin">
