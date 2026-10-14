@@ -672,12 +672,22 @@
                loading="lazy">`
           : `<div class="product-info">Photo indisponible</div>`;
 
-        const priceHTML =
-          product.price !== null &&
-          product.price !== undefined &&
-          product.price !== ""
-            ? `${escapeHTML(product.price)}$`
-            : "Prix indisponible";
+        
+const rawPrice = product.price ?? product.Price ?? product.prix;
+
+const numericPrice =
+  typeof rawPrice === "string"
+    ? rawPrice.trim()
+    : rawPrice;
+
+const priceHTML =
+  numericPrice !== null &&
+  numericPrice !== undefined &&
+  numericPrice !== "" &&
+  Number.isFinite(Number(numericPrice))
+    ? `${escapeHTML(numericPrice)}$`
+    : "Prix indisponible";
+
 
         card.innerHTML = `
           ${imageHTML}
