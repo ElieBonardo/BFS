@@ -585,13 +585,16 @@ async function loadAdminOrders() {
   }
 }
 
+
 document
   .getElementById("refreshOrdersButton")
-  .addEventListener("click", loadAdminOrders);
+  .addEventListener("click", async () => {
+    const container = document.getElementById("adminOrders");
+    container.textContent = "TEST DU BOUTON : le clic fonctionne.";
 
-  alert("Prix enregistré : " + data[0].Price + "$");
-  await loadAdminProducts();
-}
+    await loadAdminOrders();
+  });
+
 
 
 
