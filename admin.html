@@ -145,20 +145,45 @@
       .bfs-panel { padding: 15px; }
       .bfs-panel h1 { font-size: 23px; }
     }
+    
+.bfs-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 20px;
+}
+
+    
   </style>
 </head>
 <body>
+
 <div class="admin">
   <div id="loginSection">
+
+    <img
+      src="logo.png"
+      alt="Logo Bonardo Fashion Store BFS"
+      class="bfs-logo"
+    >
+
     <h1>BFS Admin</h1>
     <p>Connexion administrateur</p>
+
     <label for="email">E-mail</label>
     <input type="email" id="email" autocomplete="email" required>
+
     <label for="password">Mot de passe</label>
     <input type="password" id="password" autocomplete="current-password" required>
+
     <button id="loginButton" type="button">Se connecter</button>
     <div id="message"></div>
+
   </div>
+</div>
+
 
   <div id="dashboard" style="display:none;">
     <button id="sidebarToggle" type="button" aria-label="Ouvrir le menu">☰</button>
