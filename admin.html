@@ -6,117 +6,232 @@
   <title>BFS Admin</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      color: #111;
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f1f4f9;
+    color: #172033;
+  }
+  .admin {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px;
+  }
+  #loginSection,
+  #dashboard {
+    background: #f1f4f9;
+    padding: 15px;
+    border-radius: 16px;
+    box-shadow: none;
+  }
+  #loginSection {
+    max-width: 480px;
+    margin: 35px auto;
+    background: #ffffff;
+    padding: 25px;
+    box-shadow: 0 8px 30px rgba(23, 32, 51, 0.08);
+  }
+  h1 {
+    font-size: 27px;
+    text-align: left;
+    color: #172033;
+  }
+  h2 {
+    color: #172033;
+  }
+  label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+  }
+  input,
+  textarea,
+  select {
+    width: 100%;
+    padding: 13px;
+    margin-top: 7px;
+    border: 1px solid #d8deea;
+    border-radius: 9px;
+    font-size: 16px;
+    background: #ffffff;
+    color: #172033;
+  }
+  button {
+    padding: 13px 16px;
+    margin-top: 12px;
+    border: none;
+    border-radius: 9px;
+    background: #2459d3;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  button:disabled {
+    opacity: 0.6;
+  }
+  #loginButton,
+  #logoutButton,
+  #refreshOrdersButton,
+  #addProductForm button {
+    width: 100%;
+  }
+  #message,
+  #addProductMessage {
+    margin-top: 15px;
+    text-align: center;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+  }
+  .admin-product {
+    padding: 18px;
+    margin-top: 14px;
+    background: #ffffff;
+    border: 1px solid #e5eaf2;
+    border-radius: 14px;
+    overflow-wrap: anywhere;
+    box-shadow: 0 4px 14px rgba(23, 32, 51, 0.04);
+  }
+  .admin-product img {
+    width: 100%;
+    max-width: 300px;
+    height: 220px;
+    object-fit: contain;
+    background: #ffffff;
+    border-radius: 10px;
+  }
+  .edit-button {
+    background: #1769ff;
+  }
+  .delete-button {
+    background: #c62828;
+  }
+  .order-status {
+    font-weight: bold;
+  }
+  /* Bouton du menu */
+  #sidebarToggle {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1002;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    margin: 0;
+    border-radius: 13px;
+    background: #172033;
+    color: #ffffff;
+    font-size: 30px;
+    line-height: 1;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.18);
+  }
+  /* Menu latéral */
+  .bfs-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1001;
+    width: 270px;
+    height: 100vh;
+    height: 100dvh;
+    padding: 80px 20px 25px;
+    background: #172033;
+    color: #ffffff;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 8px 0 30px rgba(0, 0, 0, 0.15);
+  }
+  #dashboard.menu-open .bfs-sidebar {
+    transform: translateX(0);
+  }
+  .bfs-sidebar h2 {
+    color: #ffffff;
+    font-size: 23px;
+  }
+  .bfs-sidebar p {
+    color: #b8c3d8;
+    line-height: 1.5;
+  }
+  .bfs-admin-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 28px 0;
+  }
+  .bfs-admin-menu a {
+    display: block;
+    padding: 14px;
+    border-radius: 10px;
+    background: #263650;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .bfs-admin-menu a:hover,
+  .bfs-admin-menu a.active {
+    background: #2459d3;
+  }
+  #logoutButton {
+    background: #b8323c;
+  }
+  /* Contenu principal */
+  #bfsAdminContent {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 55px 10px 25px;
+    transition: margin 0.25s ease;
+  }
+  .bfs-panel {
+    width: 100%;
+    padding: 22px;
+    margin-bottom: 20px;
+    background: #ffffff;
+    border: 1px solid #e5eaf2;
+    border-radius: 16px;
+    box-shadow: 0 5px 20px rgba(23, 32, 51, 0.04);
+  }
+  .bfs-panel[hidden] {
+    display: none !important;
+  }
+  .bfs-panel h1 {
+    margin-top: 0;
+  }
+  @media (min-width: 900px) {
+    #dashboard.menu-open #bfsAdminContent {
+      margin-left: 285px;
+      width: calc(100% - 285px);
     }
+  }
+  @media (max-width: 600px) {
     .admin {
-      width: 100%;
-      max-width: 600px;
-      margin: 30px auto;
-      padding: 20px;
+      padding: 7px;
     }
-    #loginSection, #dashboard {
-      background: white;
-      padding: 25px;
-      border-radius: 15px;
-      box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+    #dashboard {
+      padding: 8px;
     }
-    h1 { text-align: center; }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
+    #bfsAdminContent {
+      padding: 58px 2px 20px;
     }
-    input, textarea {
-      width: 100%;
-      padding: 13px;
-      margin-top: 7px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
+    .bfs-panel {
+      padding: 15px;
+      border-radius: 12px;
     }
-    button {
-      padding: 13px;
-      margin-top: 12px;
-      border: none;
-      border-radius: 8px;
-      background: #111;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:disabled { opacity: 0.6; }
-    #loginButton, #logoutButton, #refreshOrdersButton,
-    #addProductForm button { width: 100%; }
-    #message, #addProductMessage {
-      margin-top: 15px;
-      text-align: center;
-      font-weight: bold;
-      overflow-wrap: anywhere;
+    .bfs-panel h1 {
+      font-size: 23px;
     }
     .admin-product {
-      padding: 15px;
-      margin-top: 12px;
-      background: #f5f5f5;
-      border-radius: 10px;
-      overflow-wrap: anywhere;
+      padding: 14px;
     }
-    .admin-product img {
-      width: 100%;
-      max-width: 300px;
-      height: 220px;
-      object-fit: contain;
-      background: white;
-    }
-    .edit-button { background: #1769ff; }
-    .delete-button { background: #c62828; }
-    .order-status { font-weight: bold; }
-    
-    
-.bfs-admin-menu {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 20px 0;
-  padding: 12px;
-  background: #172033;
-  border-radius: 14px;
-  position: sticky;
-  top: 8px;
-  z-index: 100;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.bfs-admin-menu a {
-  flex: 1 1 130px;
-  text-align: center;
-  text-decoration: none;
-  color: #ffffff;
-  background: #263650;
-  padding: 12px 10px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  transition: background 0.2s ease;
-}
-
-.bfs-admin-menu a:hover {
-  background: #4169e1;
-}
-
-#dashboardStats,
-#productsSection,
-#ordersSection {
-  scroll-margin-top: 100px;
-}
-
-    
-  </style>
+  }
+</style>
   
 </head>
 <body>
@@ -132,42 +247,77 @@
     <button id="loginButton" type="button">Se connecter</button>
     <div id="message"></div>
   </div>
-  <div id="dashboard" style="display:none;">
-    <h1>BFS Admin</h1>
-    <p style="text-align:center;">Gestion de Bonardo Fashion Store</
-<nav class="bfs-admin-menu">
-  <a href="#dashboardStats">📊 Tableau de bord</a>
-  <a href="#productsSection">🛍️ Produits</a>
-  <a href="#ordersSection">📦 Commandes clients</a>
-</nav>
- 
-    <hr>
-    <h2>Ajouter un produit</h2>
-    <form id="addProductForm">
-      <label for="productName">Nom du produit</label>
-      <input type="text" id="productName" required>
-      <label for="productPrice">Prix en dollars</label>
-      <input type="number" id="productPrice" min="0" step="0.01" required>
-      <label for="productDescription">Description</label>
-      <textarea id="productDescription" rows="3"></textarea>
-      <label for="productCategory">Catégorie</label>
-      <input type="text" id="productCategory">
-      <label for="productImage">Photo du produit</label>
-      <input type="file" id="productImage" accept="image/*" required>
-      <button type="submit">Ajouter le produit</button>
-      <p id="addProductMessage"></p>
-    </form>
-    <hr>
-    <h2 id="productsSection">🛍️ Gestion des produits</h2>
-    <div id="adminProducts">Les produits apparaîtront ici.</div>
-    <hr>
-    <h2 id="ordersSection">📦 Commandes clients</h2>
-    
-<h2 id="dashboardStats">📊 Statistiques des commandes</h2>
-
-<div class="admin-product">
-  <h3>Total des commandes</h3>
-  <p id="statTotalOrders">0</p>
+ <div id="dashboard" style="display:none;">
+  <button id="sidebarToggle" type="button" aria-label="Ouvrir le menu">⋯</button>
+  <aside id="bfsSidebar" class="bfs-sidebar">
+    <h2>✨ BFS Admin</h2>
+    <p>Gestion de Bonardo Fashion Store</p>
+    <nav class="bfs-admin-menu">
+      <a href="#dashboardStats" data-panel="dashboardStats">📊 Tableau de bord</a>
+      <a href="#productsPanel" data-panel="productsPanel">🛍️ Produits</a>
+      <a href="#ordersPanel" data-panel="ordersPanel">📦 Commandes clients</a>
+    </nav>
+    <button id="logoutButton" type="button">Se déconnecter</button>
+  </aside>
+  <main id="bfsAdminContent">
+    <section id="dashboardStats" class="bfs-panel">
+      <h1>📊 Tableau de bord</h1>
+      <p>Vue générale de votre boutique BFS</p>
+      <div class="admin-product">
+        <h3>Total des commandes</h3>
+        <p id="statTotalOrders">0</p>
+      </div>
+      <div class="admin-product">
+        <h3>Nouvelles commandes</h3>
+        <p id="statNewOrders">0</p>
+      </div>
+      <div class="admin-product">
+        <h3>En préparation ou expédiées</h3>
+        <p id="statInProgressOrders">0</p>
+      </div>
+      <div class="admin-product">
+        <h3>Chiffre d’affaires</h3>
+        <p id="statRevenue">0 $</p>
+      </div>
+    </section>
+    <section id="productsPanel" class="bfs-panel" hidden>
+      <h1>🛍️ Gestion des produits</h1>
+      <h2>Ajouter un produit</h2>
+      <form id="addProductForm">
+        <label for="productName">Nom du produit</label>
+        <input type="text" id="productName" required>
+        <label for="productPrice">Prix en dollars</label>
+        <input type="number" id="productPrice" min="0" step="0.01" required>
+        <label for="productDescription">Description</label>
+        <textarea id="productDescription" rows="3"></textarea>
+        <label for="productCategory">Catégorie</label>
+        <input type="text" id="productCategory">
+        <label for="productImage">Photo du produit</label>
+        <input type="file" id="productImage" accept="image/*" required>
+        <button type="submit">Ajouter le produit</button>
+        <p id="addProductMessage"></p>
+      </form>
+      <hr>
+      <h2>Produits existants</h2>
+      <div id="adminProducts">Les produits apparaîtront ici.</div>
+    </section>
+    <section id="ordersPanel" class="bfs-panel" hidden>
+      <h1>📦 Commandes clients</h1>
+      <button id="refreshOrdersButton" type="button">
+        Actualiser les commandes
+      </button>
+      <label for="orderStatusFilter">Filtrer les commandes par statut :</label>
+      <select id="orderStatusFilter">
+        <option value="Toutes">Toutes les commandes</option>
+        <option value="Nouvelle">Nouvelles</option>
+        <option value="En préparation">En préparation</option>
+        <option value="Expédiée">Expédiées</option>
+        <option value="Livrée">Livrées</option>
+        <option value="Annulée">Annulées</option>
+      </select>
+      <div id="adminOrders">Connectez-vous pour afficher les commandes.</div>
+    </section>
+  </main>
 </div>
 
 <div class="admin-product">
