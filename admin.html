@@ -361,6 +361,32 @@ async function loadAdminOrders() {
 
     if (error) throw error;
 
+    const totalOrders = data.length;
+
+    const newOrders = data.filter(order =>
+      (order.status || "Nouvelle") === "Nouvelle"
+    ).length;
+
+    const inProgressOrders = data.filter(order =>
+      ["En préparation", "Expédiée"].includes(order.status)
+    ).length;
+
+    const revenue = data.reduce((sum, order) =>
+      sum + (Number(order.total) || 0), 0
+    );
+
+    document.getElementById("statTotalOrders").textContent =
+      totalOrders;
+
+    document.getElementById("statNewOrders").textContent =
+      newOrders;
+
+    document.getElementById("statInProgressOrders").textContent =
+      inProgressOrders;
+
+    document.getElementById("statRevenue").textContent =
+      revenue.toFixed(2) + " $";
+
     if (!data || data.length === 0) {
       container.textContent = "Aucune commande enregistrée.";
       return;
