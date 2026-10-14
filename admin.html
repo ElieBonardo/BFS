@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -6,233 +7,145 @@
   <title>BFS Admin</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-  * {
-    box-sizing: border-box;
-  }
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f1f4f9;
-    color: #172033;
-  }
-  .admin {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 15px;
-  }
-  #loginSection,
-  #dashboard {
-    background: #f1f4f9;
-    padding: 15px;
-    border-radius: 16px;
-    box-shadow: none;
-  }
-  #loginSection {
-    max-width: 480px;
-    margin: 35px auto;
-    background: #ffffff;
-    padding: 25px;
-    box-shadow: 0 8px 30px rgba(23, 32, 51, 0.08);
-  }
-  h1 {
-    font-size: 27px;
-    text-align: left;
-    color: #172033;
-  }
-  h2 {
-    color: #172033;
-  }
-  label {
-    display: block;
-    margin-top: 15px;
-    font-weight: bold;
-  }
-  input,
-  textarea,
-  select {
-    width: 100%;
-    padding: 13px;
-    margin-top: 7px;
-    border: 1px solid #d8deea;
-    border-radius: 9px;
-    font-size: 16px;
-    background: #ffffff;
-    color: #172033;
-  }
-  button {
-    padding: 13px 16px;
-    margin-top: 12px;
-    border: none;
-    border-radius: 9px;
-    background: #2459d3;
-    color: #ffffff;
-    font-size: 15px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  button:disabled {
-    opacity: 0.6;
-  }
-  #loginButton,
-  #logoutButton,
-  #refreshOrdersButton,
-  #addProductForm button {
-    width: 100%;
-  }
-  #message,
-  #addProductMessage {
-    margin-top: 15px;
-    text-align: center;
-    font-weight: bold;
-    overflow-wrap: anywhere;
-  }
-  .admin-product {
-    padding: 18px;
-    margin-top: 14px;
-    background: #ffffff;
-    border: 1px solid #e5eaf2;
-    border-radius: 14px;
-    overflow-wrap: anywhere;
-    box-shadow: 0 4px 14px rgba(23, 32, 51, 0.04);
-  }
-  .admin-product img {
-    width: 100%;
-    max-width: 300px;
-    height: 220px;
-    object-fit: contain;
-    background: #ffffff;
-    border-radius: 10px;
-  }
-  .edit-button {
-    background: #1769ff;
-  }
-  .delete-button {
-    background: #c62828;
-  }
-  .order-status {
-    font-weight: bold;
-  }
-  /* Bouton du menu */
-  #sidebarToggle {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 1002;
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    margin: 0;
-    border-radius: 13px;
-    background: #172033;
-    color: #ffffff;
-    font-size: 30px;
-    line-height: 1;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.18);
-  }
-  /* Menu latéral */
-  .bfs-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1001;
-    width: 270px;
-    height: 100vh;
-    height: 100dvh;
-    padding: 80px 20px 25px;
-    background: #172033;
-    color: #ffffff;
-    overflow-y: auto;
-    transform: translateX(-100%);
-    transition: transform 0.25s ease;
-    box-shadow: 8px 0 30px rgba(0, 0, 0, 0.15);
-  }
-  #dashboard.menu-open .bfs-sidebar {
-    transform: translateX(0);
-  }
-  .bfs-sidebar h2 {
-    color: #ffffff;
-    font-size: 23px;
-  }
-  .bfs-sidebar p {
-    color: #b8c3d8;
-    line-height: 1.5;
-  }
-  .bfs-admin-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 28px 0;
-  }
-  .bfs-admin-menu a {
-    display: block;
-    padding: 14px;
-    border-radius: 10px;
-    background: #263650;
-    color: #ffffff;
-    text-decoration: none;
-    font-size: 15px;
-    font-weight: 600;
-  }
-  .bfs-admin-menu a:hover,
-  .bfs-admin-menu a.active {
-    background: #2459d3;
-  }
-  #logoutButton {
-    background: #b8323c;
-  }
-  /* Contenu principal */
-  #bfsAdminContent {
-    width: 100%;
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 55px 10px 25px;
-    transition: margin 0.25s ease;
-  }
-  .bfs-panel {
-    width: 100%;
-    padding: 22px;
-    margin-bottom: 20px;
-    background: #ffffff;
-    border: 1px solid #e5eaf2;
-    border-radius: 16px;
-    box-shadow: 0 5px 20px rgba(23, 32, 51, 0.04);
-  }
-  .bfs-panel[hidden] {
-    display: none !important;
-  }
-  .bfs-panel h1 {
-    margin-top: 0;
-  }
-  @media (min-width: 900px) {
-    #dashboard.menu-open #bfsAdminContent {
-      margin-left: 285px;
-      width: calc(100% - 285px);
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f1f4f9;
+      color: #172033;
     }
-  }
-  @media (max-width: 600px) {
-    .admin {
-      padding: 7px;
+    .admin { max-width: 1200px; margin: auto; padding: 15px; }
+    #loginSection {
+      max-width: 480px;
+      margin: 35px auto;
+      padding: 25px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px #17203314;
     }
-    #dashboard {
-      padding: 8px;
+    #dashboard { padding: 8px; }
+    h1 { font-size: 27px; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input, textarea, select {
+      width: 100%;
+      padding: 13px;
+      margin-top: 7px;
+      border: 1px solid #d8deea;
+      border-radius: 9px;
+      font-size: 16px;
+      background: white;
+      color: #172033;
     }
-    #bfsAdminContent {
-      padding: 58px 2px 20px;
+    button {
+      padding: 13px 16px;
+      margin-top: 12px;
+      border: 0;
+      border-radius: 9px;
+      background: #2459d3;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
     }
-    .bfs-panel {
-      padding: 15px;
-      border-radius: 12px;
-    }
-    .bfs-panel h1 {
-      font-size: 23px;
+    button:disabled { opacity: .6; }
+    #loginButton, #logoutButton, #refreshOrdersButton,
+    #addProductForm button { width: 100%; }
+    #message, #addProductMessage {
+      margin-top: 15px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
     }
     .admin-product {
-      padding: 14px;
+      padding: 18px;
+      margin-top: 14px;
+      background: white;
+      border: 1px solid #e5eaf2;
+      border-radius: 14px;
+      overflow-wrap: anywhere;
     }
-  }
-</style>
-  
+    .admin-product img {
+      width: 100%;
+      max-width: 300px;
+      height: 220px;
+      object-fit: contain;
+      background: white;
+      border-radius: 10px;
+    }
+    .edit-button { background: #1769ff; }
+    #sidebarToggle {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 1002;
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      margin: 0;
+      background: #172033;
+      font-size: 30px;
+    }
+    .bfs-sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 1001;
+      width: 270px;
+      height: 100vh;
+      height: 100dvh;
+      padding: 80px 20px 25px;
+      background: #172033;
+      color: white;
+      overflow-y: auto;
+      transform: translateX(-100%);
+      transition: transform .25s ease;
+    }
+    #dashboard.menu-open .bfs-sidebar {
+      transform: translateX(0);
+    }
+    .bfs-sidebar h2 { color: white; }
+    .bfs-sidebar p { color: #b8c3d8; }
+    .bfs-admin-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 28px 0;
+    }
+    .bfs-admin-menu a {
+      display: block;
+      padding: 14px;
+      border-radius: 10px;
+      background: #263650;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .bfs-admin-menu a.active { background: #2459d3; }
+    #logoutButton { background: #b8323c; }
+    #bfsAdminContent {
+      max-width: 1000px;
+      margin: auto;
+      padding: 55px 10px 25px;
+    }
+    .bfs-panel {
+      padding: 22px;
+      margin-bottom: 20px;
+      background: white;
+      border: 1px solid #e5eaf2;
+      border-radius: 16px;
+    }
+    .bfs-panel[hidden] { display: none !important; }
+    @media (min-width: 900px) {
+      #dashboard.menu-open #bfsAdminContent {
+        margin-left: 285px;
+        max-width: none;
+      }
+    }
+    @media (max-width: 600px) {
+      .admin { padding: 7px; }
+      #bfsAdminContent { padding: 58px 2px 20px; }
+      .bfs-panel { padding: 15px; }
+      .bfs-panel h1 { font-size: 23px; }
+    }
+  </style>
 </head>
 <body>
 <div class="admin">
@@ -242,233 +155,241 @@
     <label for="email">E-mail</label>
     <input type="email" id="email" autocomplete="email" required>
     <label for="password">Mot de passe</label>
-    <input type="password" id="password"
-           autocomplete="current-password" required>
+    <input type="password" id="password" autocomplete="current-password" required>
     <button id="loginButton" type="button">Se connecter</button>
     <div id="message"></div>
   </div>
- <div id="dashboard" style="display:none;">
-  <button id="sidebarToggle" type="button" aria-label="Ouvrir le menu">⋯</button>
-  <aside id="bfsSidebar" class="bfs-sidebar">
-    <h2>✨ BFS Admin</h2>
-    <p>Gestion de Bonardo Fashion Store</p>
-    <nav class="bfs-admin-menu">
-      <a href="#dashboardStats" data-panel="dashboardStats">📊 Tableau de bord</a>
-      <a href="#productsPanel" data-panel="productsPanel">🛍️ Produits</a>
-      <a href="#ordersPanel" data-panel="ordersPanel">📦 Commandes clients</a>
-    </nav>
-    <button id="logoutButton" type="button">Se déconnecter</button>
-  </aside>
-  <main id="bfsAdminContent">
-    <section id="dashboardStats" class="bfs-panel">
-      <h1>📊 Tableau de bord</h1>
-      <p>Vue générale de votre boutique BFS</p>
-      <div class="admin-product">
-        <h3>Total des commandes</h3>
-        <p id="statTotalOrders">0</p>
-      </div>
-      <div class="admin-product">
-        <h3>Nouvelles commandes</h3>
-        <p id="statNewOrders">0</p>
-      </div>
-      <div class="admin-product">
-        <h3>En préparation ou expédiées</h3>
-        <p id="statInProgressOrders">0</p>
-      </div>
-      <div class="admin-product">
-        <h3>Chiffre d’affaires</h3>
-        <p id="statRevenue">0 $</p>
-      </div>
-    </section>
-    <section id="productsPanel" class="bfs-panel" hidden>
-      <h1>🛍️ Gestion des produits</h1>
-      <h2>Ajouter un produit</h2>
-      <form id="addProductForm">
-        <label for="productName">Nom du produit</label>
-        <input type="text" id="productName" required>
-        <label for="productPrice">Prix en dollars</label>
-        <input type="number" id="productPrice" min="0" step="0.01" required>
-        <label for="productDescription">Description</label>
-        <textarea id="productDescription" rows="3"></textarea>
-        <label for="productCategory">Catégorie</label>
-        <input type="text" id="productCategory">
-        <label for="productImage">Photo du produit</label>
-        <input type="file" id="productImage" accept="image/*" required>
-        <button type="submit">Ajouter le produit</button>
-        <p id="addProductMessage"></p>
-      </form>
-      <hr>
-      <h2>Produits existants</h2>
-      <div id="adminProducts">Les produits apparaîtront ici.</div>
-    </section>
-    <section id="ordersPanel" class="bfs-panel" hidden>
-      <h1>📦 Commandes clients</h1>
-      <button id="refreshOrdersButton" type="button">
-        Actualiser les commandes
-      </button>
-      <label for="orderStatusFilter">Filtrer les commandes par statut :</label>
-      <select id="orderStatusFilter">
-        <option value="Toutes">Toutes les commandes</option>
-        <option value="Nouvelle">Nouvelles</option>
-        <option value="En préparation">En préparation</option>
-        <option value="Expédiée">Expédiées</option>
-        <option value="Livrée">Livrées</option>
-        <option value="Annulée">Annulées</option>
-      </select>
-      <div id="adminOrders">Connectez-vous pour afficher les commandes.</div>
-    </section>
-  </main>
-</div>
 
-<div class="admin-product">
-  <h3>Nouvelles commandes</h3>
-  <p id="statNewOrders">0</p>
-</div>
+  <div id="dashboard" style="display:none;">
+    <button id="sidebarToggle" type="button" aria-label="Ouvrir le menu">☰</button>
 
-<div class="admin-product">
-  <h3>En préparation ou expédiées</h3>
-  <p id="statInProgressOrders">0</p>
-</div>
+    <aside id="bfsSidebar" class="bfs-sidebar">
+      <h2>✨ BFS Admin</h2>
+      <p>Gestion de Bonardo Fashion Store</p>
+      <nav class="bfs-admin-menu">
+        <a href="#dashboardStats" data-panel="dashboardStats">📊 Tableau de bord</a>
+        <a href="#productsPanel" data-panel="productsPanel">🛍️ Produits</a>
+        <a href="#ordersPanel" data-panel="ordersPanel">📦 Commandes clients</a>
+      </nav>
+      <button id="logoutButton" type="button">Se déconnecter</button>
+    </aside>
 
-<div class="admin-product">
-  <h3>Chiffre d’affaires</h3>
-  <p id="statRevenue">0 $</p>
-</div>
+    <main id="bfsAdminContent">
+      <section id="dashboardStats" class="bfs-panel">
+        <h1>📊 Tableau de bord</h1>
+        <p>Vue générale de votre boutique BFS</p>
+        <div class="admin-product">
+          <h3>Total des commandes</h3>
+          <p id="statTotalOrders">0</p>
+        </div>
+        <div class="admin-product">
+          <h3>Nouvelles commandes</h3>
+          <p id="statNewOrders">0</p>
+        </div>
+        <div class="admin-product">
+          <h3>En préparation ou expédiées</h3>
+          <p id="statInProgressOrders">0</p>
+        </div>
+        <div class="admin-product">
+          <h3>Chiffre d’affaires</h3>
+          <p id="statRevenue">0 $</p>
+        </div>
+      </section>
 
-<hr>
+      <section id="productsPanel" class="bfs-panel" hidden>
+        <h1>🛍️ Gestion des produits</h1>
+        <h2>Ajouter un produit</h2>
+        <form id="addProductForm">
+          <label for="productName">Nom du produit</label>
+          <input type="text" id="productName" required>
 
-    <button id="refreshOrdersButton" type="button">
-      Actualiser les commandes
-    </button>
- 
-<label for="orderStatusFilter">Filtrer les commandes par statut :</label>
-<select id="orderStatusFilter">
-  <option value="Toutes">Toutes les commandes</option>
-  <option value="Nouvelle">Nouvelles</option>
-  <option value="En préparation">En préparation</option>
-  <option value="Expédiée">Expédiées</option>
-  <option value="Livrée">Livrées</option>
-  <option value="Annulée">Annulées</option>
-</select>
+          <label for="productPrice">Prix en dollars</label>
+          <input type="number" id="productPrice" min="0" step="0.01" required>
 
-<div id="adminOrders">Connectez-vous pour afficher les commandes.</div>
-<button id="logoutButton" type="button">Se déconnecter</button>
+          <label for="productDescription">Description</label>
+          <textarea id="productDescription" rows="3"></textarea>
+
+          <label for="productCategory">Catégorie</label>
+          <input type="text" id="productCategory">
+
+          <label for="productImage">Photo du produit</label>
+          <input type="file" id="productImage" accept="image/*" required>
+
+          <button type="submit">Ajouter le produit</button>
+          <p id="addProductMessage"></p>
+        </form>
+        <hr>
+        <h2>Produits existants</h2>
+        <div id="adminProducts">Connectez-vous pour afficher les produits.</div>
+      </section>
+
+      <section id="ordersPanel" class="bfs-panel" hidden>
+        <h1>📦 Commandes clients</h1>
+        <button id="refreshOrdersButton" type="button">Actualiser les commandes</button>
+        <label for="orderStatusFilter">Filtrer les commandes par statut :</label>
+        <select id="orderStatusFilter">
+          <option value="Toutes">Toutes les commandes</option>
+          <option value="Nouvelle">Nouvelles</option>
+          <option value="En préparation">En préparation</option>
+          <option value="Expédiée">Expédiées</option>
+          <option value="Livrée">Livrées</option>
+          <option value="Annulée">Annulées</option>
+        </select>
+        <div id="adminOrders">Connectez-vous pour afficher les commandes.</div>
+      </section>
+    </main>
   </div>
 </div>
 
 <script>
 "use strict";
+
 /* 1. CONFIGURATION SUPABASE */
 const SUPABASE_URL = "https://eulbdrwxyhdvosbmxnwy.supabase.co";
-/* COLLEZ VOTRE CLE PUBLIQUE SUR CETTE LIGNE.
-   Utilisez une clé sb_publishable_... ou l'ancienne clé anon.
-   N'utilisez jamais une clé service_role ou sb_secret_... ici. */
+
+/* Remplacez cette valeur par votre clé publique Supabase actuelle. */
 const SUPABASE_KEY = "sb_publishable_LfwW5XWa2C_3WPArJvEsbQ_Klth7gNl";
+
 const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
+
 /* 2. ELEMENTS */
 const loginButton = document.getElementById("loginButton");
 const logoutButton = document.getElementById("logoutButton");
 const refreshOrdersButton = document.getElementById("refreshOrdersButton");
-const message = document.getElementById("message");
 const loginSection = document.getElementById("loginSection");
 const dashboard = document.getElementById("dashboard");
+const message = document.getElementById("message");
+
+let currentOrders = [];
+
+const statuses = [
+  "Nouvelle",
+  "En préparation",
+  "Expédiée",
+  "Livrée",
+  "Annulée"
+];
+
 /* 3. CONNEXION */
 loginButton.addEventListener("click", async () => {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
+
   if (!email || !password) {
     message.textContent = "Veuillez remplir les deux champs.";
     return;
   }
-  if (SUPABASE_KEY === "COLLEZ_VOTRE_CLE_PUBLIQUE_ICI") {
-    message.textContent = "Ajoutez d'abord votre clé publique Supabase dans le code.";
+
+  if (SUPABASE_KEY === "REMPLACEZ_PAR_VOTRE_CLE_PUBLIQUE") {
+    message.textContent = "Ajoutez votre clé publique Supabase dans le code.";
     return;
   }
+
   loginButton.disabled = true;
   message.textContent = "Connexion en cours...";
+
   try {
     const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
+      email,
+      password
     });
+
     if (error) throw error;
     if (!data.user) throw new Error("Compte administrateur introuvable.");
+
     loginSection.style.display = "none";
     dashboard.style.display = "block";
     message.textContent = "";
+
+    showPanel("dashboardStats");
     await loadAdminProducts();
     await loadAdminOrders();
   } catch (error) {
-    console.error("Erreur de connexion :", error);
+    console.error(error);
     message.textContent = "Erreur de connexion : " + error.message;
   } finally {
     loginButton.disabled = false;
   }
 });
-/* 4. CHARGER LES PRODUITS */
+
+/* 4. AFFICHAGE DES PRODUITS */
 async function loadAdminProducts() {
   const container = document.getElementById("adminProducts");
   container.textContent = "Chargement des produits...";
+
   try {
     const { data, error } = await supabaseClient
       .from("products")
       .select("*")
       .order("id", { ascending: false });
+
     if (error) throw error;
+
     if (!data || data.length === 0) {
       container.textContent = "Aucun produit disponible.";
       return;
     }
+
     container.innerHTML = "";
+
     data.forEach(product => {
-      const item = document.createElement("div");
-      item.className = "admin-product";
+      const card = document.createElement("div");
+      card.className = "admin-product";
+
       const title = document.createElement("h3");
-      title.textContent = product.Name || "Sans nom";
-      item.appendChild(title);
-      if (product.image_url) {
+      title.textContent = product.name || "Sans nom";
+      card.appendChild(title);
+
+      if (product.image) {
         const img = document.createElement("img");
-        img.src = product.image_url;
-        img.alt = product.Name || "Produit";
+        img.src = product.image;
+        img.alt = product.name || "Produit";
         img.onerror = () => {
           img.alt = "Photo indisponible";
           img.style.display = "none";
         };
-        item.appendChild(img);
+        card.appendChild(img);
       }
+
       const details = document.createElement("p");
       details.textContent =
-        `Prix : ${product.Price ?? ""}$ | Catégorie : ${product.category || ""}`;
-      item.appendChild(details);
+        `Prix : ${product.price ?? ""}$ | Catégorie : ${product.category || ""}`;
+      card.appendChild(details);
+
       const description = document.createElement("p");
-      description.textContent = product.Description || "";
-      item.appendChild(description);
+      description.textContent = product.description || "";
+      card.appendChild(description);
+
       const editButton = document.createElement("button");
       editButton.type = "button";
       editButton.className = "edit-button";
       editButton.textContent = "Modifier";
+
       editButton.addEventListener("click", async () => {
-        const newName = prompt("Nom du produit :", product.Name || "");
+        const newName = prompt("Nom du produit :", product.name || "");
         if (newName === null) return;
-        const newPriceText = prompt("Prix en dollars :", product.Price ?? "");
-        if (newPriceText === null) return;
-        const newPrice = Number(newPriceText);
-        if (!newName.trim() || newPriceText.trim() === "" ||
+
+        const priceText = prompt("Prix en dollars :", product.price ?? "");
+        if (priceText === null) return;
+
+        const newPrice = Number(priceText);
+        if (!newName.trim() || priceText.trim() === "" ||
             !Number.isFinite(newPrice) || newPrice < 0) {
           alert("Vérifiez le nom et le prix.");
           return;
         }
+
         const newDescription = prompt(
-          "Description :", product.Description || ""
+          "Description :", product.description || ""
         );
         if (newDescription === null) return;
-        const newCategory = prompt(
-          "Catégorie :", product.category || ""
-        );
+
+        const newCategory = prompt("Catégorie :", product.category || "");
         if (newCategory === null) return;
+
         await saveProductChanges(
           product.id,
           newName.trim(),
@@ -477,54 +398,37 @@ async function loadAdminProducts() {
           newCategory.trim()
         );
       });
-      item.appendChild(editButton);
-      /* La suppression dépend de vos règles Supabase.
-         Si elle est interdite par RLS, le produit restera présent. */
-      const deleteButton = document.createElement("button");
-      deleteButton.type = "button";
-      deleteButton.className = "delete-button";
-      deleteButton.textContent = "Supprimer";
-      deleteButton.addEventListener("click", async () => {
-        if (!confirm(`Supprimer définitivement « ${product.Name || "ce produit"} » ?`)) {
-          return;
-        }
-        const { error } = await supabaseClient
-          .from("products")
-          .delete()
-          .eq("id", product.id);
-        if (error) {
-          alert("Suppression refusée ou impossible : " + error.message);
-          return;
-        }
-        alert("Produit supprimé.");
-        await loadAdminProducts();
-      });
-      item.appendChild(deleteButton);
-      container.appendChild(item);
+
+      card.appendChild(editButton);
+      container.appendChild(card);
     });
   } catch (error) {
     console.error("Erreur produits :", error);
     container.textContent = "Erreur de chargement des produits : " + error.message;
   }
 }
-/* 5. MODIFIER UN PRODUIT */
+
+/* 5. MODIFICATION DES PRODUITS */
 async function saveProductChanges(id, name, price, description, category) {
   try {
     const { data, error } = await supabaseClient
       .from("products")
       .update({
-        Name: name,
-        Price: price,
-        Description: description,
-        category: category
+        name,
+        price,
+        description,
+        category
       })
       .eq("id", id)
       .select();
+
     if (error) throw error;
+
     if (!data || data.length === 0) {
       alert("Aucun produit modifié. Vérifiez la règle RLS UPDATE.");
       return;
     }
+
     alert("Produit modifié avec succès.");
     await loadAdminProducts();
   } catch (error) {
@@ -532,23 +436,78 @@ async function saveProductChanges(id, name, price, description, category) {
     alert("Erreur de modification : " + error.message);
   }
 }
-/* 6. CHARGER LES COMMANDES */
 
-/* 6. CHARGER LES COMMANDES */
+/* 6. AJOUT D'UN PRODUIT AVEC PHOTO */
+document.getElementById("addProductForm").addEventListener("submit", async event => {
+  event.preventDefault();
 
+  const status = document.getElementById("addProductMessage");
+  const name = document.getElementById("productName").value.trim();
+  const priceText = document.getElementById("productPrice").value;
+  const price = Number(priceText);
+  const description = document.getElementById("productDescription").value.trim();
+  const category = document.getElementById("productCategory").value.trim();
+  const file = document.getElementById("productImage").files[0];
+
+  if (!name || !file || priceText.trim() === "" ||
+      !Number.isFinite(price) || price < 0) {
+    status.textContent = "Remplissez le nom, le prix et choisissez une photo.";
+    return;
+  }
+
+  status.textContent = "Enregistrement en cours...";
+
+  try {
+    const extension = file.name.includes(".")
+      ? file.name.split(".").pop().toLowerCase()
+      : "jpg";
+
+    const filePath = `${Date.now()}-${crypto.randomUUID()}.${extension}`;
+
+    const { data: uploaded, error: uploadError } = await supabaseClient
+      .storage
+      .from("products")
+      .upload(filePath, file, {
+        contentType: file.type || "image/jpeg",
+        upsert: false
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data: publicData } = supabaseClient
+      .storage
+      .from("products")
+      .getPublicUrl(uploaded.path);
+
+    if (!publicData || !publicData.publicUrl) {
+      throw new Error("Impossible de récupérer l'adresse publique de la photo.");
+    }
+
+    const { error: insertError } = await supabaseClient
+      .from("products")
+      .insert({
+        name,
+        price,
+        description,
+        category,
+        image: publicData.publicUrl
+      });
+
+    if (insertError) throw insertError;
+
+    status.textContent = "Produit ajouté avec succès.";
+    document.getElementById("addProductForm").reset();
+    await loadAdminProducts();
+  } catch (error) {
+    console.error("Erreur ajout produit :", error);
+    status.textContent = "Erreur : " + error.message;
+  }
+});
+
+/* 7. CHARGEMENT DES COMMANDES ET STATISTIQUES */
 async function loadAdminOrders() {
   const container = document.getElementById("adminOrders");
-  const filter = document.getElementById("orderStatusFilter");
-
   container.textContent = "Chargement des commandes...";
-
-  const statuts = [
-    "Nouvelle",
-    "En préparation",
-    "Expédiée",
-    "Livrée",
-    "Annulée"
-  ];
 
   try {
     const { data, error } = await supabaseClient
@@ -558,184 +517,29 @@ async function loadAdminOrders() {
 
     if (error) throw error;
 
-    const totalOrders = data.length;
-
-    const newOrders = data.filter(order =>
-      (order.status || "Nouvelle") === "Nouvelle"
-    ).length;
-
-    const inProgressOrders = data.filter(order =>
-      ["En préparation", "Expédiée"].includes(order.status)
-    ).length;
-
-    const revenue = data.reduce((sum, order) =>
-      sum + (Number(order.total) || 0), 0
-    );
+    currentOrders = data || [];
 
     document.getElementById("statTotalOrders").textContent =
-      totalOrders;
+      currentOrders.length;
 
     document.getElementById("statNewOrders").textContent =
-      newOrders;
+      currentOrders.filter(order =>
+        (order.status || "Nouvelle") === "Nouvelle"
+      ).length;
 
     document.getElementById("statInProgressOrders").textContent =
-      inProgressOrders;
+      currentOrders.filter(order =>
+        ["En préparation", "Expédiée"].includes(order.status)
+      ).length;
+
+    const revenue = currentOrders.reduce(
+      (sum, order) => sum + (Number(order.total) || 0), 0
+    );
 
     document.getElementById("statRevenue").textContent =
       revenue.toFixed(2) + " $";
 
-    if (!data || data.length === 0) {
-      container.textContent = "Aucune commande enregistrée.";
-      return;
-    }
-
-    function afficherCommandes() {
-      const filtre = filter ? filter.value : "Toutes";
-
-      const commandes = filtre === "Toutes"
-        ? data
-        : data.filter(order =>
-            (order.status || "Nouvelle") === filtre
-          );
-
-      container.innerHTML = "";
-
-      if (commandes.length === 0) {
-        container.textContent =
-          "Aucune commande avec ce statut.";
-        return;
-      }
-
-      commandes.forEach(order => {
-        const card = document.createElement("div");
-        card.className = "admin-product";
-
-        const title = document.createElement("h3");
-        title.textContent = "Commande #" + order.id;
-        card.appendChild(title);
-
-        const date = document.createElement("p");
-        const parsedDate = new Date(order.created_at);
-        date.textContent = "Date : " +
-          (Number.isNaN(parsedDate.getTime())
-            ? "Date inconnue"
-            : parsedDate.toLocaleString("fr-FR"));
-        card.appendChild(date);
-
-        const total = document.createElement("p");
-        total.textContent = "Total : " + order.total + "$";
-        card.appendChild(total);
-
-        const statusLabel = document.createElement("label");
-        statusLabel.textContent = "Statut de la commande : ";
-
-        const statusSelect = document.createElement("select");
-        const currentStatus = order.status || "Nouvelle";
-        const options = [...statuts];
-
-        if (!options.includes(currentStatus)) {
-          options.unshift(currentStatus);
-        }
-
-        options.forEach(statut => {
-          const option = document.createElement("option");
-          option.value = statut;
-          option.textContent = statut;
-          statusSelect.appendChild(option);
-        });
-
-        statusSelect.value = currentStatus;
-        statusLabel.appendChild(statusSelect);
-        card.appendChild(statusLabel);
-
-        const statusMessage = document.createElement("p");
-        card.appendChild(statusMessage);
-
-        statusSelect.addEventListener("change", async () => {
-          const previousStatus = order.status || "Nouvelle";
-          const newStatus = statusSelect.value;
-
-          statusSelect.disabled = true;
-          statusMessage.textContent = "Enregistrement...";
-
-          try {
-            const { error: updateError } = await supabaseClient
-              .from("orders")
-              .update({ status: newStatus })
-              .eq("id", order.id);
-
-            if (updateError) throw updateError;
-
-            order.status = newStatus;
-            statusMessage.textContent = "Statut enregistré.";
-
-            if (filter && filter.value !== "Toutes" &&
-                filter.value !== newStatus) {
-              afficherCommandes();
-            }
-          } catch (err) {
-            console.error("Erreur de modification du statut :", err);
-            statusSelect.value = previousStatus;
-            statusMessage.textContent = "Erreur : " + err.message;
-          } finally {
-            statusSelect.disabled = false;
-          }
-        });
-
-        const itemsTitle = document.createElement("p");
-        itemsTitle.textContent = "Articles commandés :";
-        card.appendChild(itemsTitle);
-
-        const list = document.createElement("ul");
-        let items = order.items;
-
-        if (typeof items === "string") {
-          try {
-            items = JSON.parse(items);
-          } catch {
-            items = null;
-          }
-        }
-
-        if (Array.isArray(items)) {
-          items.forEach(product => {
-            const li = document.createElement("li");
-
-            if (product && typeof product === "object") {
-              const name = product.name ||
-                product.Name ||
-                product.title ||
-                product.product_name ||
-                "Article";
-
-              const quantity = product.quantity ??
-                product.qty ??
-                product.count ??
-                1;
-
-              li.textContent = name + " × " + quantity;
-            } else {
-              li.textContent = String(product);
-            }
-
-            list.appendChild(li);
-          });
-        } else {
-          list.textContent = "Détails des articles indisponibles.";
-        }
-
-        card.appendChild(list);
-        container.appendChild(card);
-      });
-    }
-
-    if (filter && !filter.dataset.filterReady) {
-      filter.addEventListener("change", afficherCommandes);
-      filter.dataset.filterReady = "true";
-    }
-
-    afficherCommandes();
-
+    renderOrders();
   } catch (error) {
     console.error("Erreur commandes :", error);
     container.textContent =
@@ -743,8 +547,139 @@ async function loadAdminOrders() {
   }
 }
 
+/* 8. AFFICHAGE ET FILTRAGE DES COMMANDES */
+function renderOrders() {
+  const container = document.getElementById("adminOrders");
+  const filter = document.getElementById("orderStatusFilter").value;
 
-/* 7. ACTUALISER LES COMMANDES */
+  const orders = filter === "Toutes"
+    ? currentOrders
+    : currentOrders.filter(order =>
+        (order.status || "Nouvelle") === filter
+      );
+
+  container.innerHTML = "";
+
+  if (orders.length === 0) {
+    container.textContent = "Aucune commande pour ce statut.";
+    return;
+  }
+
+  orders.forEach(order => {
+    const card = document.createElement("div");
+    card.className = "admin-product";
+
+    const title = document.createElement("h3");
+    title.textContent = "Commande #" + order.id;
+    card.appendChild(title);
+
+    const date = document.createElement("p");
+    const parsedDate = new Date(order.created_at);
+    date.textContent = "Date : " +
+      (Number.isNaN(parsedDate.getTime())
+        ? "Date inconnue"
+        : parsedDate.toLocaleString("fr-FR"));
+    card.appendChild(date);
+
+    const total = document.createElement("p");
+    total.textContent = "Total : " + (order.total ?? 0) + "$";
+    card.appendChild(total);
+
+    const statusLabel = document.createElement("label");
+    statusLabel.textContent = "Statut de la commande :";
+
+    const statusSelect = document.createElement("select");
+    const currentStatus = order.status || "Nouvelle";
+
+    statuses.forEach(status => {
+      const option = document.createElement("option");
+      option.value = status;
+      option.textContent = status;
+      statusSelect.appendChild(option);
+    });
+
+    if (!statuses.includes(currentStatus)) {
+      const option = document.createElement("option");
+      option.value = currentStatus;
+      option.textContent = currentStatus;
+      statusSelect.appendChild(option);
+    }
+
+    statusSelect.value = currentStatus;
+    statusLabel.appendChild(statusSelect);
+    card.appendChild(statusLabel);
+
+    const statusMessage = document.createElement("p");
+    card.appendChild(statusMessage);
+
+    statusSelect.addEventListener("change", async () => {
+      const previousStatus = order.status || "Nouvelle";
+      const newStatus = statusSelect.value;
+
+      statusSelect.disabled = true;
+      statusMessage.textContent = "Enregistrement...";
+
+      try {
+        const { error } = await supabaseClient
+          .from("orders")
+          .update({ status: newStatus })
+          .eq("id", order.id);
+
+        if (error) throw error;
+
+        order.status = newStatus;
+        statusMessage.textContent = "Statut enregistré.";
+        await loadAdminOrders();
+      } catch (error) {
+        statusSelect.value = previousStatus;
+        statusMessage.textContent = "Erreur : " + error.message;
+      } finally {
+        statusSelect.disabled = false;
+      }
+    });
+
+    const itemsTitle = document.createElement("p");
+    itemsTitle.textContent = "Articles commandés :";
+    card.appendChild(itemsTitle);
+
+    const list = document.createElement("ul");
+    let items = order.items;
+
+    if (typeof items === "string") {
+      try {
+        items = JSON.parse(items);
+      } catch {
+        items = null;
+      }
+    }
+
+    if (Array.isArray(items)) {
+      items.forEach(product => {
+        const li = document.createElement("li");
+
+        if (product && typeof product === "object") {
+          const name = product.name || product.Name ||
+            product.title || product.product_name || "Article";
+          const quantity = product.quantity ?? product.qty ?? product.count ?? 1;
+          li.textContent = name + " × " + quantity;
+        } else {
+          li.textContent = String(product);
+        }
+
+        list.appendChild(li);
+      });
+    } else {
+      list.textContent = "Détails des articles indisponibles.";
+    }
+
+    card.appendChild(list);
+    container.appendChild(card);
+  });
+}
+
+document.getElementById("orderStatusFilter")
+  .addEventListener("change", renderOrders);
+
 refreshOrdersButton.addEventListener("click", async () => {
   refreshOrdersButton.disabled = true;
   try {
@@ -753,107 +688,56 @@ refreshOrdersButton.addEventListener("click", async () => {
     refreshOrdersButton.disabled = false;
   }
 });
-/* 8. DECONNEXION */
+
+/* 9. DECONNEXION */
 logoutButton.addEventListener("click", async () => {
   logoutButton.disabled = true;
+
   try {
     const { error } = await supabaseClient.auth.signOut();
     if (error) throw error;
+
     dashboard.style.display = "none";
+    dashboard.classList.remove("menu-open");
     loginSection.style.display = "block";
     document.getElementById("password").value = "";
     message.textContent = "";
   } catch (error) {
-    console.error("Erreur déconnexion :", error);
     alert("Erreur de déconnexion : " + error.message);
   } finally {
     logoutButton.disabled = false;
   }
 });
-/* 9. AJOUTER UN PRODUIT AVEC PHOTO */
-document.getElementById("addProductForm").addEventListener("submit", async event => {
-  event.preventDefault();
-  const status = document.getElementById("addProductMessage");
-  const name = document.getElementById("productName").value.trim();
-  const priceText = document.getElementById("productPrice").value;
-  const price = Number(priceText);
-  const description = document.getElementById("productDescription").value.trim();
-  const category = document.getElementById("productCategory").value.trim();
-  const file = document.getElementById("productImage").files[0];
-  if (!name || !file || priceText.trim() === "" ||
-      !Number.isFinite(price) || price < 0) {
-    status.textContent = "Remplissez le nom, le prix et choisissez une photo.";
-    return;
-  }
-  status.textContent = "Enregistrement en cours...";
-  try {
-    const extension = file.name.includes(".")
-      ? file.name.split(".").pop().toLowerCase()
-      : "jpg";
-    const filePath = `${Date.now()}-${crypto.randomUUID()}.${extension}`;
-    const { data: uploaded, error: uploadError } = await supabaseClient
-      .storage
-      .from("products")
-      .upload(filePath, file, {
-        contentType: file.type || "image/jpeg",
-        upsert: false
-      });
-    if (uploadError) throw uploadError;
-    const { data: publicData } = supabaseClient
-      .storage
-      .from("products")
-      .getPublicUrl(uploaded.path);
-    if (!publicData || !publicData.publicUrl) {
-      throw new Error("Impossible de récupérer l'adresse publique de la photo.");
-    }
-    const { error: insertError } = await supabaseClient
-      .from("products")
-      .insert({
-        Name: name,
-        Price: price,
-        Description: description,
-        category: category,
-        image_url: publicData.publicUrl
-      });
-    if (insertError) throw insertError;
-    status.textContent = "Produit ajouté avec succès.";
-    document.getElementById("addProductForm").reset();
-    await loadAdminProducts();
-  } catch (error) {
-    console.error("Erreur ajout produit :", error);
-    status.textContent = "Erreur : " + error.message;
-  }
-});
-/* MENU LATERAL BFS */
+
+/* 10. MENU LATERAL */
 const sidebarToggle = document.getElementById("sidebarToggle");
-const bfsMenuLinks = document.querySelectorAll(".bfs-admin-menu a");
-const bfsPanels = document.querySelectorAll(".bfs-panel");
-function showBfsPanel(panelId) {
-  bfsPanels.forEach(panel => {
+const menuLinks = document.querySelectorAll(".bfs-admin-menu a");
+const panels = document.querySelectorAll(".bfs-panel");
+
+function showPanel(panelId) {
+  panels.forEach(panel => {
     panel.hidden = panel.id !== panelId;
   });
-  bfsMenuLinks.forEach(link => {
-    const isActive = link.dataset.panel === panelId;
-    link.classList.toggle("active", isActive);
+
+  menuLinks.forEach(link => {
+    link.classList.toggle("active", link.dataset.panel === panelId);
   });
 }
-if (sidebarToggle) {
-  sidebarToggle.addEventListener("click", () => {
-    dashboard.classList.toggle("menu-open");
-  });
-}
-bfsMenuLinks.forEach(link => {
+
+sidebarToggle.addEventListener("click", () => {
+  dashboard.classList.toggle("menu-open");
+});
+
+menuLinks.forEach(link => {
   link.addEventListener("click", event => {
     event.preventDefault();
-    showBfsPanel(link.dataset.panel);
+    showPanel(link.dataset.panel);
     dashboard.classList.remove("menu-open");
   });
 });
-/* Afficher uniquement le tableau de bord au démarrage */
-showBfsPanel("dashboardStats");
-/* Masquer complètement l'administration avant connexion */
-dashboard.style.display = "none";
 
+showPanel("dashboardStats");
+dashboard.style.display = "none";
 </script>
 </body>
 </html>
