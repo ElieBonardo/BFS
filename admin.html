@@ -340,12 +340,12 @@ async function loadAdminProducts() {
       card.className = "admin-product";
 
       const title = document.createElement("h3");
-      title.textContent = product.name || "Sans nom";
+      title.textContent = product.Name || "Sans nom";
       card.appendChild(title);
 
-      if (product.image) {
+      if (product.image_url) {
         const img = document.createElement("img");
-        img.src = product.image;
+        img.src = product.image_url;
         img.alt = product.name || "Produit";
         img.onerror = () => {
           img.alt = "Photo indisponible";
@@ -356,7 +356,7 @@ async function loadAdminProducts() {
 
       const details = document.createElement("p");
       details.textContent =
-        `Prix : ${product.price ?? ""}$ | Catégorie : ${product.category || ""}`;
+       `Prix : ${product.Price ?? ""}$ | Catégorie : ${product.category || ""}`;
       card.appendChild(details);
 
       const description = document.createElement("p");
