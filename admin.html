@@ -824,6 +824,34 @@ document.getElementById("addProductForm").addEventListener("submit", async event
     status.textContent = "Erreur : " + error.message;
   }
 });
+/* MENU LATERAL BFS */
+const sidebarToggle = document.getElementById("sidebarToggle");
+const bfsMenuLinks = document.querySelectorAll(".bfs-admin-menu a");
+const bfsPanels = document.querySelectorAll(".bfs-panel");
+function showBfsPanel(panelId) {
+  bfsPanels.forEach(panel => {
+    panel.hidden = panel.id !== panelId;
+  });
+  bfsMenuLinks.forEach(link => {
+    link.classList.toggle("active", link.dataset.panel === panelId);
+  });
+  if (window.innerWidth < 900) {
+    dashboard.classList.remove("menu-open");
+  }
+}
+if (sidebarToggle) {
+  sidebarToggle.addEventListener("click", () => {
+    dashboard.classList.toggle("menu-open");
+  });
+}
+bfsMenuLinks.forEach(link => {
+  link.addEventListener("click", event => {
+    event.preventDefault();
+    showBfsPanel(link.dataset.panel);
+  });
+});
+showBfsPanel("dashboardStats");
+
 </script>
 </body>
 </html>
