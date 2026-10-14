@@ -315,6 +315,7 @@ loginButton.addEventListener("click", async () => {
   }
 });
 
+
 /* 4. AFFICHAGE DES PRODUITS */
 async function loadAdminProducts() {
   const container = document.getElementById("adminProducts");
@@ -346,7 +347,7 @@ async function loadAdminProducts() {
       if (product.image_url) {
         const img = document.createElement("img");
         img.src = product.image_url;
-        img.alt = product.name || "Produit";
+        img.alt = product.Name || "Produit";
         img.onerror = () => {
           img.alt = "Photo indisponible";
           img.style.display = "none";
@@ -356,111 +357,95 @@ async function loadAdminProducts() {
 
       const details = document.createElement("p");
       details.textContent =
-       `Prix : ${product.Price ?? ""}$ | Catégorie : ${product.category || ""}`;
+        `Prix : ${product.Price ?? ""}$ | Catégorie : ${product.category || ""}`;
       card.appendChild(details);
 
       const description = document.createElement("p");
       description.textContent = product.description || "";
       card.appendChild(description);
 
-      
-const editButton = document.createElement("button");
-editButton.type = "button";
-editButton.className = "edit-button";
-editButton.textContent = "Modifier";
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.className = "edit-button";
+      editButton.textContent = "Modifier";
 
-editButton.addEventListener("click", async () => {
-  const newName = prompt("Nom du produit :", product.Name || "");
-  if (newName === null) return;
+      editButton.addEventListener("click", async () => {
+        const newName = prompt("Nom du produit :", product.Name || "");
+        if (newName === null) return;
 
-  const priceText = prompt("Prix en dollars :", product.Price ?? "");
-  if (priceText === null) return;
+        const priceText = prompt("Prix en dollars :", product.Price ?? "");
+        if (priceText === null) return;
 
-  const newPrice = Number(priceText);
-  if (!newName.trim() || priceText.trim() === "" ||
-      !Number.isFinite(newPrice) || newPrice < 0) {
-    alert("Vérifiez le nom et le prix.");
-    return;
-  });
+        const newPrice = Number(priceText);
 
+        if (
+          !newName.trim() ||
+          priceText.trim() === "" ||
+          !Number.isFinite(newPrice) ||
+          newPrice < 0
+        ) {
+          alert("Vérifiez le nom et le prix.");
+          return;
+        }
 
-        
-const editButton = document.createElement("button");
-editButton.type = "button";
-editButton.className = "edit-button";
-editButton.textContent = "Modifier";
+        const newDescription = prompt(
+          "Description :", product.description || ""
+        );
+        if (newDescription === null) return;
 
-editButton.addEventListener("click", async () => {
-  const newName = prompt("Nom du produit :", product.Name || "");
-  if (newName === null) return;
+        const newCategory = prompt(
+          "Catégorie :", product.category || ""
+        );
+        if (newCategory === null) return;
 
-  const priceText = prompt("Prix en dollars :", product.Price ?? "");
-  if (priceText === null) return;
+        await saveProductChanges(
+          product.id,
+          newName.trim(),
+          newPrice,
+          newDescription.trim(),
+          newCategory.trim()
+        );
+      });
 
-  const newPrice = Number(priceText);
-  if (!newName.trim() || priceText.trim() === "" ||
-      !Number.isFinite(newPrice) || newPrice < 0) {
-    alert("Vérifiez le nom et le prix.");
-    return;
-  }
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.textContent = "Supprimer";
+      deleteButton.style.backgroundColor = "#b91c1c";
+      deleteButton.style.color = "white";
+      deleteButton.style.marginLeft = "8px";
 
-  const newDescription = prompt(
-    "Description :", product.description || ""
-  );
-  if (newDescription === null) return;
+      deleteButton.addEventListener("click", async () => {
+        const confirmed = confirm(
+          `Supprimer définitivement "${product.Name}" ?`
+        );
 
-  const newCategory = prompt("Catégorie :", product.category || "");
-  if (newCategory === null) return;
+        if (!confirmed) return;
 
-  await saveProductChanges(
-    product.id,
-    newName.trim(),
-    newPrice,
-    newDescription.trim(),
-    newCategory.trim()
-  );
-});
+        const { error } = await supabaseClient
+          .from("products")
+          .delete()
+          .eq("id", product.id);
 
-const deleteButton = document.createElement("button");
-deleteButton.type = "button";
-deleteButton.textContent = "Supprimer";
-deleteButton.style.backgroundColor = "#b91c1c";
-deleteButton.style.color = "white";
-deleteButton.style.marginLeft = "8px";
+        if (error) {
+          alert("Suppression impossible : " + error.message);
+          return;
+        }
 
-deleteButton.addEventListener("click", async () => {
-  const confirmed = confirm(
-    `Voulez-vous vraiment supprimer le produit "${product.Name}" ? Cette action est définitive.`
-  );
-
-  if (!confirmed) return;
-
-  const { error } = await supabaseClient
-    .from("products")
-    .delete()
-    .eq("id", product.id);
-
-  if (error) {
-    alert("Suppression impossible : " + error.message);
-    return;
-  }
-
-  alert("Produit supprimé avec succès.");
-  await loadAdminProducts();
-});
-
-card.appendChild(editButton);
-card.appendChild(deleteButton);
-
+        alert("Produit supprimé avec succès.");
+        await loadAdminProducts();
+      });
 
       card.appendChild(editButton);
+      card.appendChild(deleteButton);
       container.appendChild(card);
     });
   } catch (error) {
     console.error("Erreur produits :", error);
-    container.textContent = "Erreur de chargement des produits : " + error.message;
+    container.textContent =
+      "Erreur de chargement des produits : " + error.message;
   }
 }
+
 
 /* 5. MODIFICATION DES PRODUITS */
 async function saveProductChanges(id, name, price, description, category) {
@@ -544,7 +529,7 @@ document.getElementById("addProductForm").addEventListener("submit", async event
         price,
         description,
         category,
-        image: publicData.publicUrl
+        image_url: publicData.publicUrl
       });
 
     if (insertError) throw insertError;
