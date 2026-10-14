@@ -308,6 +308,22 @@ async function loadAdminOrders() {
       .select("id, created_at, items, total, status")
       .order("created_at", { ascending: false });
     if (error) throw error;
+    async function loadAdminOrders() {
+  const container = document.getElementById("adminOrders");
+  container.textContent = "Chargement des commandes...";
+  const statuts = [
+    "Nouvelle",
+    "En préparation",
+    "Expédiée",
+    "Livrée",
+    "Annulée"
+  ];
+  try {
+    const { data, error } = await supabaseClient
+      .from("orders")
+      .select("id, created_at, items, total, status")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
     if (!data || data.length === 0) {
       container.textContent = "Aucune commande enregistrée.";
       return;
@@ -329,10 +345,51 @@ async function loadAdminOrders() {
       const total = document.createElement("p");
       total.textContent = "Total : " + order.total + "$";
       card.appendChild(total);
-      const status = document.createElement("p");
-      status.className = "order-status";
-      status.textContent = "Statut : " + (order.status || "En attente");
-      card.appendChild(status);
+      const statusLabel = document.createElement("label");
+      statusLabel.textContent = "Statut de la commande : ";
+      const statusSelect = document.createElement("select");
+      statusSelect.setAttribute(
+        "aria-label",
+        "Statut de la commande " + order.id
+      );
+      const statutActuel = order.status || "Nouvelle";
+      const options = [...statuts];
+      if (!options.includes(statutActuel)) {
+        options.unshift(statutActuel);
+      }
+      options.forEach(statut => {
+        const option = document.createElement("option");
+        option.value = statut;
+        option.textContent = statut;
+        statusSelect.appendChild(option);
+      });
+      statusSelect.value = statutActuel;
+      statusLabel.appendChild(statusSelect);
+      card.appendChild(statusLabel);
+      const statusMessage = document.createElement("p");
+      statusMessage.textContent = "";
+      card.appendChild(statusMessage);
+      statusSelect.addEventListener("change", async () => {
+        const nouveauStatut = statusSelect.value;
+        statusSelect.disabled = true;
+        statusMessage.textContent = "Enregistrement...";
+        try {
+          const { error: updateError } = await supabaseClient
+            .from("orders")
+            .update({ status: nouveauStatut })
+            .eq("id", order.id);
+          if (updateError) throw updateError;
+          order.status = nouveauStatut;
+          statusMessage.textContent = "Statut enregistré.";
+        } catch (err) {
+          console.error("Erreur de modification du statut :", err);
+          statusMessage.textContent =
+            "Erreur : " + err.message;
+          statusSelect.value = statutActuel;
+        } finally {
+          statusSelect.disabled = false;
+        }
+      });
       const itemsTitle = document.createElement("p");
       itemsTitle.textContent = "Articles commandés :";
       card.appendChild(itemsTitle);
@@ -349,10 +406,15 @@ async function loadAdminOrders() {
         items.forEach(product => {
           const li = document.createElement("li");
           if (product && typeof product === "object") {
-            const productName = product.name || product.Name ||
-              product.title || product.product_name || "Article";
-            const quantity = product.quantity ?? product.qty ??
-              product.count ?? 1;
+            const productName = product.name ||
+              product.Name ||
+              product.title ||
+              product.product_name ||
+              "Article";
+            const quantity = product.quantity ??
+              product.qty ??
+              product.count ??
+              1;
             li.textContent = productName + " × " + quantity;
           } else {
             li.textContent = String(product);
@@ -367,7 +429,8 @@ async function loadAdminOrders() {
     });
   } catch (error) {
     console.error("Erreur commandes :", error);
-    container.textContent = "Erreur de chargement des commandes : " + error.message;
+    container.textContent =
+      "Erreur de chargement des commandes : " + error.message;
   }
 }
 /* 7. ACTUALISER LES COMMANDES */
