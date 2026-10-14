@@ -334,9 +334,11 @@
       message.textContent = "";
 
 
-      await loadAdminProducts();
-      await loadAdminOrders();
+            await loadAdminProducts();
 
+      loadAdminOrders().catch(error => {
+        console.error("Erreur commandes :", error);
+      });
     }
   );
 
