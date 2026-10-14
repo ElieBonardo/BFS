@@ -118,10 +118,22 @@
     <button id="refreshOrdersButton" type="button">
       Actualiser les commandes
     </button>
-    <div id="adminOrders">Connectez-vous pour afficher les commandes.</div>
-    <button id="logoutButton" type="button">Se déconnecter</button>
+ 
+<label for="orderStatusFilter">Filtrer les commandes par statut :</label>
+<select id="orderStatusFilter">
+  <option value="Toutes">Toutes les commandes</option>
+  <option value="Nouvelle">Nouvelles</option>
+  <option value="En préparation">En préparation</option>
+  <option value="Expédiée">Expédiées</option>
+  <option value="Livrée">Livrées</option>
+  <option value="Annulée">Annulées</option>
+</select>
+
+<div id="adminOrders">Connectez-vous pour afficher les commandes.</div>
+<button id="logoutButton" type="button">Se déconnecter</button>
   </div>
 </div>
+
 <script>
 "use strict";
 /* 1. CONFIGURATION SUPABASE */
@@ -301,8 +313,11 @@ async function saveProductChanges(id, name, price, description, category) {
 /* 6. CHARGER LES COMMANDES */
 
 /* 6. CHARGER LES COMMANDES */
+
 async function loadAdminOrders() {
   const container = document.getElementById("adminOrders");
+  const filter = document.getElementById("orderStatusFilter");
+
   container.textContent = "Chargement des commandes...";
 
   const statuts = [
@@ -326,130 +341,160 @@ async function loadAdminOrders() {
       return;
     }
 
-    container.innerHTML = "";
+    function afficherCommandes() {
+      const filtre = filter ? filter.value : "Toutes";
 
-    data.forEach(order => {
-      const card = document.createElement("div");
-      card.className = "admin-product";
+      const commandes = filtre === "Toutes"
+        ? data
+        : data.filter(order =>
+            (order.status || "Nouvelle") === filtre
+          );
 
-      const title = document.createElement("h3");
-      title.textContent = "Commande #" + order.id;
-      card.appendChild(title);
+      container.innerHTML = "";
 
-      const date = document.createElement("p");
-      const parsedDate = new Date(order.created_at);
-      date.textContent = "Date : " +
-        (Number.isNaN(parsedDate.getTime())
-          ? "Date inconnue"
-          : parsedDate.toLocaleString("fr-FR"));
-      card.appendChild(date);
-
-      const total = document.createElement("p");
-      total.textContent = "Total : " + order.total + "$";
-      card.appendChild(total);
-
-      const statusLabel = document.createElement("label");
-      statusLabel.textContent = "Statut de la commande : ";
-
-      const statusSelect = document.createElement("select");
-      const currentStatus = order.status || "Nouvelle";
-      const options = [...statuts];
-
-      if (!options.includes(currentStatus)) {
-        options.unshift(currentStatus);
+      if (commandes.length === 0) {
+        container.textContent =
+          "Aucune commande avec ce statut.";
+        return;
       }
 
-      options.forEach(statut => {
-        const option = document.createElement("option");
-        option.value = statut;
-        option.textContent = statut;
-        statusSelect.appendChild(option);
-      });
+      commandes.forEach(order => {
+        const card = document.createElement("div");
+        card.className = "admin-product";
 
-      statusSelect.value = currentStatus;
-      statusLabel.appendChild(statusSelect);
-      card.appendChild(statusLabel);
+        const title = document.createElement("h3");
+        title.textContent = "Commande #" + order.id;
+        card.appendChild(title);
 
-      const statusMessage = document.createElement("p");
-      card.appendChild(statusMessage);
+        const date = document.createElement("p");
+        const parsedDate = new Date(order.created_at);
+        date.textContent = "Date : " +
+          (Number.isNaN(parsedDate.getTime())
+            ? "Date inconnue"
+            : parsedDate.toLocaleString("fr-FR"));
+        card.appendChild(date);
 
-      statusSelect.addEventListener("change", async () => {
-        const previousStatus = order.status || "Nouvelle";
-        const newStatus = statusSelect.value;
+        const total = document.createElement("p");
+        total.textContent = "Total : " + order.total + "$";
+        card.appendChild(total);
 
-        statusSelect.disabled = true;
-        statusMessage.textContent = "Enregistrement...";
+        const statusLabel = document.createElement("label");
+        statusLabel.textContent = "Statut de la commande : ";
 
-        try {
-          const { error: updateError } = await supabaseClient
-            .from("orders")
-            .update({ status: newStatus })
-            .eq("id", order.id);
+        const statusSelect = document.createElement("select");
+        const currentStatus = order.status || "Nouvelle";
+        const options = [...statuts];
 
-          if (updateError) throw updateError;
-
-          order.status = newStatus;
-          statusMessage.textContent = "Statut enregistré.";
-        } catch (err) {
-          console.error("Erreur de modification du statut :", err);
-          statusSelect.value = previousStatus;
-          statusMessage.textContent = "Erreur : " + err.message;
-        } finally {
-          statusSelect.disabled = false;
+        if (!options.includes(currentStatus)) {
+          options.unshift(currentStatus);
         }
-      });
 
-      const itemsTitle = document.createElement("p");
-      itemsTitle.textContent = "Articles commandés :";
-      card.appendChild(itemsTitle);
-
-      const list = document.createElement("ul");
-      let items = order.items;
-
-      if (typeof items === "string") {
-        try {
-          items = JSON.parse(items);
-        } catch {
-          items = null;
-        }
-      }
-
-      if (Array.isArray(items)) {
-        items.forEach(product => {
-          const li = document.createElement("li");
-
-          if (product && typeof product === "object") {
-            const name = product.name ||
-              product.Name ||
-              product.title ||
-              product.product_name ||
-              "Article";
-
-            const quantity = product.quantity ??
-              product.qty ??
-              product.count ??
-              1;
-
-            li.textContent = name + " × " + quantity;
-          } else {
-            li.textContent = String(product);
-          }
-
-          list.appendChild(li);
+        options.forEach(statut => {
+          const option = document.createElement("option");
+          option.value = statut;
+          option.textContent = statut;
+          statusSelect.appendChild(option);
         });
-      } else {
-        list.textContent = "Détails des articles indisponibles.";
-      }
 
-      card.appendChild(list);
-      container.appendChild(card);
-    });
+        statusSelect.value = currentStatus;
+        statusLabel.appendChild(statusSelect);
+        card.appendChild(statusLabel);
+
+        const statusMessage = document.createElement("p");
+        card.appendChild(statusMessage);
+
+        statusSelect.addEventListener("change", async () => {
+          const previousStatus = order.status || "Nouvelle";
+          const newStatus = statusSelect.value;
+
+          statusSelect.disabled = true;
+          statusMessage.textContent = "Enregistrement...";
+
+          try {
+            const { error: updateError } = await supabaseClient
+              .from("orders")
+              .update({ status: newStatus })
+              .eq("id", order.id);
+
+            if (updateError) throw updateError;
+
+            order.status = newStatus;
+            statusMessage.textContent = "Statut enregistré.";
+
+            if (filter && filter.value !== "Toutes" &&
+                filter.value !== newStatus) {
+              afficherCommandes();
+            }
+          } catch (err) {
+            console.error("Erreur de modification du statut :", err);
+            statusSelect.value = previousStatus;
+            statusMessage.textContent = "Erreur : " + err.message;
+          } finally {
+            statusSelect.disabled = false;
+          }
+        });
+
+        const itemsTitle = document.createElement("p");
+        itemsTitle.textContent = "Articles commandés :";
+        card.appendChild(itemsTitle);
+
+        const list = document.createElement("ul");
+        let items = order.items;
+
+        if (typeof items === "string") {
+          try {
+            items = JSON.parse(items);
+          } catch {
+            items = null;
+          }
+        }
+
+        if (Array.isArray(items)) {
+          items.forEach(product => {
+            const li = document.createElement("li");
+
+            if (product && typeof product === "object") {
+              const name = product.name ||
+                product.Name ||
+                product.title ||
+                product.product_name ||
+                "Article";
+
+              const quantity = product.quantity ??
+                product.qty ??
+                product.count ??
+                1;
+
+              li.textContent = name + " × " + quantity;
+            } else {
+              li.textContent = String(product);
+            }
+
+            list.appendChild(li);
+          });
+        } else {
+          list.textContent = "Détails des articles indisponibles.";
+        }
+
+        card.appendChild(list);
+        container.appendChild(card);
+      });
+    }
+
+    if (filter && !filter.dataset.filterReady) {
+      filter.addEventListener("change", afficherCommandes);
+      filter.dataset.filterReady = "true";
+    }
+
+    afficherCommandes();
+
   } catch (error) {
     console.error("Erreur commandes :", error);
     container.textContent =
       "Erreur de chargement des commandes : " + error.message;
   }
 }
+
 
 /* 7. ACTUALISER LES COMMANDES */
 refreshOrdersButton.addEventListener("click", async () => {
