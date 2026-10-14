@@ -50,10 +50,9 @@
       font-weight: bold;
       cursor: pointer;
     }
+    button:disabled { opacity: 0.6; }
     #loginButton, #logoutButton, #refreshOrdersButton,
-    #addProductForm button {
-      width: 100%;
-    }
+    #addProductForm button { width: 100%; }
     #message, #addProductMessage {
       margin-top: 15px;
       text-align: center;
@@ -74,7 +73,7 @@
       object-fit: contain;
       background: white;
     }
-    .edit-button { background: #1769ff; margin-right: 5px; }
+    .edit-button { background: #1769ff; }
     .delete-button { background: #c62828; }
     .order-status { font-weight: bold; }
   </style>
@@ -82,19 +81,18 @@
 <body>
 <div class="admin">
   <div id="loginSection">
-    <h1>🔐 BFS Admin</h1>
+    <h1>BFS Admin</h1>
     <p>Connexion administrateur</p>
     <label for="email">E-mail</label>
-    <input type="email" id="email" placeholder="Votre e-mail"
-           autocomplete="email" required>
+    <input type="email" id="email" autocomplete="email" required>
     <label for="password">Mot de passe</label>
-    <input type="password" id="password" placeholder="Votre mot de passe"
+    <input type="password" id="password"
            autocomplete="current-password" required>
     <button id="loginButton" type="button">Se connecter</button>
     <div id="message"></div>
   </div>
   <div id="dashboard" style="display:none;">
-    <h1>🏪 BFS Admin</h1>
+    <h1>BFS Admin</h1>
     <p style="text-align:center;">Gestion de Bonardo Fashion Store</p>
     <hr>
     <h2>Ajouter un produit</h2>
@@ -114,13 +112,13 @@
     </form>
     <hr>
     <h2>Gestion des produits</h2>
-    <div id="adminProducts">Chargement des produits...</div>
+    <div id="adminProducts">Les produits apparaîtront ici.</div>
     <hr>
     <h2>Commandes clients</h2>
     <button id="refreshOrdersButton" type="button">
       Actualiser les commandes
     </button>
-    <div id="adminOrders">Les commandes apparaîtront ici.</div>
+    <div id="adminOrders">Connectez-vous pour afficher les commandes.</div>
     <button id="logoutButton" type="button">Se déconnecter</button>
   </div>
 </div>
@@ -128,22 +126,22 @@
 "use strict";
 /* 1. CONFIGURATION SUPABASE */
 const SUPABASE_URL = "https://eulbdrwxyhdvosbmxnwy.supabase.co";
-/* Remplace UNIQUEMENT le texte ci-dessous par ta clé publique anon
-   ou publishable actuelle. Ne mets jamais une clé service_role ici. */
-const SUPABASE_KEY = "sb_publishable_LfwW5XWa2C_3WPArJvEsbQ_Klth7gNl
-";
+/* COLLEZ VOTRE CLE PUBLIQUE SUR CETTE LIGNE.
+   Utilisez une clé sb_publishable_... ou l'ancienne clé anon.
+   N'utilisez jamais une clé service_role ou sb_secret_... ici. */
+const SUPABASE_KEY = "sb_publishable_LfwW5XWa2C_3WPArJvEsbQ_Klth7gNl";
 const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
-/* 2. ELEMENTS DE LA PAGE */
+/* 2. ELEMENTS */
 const loginButton = document.getElementById("loginButton");
 const logoutButton = document.getElementById("logoutButton");
 const refreshOrdersButton = document.getElementById("refreshOrdersButton");
 const message = document.getElementById("message");
 const loginSection = document.getElementById("loginSection");
 const dashboard = document.getElementById("dashboard");
-/* 3. CONNEXION ADMINISTRATEUR */
+/* 3. CONNEXION */
 loginButton.addEventListener("click", async () => {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
@@ -151,17 +149,19 @@ loginButton.addEventListener("click", async () => {
     message.textContent = "Veuillez remplir les deux champs.";
     return;
   }
+  if (SUPABASE_KEY === "sb_publishable_LfwW5XWa2C_3WPArJvEsbQ_Klth7gNl") {
+    message.textContent = "Ajoutez d'abord votre clé publique Supabase dans le code.";
+    return;
+  }
   loginButton.disabled = true;
   message.textContent = "Connexion en cours...";
   try {
     const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password
+      email: email,
+      password: password
     });
     if (error) throw error;
-    if (!data.user) {
-      throw new Error("Compte administrateur introuvable.");
-    }
+    if (!data.user) throw new Error("Compte administrateur introuvable.");
     loginSection.style.display = "none";
     dashboard.style.display = "block";
     message.textContent = "";
@@ -169,7 +169,7 @@ loginButton.addEventListener("click", async () => {
     await loadAdminOrders();
   } catch (error) {
     console.error("Erreur de connexion :", error);
-    message.textContent = "Erreur : " + error.message;
+    message.textContent = "Erreur de connexion : " + error.message;
   } finally {
     loginButton.disabled = false;
   }
@@ -224,7 +224,7 @@ async function loadAdminProducts() {
         const newPrice = Number(newPriceText);
         if (!newName.trim() || newPriceText.trim() === "" ||
             !Number.isFinite(newPrice) || newPrice < 0) {
-          alert("Vérifie le nom et le prix.");
+          alert("Vérifiez le nom et le prix.");
           return;
         }
         const newDescription = prompt(
@@ -244,6 +244,8 @@ async function loadAdminProducts() {
         );
       });
       item.appendChild(editButton);
+      /* La suppression dépend de vos règles Supabase.
+         Si elle est interdite par RLS, le produit restera présent. */
       const deleteButton = document.createElement("button");
       deleteButton.type = "button";
       deleteButton.className = "delete-button";
@@ -257,7 +259,7 @@ async function loadAdminProducts() {
           .delete()
           .eq("id", product.id);
         if (error) {
-          alert("Erreur de suppression : " + error.message);
+          alert("Suppression refusée ou impossible : " + error.message);
           return;
         }
         alert("Produit supprimé.");
@@ -286,7 +288,7 @@ async function saveProductChanges(id, name, price, description, category) {
       .select();
     if (error) throw error;
     if (!data || data.length === 0) {
-      alert("Aucun produit modifié. Vérifie la règle RLS UPDATE dans Supabase.");
+      alert("Aucun produit modifié. Vérifiez la règle RLS UPDATE.");
       return;
     }
     alert("Produit modifié avec succès.");
@@ -347,11 +349,11 @@ async function loadAdminOrders() {
         items.forEach(product => {
           const li = document.createElement("li");
           if (product && typeof product === "object") {
-            const name = product.name || product.Name ||
+            const productName = product.name || product.Name ||
               product.title || product.product_name || "Article";
             const quantity = product.quantity ?? product.qty ??
               product.count ?? 1;
-            li.textContent = name + " × " + quantity;
+            li.textContent = productName + " × " + quantity;
           } else {
             li.textContent = String(product);
           }
@@ -368,7 +370,7 @@ async function loadAdminOrders() {
     container.textContent = "Erreur de chargement des commandes : " + error.message;
   }
 }
-/* 7. BOUTON ACTUALISER LES COMMANDES */
+/* 7. ACTUALISER LES COMMANDES */
 refreshOrdersButton.addEventListener("click", async () => {
   refreshOrdersButton.disabled = true;
   try {
@@ -394,7 +396,7 @@ logoutButton.addEventListener("click", async () => {
     logoutButton.disabled = false;
   }
 });
-/* 9. AJOUTER UN PRODUIT AVEC SA PHOTO */
+/* 9. AJOUTER UN PRODUIT AVEC PHOTO */
 document.getElementById("addProductForm").addEventListener("submit", async event => {
   event.preventDefault();
   const status = document.getElementById("addProductMessage");
@@ -406,7 +408,7 @@ document.getElementById("addProductForm").addEventListener("submit", async event
   const file = document.getElementById("productImage").files[0];
   if (!name || !file || priceText.trim() === "" ||
       !Number.isFinite(price) || price < 0) {
-    status.textContent = "Remplis le nom, le prix et choisis une photo.";
+    status.textContent = "Remplissez le nom, le prix et choisissez une photo.";
     return;
   }
   status.textContent = "Enregistrement en cours...";
