@@ -241,9 +241,19 @@
       background: white;
       border-radius: 10px;
     }
-    .edit-button {
-      background: #1769ff;
-    }
+   .edit-button {
+  background: #1769ff;
+  margin-right: 8px;
+}
+
+.delete-button {
+  background: #b8323c;
+  color: white;
+}
+
+.delete-button:hover {
+  background: #8f2029;
+}
     #addProductForm button,
     #refreshOrdersButton {
       width: 100%;
@@ -513,69 +523,91 @@ loginButton.addEventListener("click", async () => {
   }
 });
 /* 5. CHARGEMENT DES PRODUITS */
+
 async function loadAdminProducts() {
   const container = document.getElementById("adminProducts");
   container.textContent = "Chargement des produits...";
+
   try {
     const { data, error } = await supabaseClient
       .from("products")
       .select("*")
       .order("id", { ascending: false });
+
     if (error) throw error;
+
     const products = data || [];
+
     document.getElementById("statTotalProducts").textContent =
       products.length;
+
     if (products.length === 0) {
       container.textContent = "Aucun produit disponible.";
       return;
     }
+
     container.innerHTML = "";
+
     products.forEach(product => {
       const card = document.createElement("div");
       card.className = "admin-product";
+
+      // Accepte plusieurs variantes du nom de colonne.
+      const productName =
+        product.name ?? product.Name ?? product.nom ?? "";
+
       const title = document.createElement("h3");
-      title.textContent = product.name || "Sans nom";
+      title.textContent = productName || "Nom du produit indisponible";
       card.appendChild(title);
-      const imageUrl = product.image || product.image_url;
+
+      const imageUrl = String(
+        product.image ?? product.image_url ?? ""
+      ).trim().replace(/(%0A|%0D)+$/i, "");
+
       if (imageUrl) {
         const img = document.createElement("img");
         img.src = imageUrl;
-        img.alt = product.name || "Produit";
+        img.alt = productName || "Produit BFS";
         img.loading = "lazy";
+
         img.onerror = () => {
-          img.alt = "Photo indisponible";
           img.style.display = "none";
         };
+
         card.appendChild(img);
       } else {
         const noImage = document.createElement("p");
         noImage.textContent = "Aucune photo enregistrée.";
         card.appendChild(noImage);
       }
+
       const details = document.createElement("p");
       details.textContent =
         `Prix : ${product.price ?? ""}$ | Catégorie : ${product.category || ""}`;
       card.appendChild(details);
+
       const description = document.createElement("p");
       description.textContent = product.description || "";
       card.appendChild(description);
-      /* MODIFICATION DU PRODUIT */
+
+      // Bouton Modifier : conserve la fonction existante.
       const editButton = document.createElement("button");
       editButton.type = "button";
       editButton.className = "edit-button";
       editButton.textContent = "Modifier";
+
       editButton.addEventListener("click", async () => {
-        const newName = prompt(
-          "Nom du produit :",
-          product.name || ""
-        );
+        const newName = prompt("Nom du produit :", productName);
         if (newName === null) return;
+
         const priceText = prompt(
           "Prix en dollars :",
           product.price ?? ""
         );
         if (priceText === null) return;
+
         const newPrice = Number(priceText);
+
         if (
           !newName.trim() ||
           priceText.trim() === "" ||
@@ -585,16 +617,19 @@ async function loadAdminProducts() {
           alert("Vérifiez le nom et le prix.");
           return;
         }
+
         const newDescription = prompt(
           "Description :",
           product.description || ""
         );
         if (newDescription === null) return;
+
         const newCategory = prompt(
           "Catégorie :",
           product.category || ""
         );
         if (newCategory === null) return;
+
         await saveProductChanges(
           product.id,
           newName.trim(),
@@ -603,7 +638,54 @@ async function loadAdminProducts() {
           newCategory.trim()
         );
       });
+
       card.appendChild(editButton);
+
+      // Bouton Supprimer : la base vérifie les droits.
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "delete-button";
+      deleteButton.textContent = "Supprimer";
+
+      deleteButton.addEventListener("click", async () => {
+        const confirmed = confirm(
+          `Voulez-vous vraiment supprimer "${productName || "ce produit"}" ? Cette action est définitive.`
+        );
+
+        if (!confirmed) return;
+
+        deleteButton.disabled = true;
+        deleteButton.textContent = "Suppression...";
+
+        try {
+          const { data: deletedRows, error: deleteError } =
+            await supabaseClient
+              .from("products")
+              .delete()
+              .eq("id", product.id)
+              .select("id");
+
+          if (deleteError) throw deleteError;
+
+          if (!deletedRows || deletedRows.length === 0) {
+            throw new Error(
+              "Aucun produit supprimé. Vérifiez la permission DELETE dans Supabase."
+            );
+          }
+
+          alert("Produit supprimé avec succès.");
+          await loadAdminProducts();
+        } catch (error) {
+          console.error("Erreur de suppression :", error);
+          alert(
+            "Suppression impossible : " + error.message
+          );
+          deleteButton.disabled = false;
+          deleteButton.textContent = "Supprimer";
+        }
+      });
+
+      card.appendChild(deleteButton);
       container.appendChild(card);
     });
   } catch (error) {
@@ -612,6 +694,7 @@ async function loadAdminProducts() {
       "Erreur de chargement des produits : " + error.message;
   }
 }
+
 /* 6. ENREGISTREMENT DES MODIFICATIONS */
 async function saveProductChanges(
   id,
