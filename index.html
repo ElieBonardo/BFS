@@ -405,22 +405,40 @@
   }
 
   // Les noms de colonnes correspondent à public.products.
-  function productKey(product) {
-    return String(product.id ?? product.name);
+  
+function productKey(product) {
+  return String(
+    product.id ??
+    product.name ??
+    product.Name ??
+    product.nom ??
+    product.title ??
+    ""
+  );
+}
+
+function productPrice(product) {
+  const rawPrice =
+    product.price ??
+    product.Price ??
+    product.prix;
+
+  if (rawPrice === null || rawPrice === undefined) {
+    return 0;
   }
 
-  function productPrice(product) {
-    const price = Number(product.price);
+  const normalizedPrice =
+    typeof rawPrice === "string"
+      ? rawPrice.trim().replace(",", ".")
+      : rawPrice;
 
-    return Number.isFinite(price) && price >= 0
-      ? price
-      : 0;
-  }
+  const price = Number(normalizedPrice);
 
-  function formatPrice(value) {
-    return Number(value).toLocaleString("fr-FR", {
-      maximumFractionDigits: 2
-    });
+  return Number.isFinite(price) && price >= 0
+    ? price
+    : 0;
+}
+
   }
 
   function addToCart(key) {
