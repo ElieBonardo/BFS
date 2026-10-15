@@ -581,14 +581,26 @@ async function loadAdminProducts() {
         card.appendChild(noImage);
       }
 
-      const details = document.createElement("p");
-      details.textContent =
-        `Prix : ${product.price ?? ""}$ | Catégorie : ${product.category || ""}`;
-      card.appendChild(details);
+      
+const details = document.createElement("p");
 
-      const description = document.createElement("p");
-      description.textContent = product.description || "";
-      card.appendChild(description);
+const rawPrice = product.price ?? product.Price ?? product.prix;
+const displayPrice =
+  rawPrice !== null &&
+  rawPrice !== undefined &&
+  String(rawPrice).trim() !== ""
+    ? `${String(rawPrice).trim()}$`
+    : "Prix indisponible";
+
+details.textContent =
+  `Prix : ${displayPrice} | Catégorie : ${product.category || ""}`;
+
+card.appendChild(details);
+
+const description = document.createElement("p");
+description.textContent = product.description || "";
+card.appendChild(description);
+
 
       // Bouton Modifier : conserve la fonction existante.
       const editButton = document.createElement("button");
