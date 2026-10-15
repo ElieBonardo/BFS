@@ -693,7 +693,9 @@ const priceHTML =
           ${imageHTML}
 
           <div class="product-info">
-            <h2>${escapeHTML(product.name || "Produit")}</h2>
+        
+<h2>${escapeHTML(product.name ?? product.Name ?? product.nom ?? product.title ?? "Produit")}</h2>
+
 
             <div class="description">
               ${escapeHTML(product.description || "")}
