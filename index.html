@@ -413,10 +413,23 @@
       </button>
     </section>
 
-    <div class="section-heading">
-      <p class="section-kicker">La sélection BFS</p>
-      <h2 class="section-title">Nos produits</h2>
-    </div>
+   <div class="section-heading">
+  <p class="section-kicker">La sélection BFS</p>
+  <h2 class="section-title">Nos produits</h2>
+</div>
+
+<div class="product-tools">
+  <input
+    id="product-search"
+    type="search"
+    placeholder="Rechercher un produit..."
+    aria-label="Rechercher un produit"
+  >
+
+  <select id="category-filter" aria-label="Filtrer par catégorie">
+    <option value="">Toutes les catégories</option>
+  </select>
+</div>
 
     <div id="products" class="products" aria-live="polite">
       <div class="loading">Chargement des produits...</div>
@@ -449,13 +462,19 @@
     window.bfsProducts = [];
 
     const productsContainer =
-      document.getElementById("products");
+  document.getElementById("products");
 
-    const cartItemsContainer =
-      document.getElementById("cart-items");
+const cartItemsContainer =
+  document.getElementById("cart-items");
 
-    function escapeHTML(value) {
-      return String(value ?? "").replace(/[&<>"']/g, char => ({
+const productSearch =
+  document.getElementById("product-search");
+
+const categoryFilter =
+  document.getElementById("category-filter");
+
+function escapeHTML(value) {
+      return String(va=lue ?? "").replace(/[&<>"']/g, char => ({
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
@@ -764,113 +783,158 @@
       }
     );
 
-    async function loadProducts() {
-      productsContainer.innerHTML =
-        '<div class="loading">Chargement des produits...</div>';
+    function renderProducts() {
+  const products = window.bfsProducts || [];
 
-      try {
-        const { data, error } = await supabaseClient
-          .from("products")
-          .select("*")
-          .order("id", { ascending: false });
+  const searchText = (productSearch.value || "")
+    .trim()
+    .toLowerCase();
 
-        if (error) {
-          console.error("Erreur Supabase :", error);
+  const selectedCategory = categoryFilter.value;
 
-          productsContainer.textContent =
-            "Impossible de charger les produits. Vérifiez la connexion Supabase.";
+  const filteredProducts = products.filter(product => {
+    const name = productName(product);
+    const description = productDescription(product);
+    const category = productCategory(product);
 
-          return;
-        }
+    const searchableText =
+      `${name} ${description} ${category}`.toLowerCase();
 
-        if (!data || data.length === 0) {
-          productsContainer.textContent =
-            "Aucun produit disponible pour le moment.";
+    const matchesSearch = searchableText.includes(searchText);
 
-          return;
-        }
+    const matchesCategory =
+      !selectedCategory || category === selectedCategory;
 
-        window.bfsProducts = data;
-        productsContainer.innerHTML = "";
+    return matchesSearch && matchesCategory;
+  });
 
-        data.forEach(product => {
-          const key = productKey(product);
-          const name = productName(product);
-          const imageURL = productImageURL(product);
-          const price = productPrice(product);
+  productsContainer.innerHTML = "";
 
-          const card = document.createElement("article");
-          card.className = "product";
+  if (filteredProducts.length === 0) {
+    productsContainer.innerHTML =
+      '<div class="loading">Aucun produit trouvé.</div>';
+    return;
+  }
 
-          const imageWrap = document.createElement("div");
-          imageWrap.className = "product-image-wrap";
+  filteredProducts.forEach(product => {
+    const key = productKey(product);
+    const name = productName(product);
+    const imageURL = productImageURL(product);
+    const price = productPrice(product);
 
-          if (imageURL) {
-            const image = document.createElement("img");
+    const card = document.createElement("article");
+    card.className = "product";
 
-            image.src = imageURL;
-            image.alt = name;
-            image.loading = "lazy";
-            image.decoding = "async";
+    const imageWrap = document.createElement("div");
+    imageWrap.className = "product-image-wrap";
 
-            image.addEventListener("error", () => {
-              imageWrap.innerHTML =
-                '<div class="image-placeholder">Photo indisponible</div>';
+    if (imageURL) {
+      const image = document.createElement("img");
 
-              console.error(
-                "Erreur de chargement de la photo :",
-                imageURL
-              );
-            }, { once: true });
+      image.src = imageURL;
+      image.alt = name;
+      image.loading = "lazy";
+      image.decoding = "async";
 
-            imageWrap.appendChild(image);
-          } else {
-            imageWrap.innerHTML =
-              '<div class="image-placeholder">Aucune photo renseignée</div>';
-          }
+      image.addEventListener("error", () => {
+        imageWrap.innerHTML =
+          '<div class="image-placeholder">Photo indisponible</div>';
 
-          const info = document.createElement("div");
-          info.className = "product-info";
+        console.error("Erreur de chargement de la photo :", imageURL);
+      }, { once: true });
 
-          info.innerHTML = `
-            <h2>${escapeHTML(name)}</h2>
-
-            <div class="description">
-              ${escapeHTML(productDescription(product))}
-            </div>
-
-            <div class="price">
-              ${formatPrice(price)}$
-            </div>
-
-            <div class="category">
-              ${escapeHTML(productCategory(product))}
-            </div>
-
-            <button
-              class="add-button"
-              type="button">
-              Ajouter au panier
-            </button>
-          `;
-
-          info.querySelector(".add-button").addEventListener(
-            "click",
-            () => addToCart(key)
-          );
-
-          card.appendChild(imageWrap);
-          card.appendChild(info);
-
-          productsContainer.appendChild(card);
-        });
-      } catch (error) {
-        console.error("Erreur de chargement des produits :", error);
-
-        productsContainer.textContent =
-          "Une erreur est survenue lors du chargement des produits.";
-      }
+      imageWrap.appendChild(image);
+    } else {
+      imageWrap.innerHTML =
+        '<div class="image-placeholder">Aucune photo renseignée</div>';
     }
+
+    const info = document.createElement("div");
+    info.className = "product-info";
+
+    info.innerHTML = `
+      <h2>${escapeHTML(name)}</h2>
+
+      <div class="description">
+        ${escapeHTML(productDescription(product))}
+      </div>
+
+      <div class="price">
+        ${formatPrice(price)}$
+      </div>
+
+      <div class="category">
+        ${escapeHTML(productCategory(product))}
+      </div>
+
+      <button class="add-button" type="button">
+        Ajouter au panier
+      </button>
+    `;
+
+    info.querySelector(".add-button").addEventListener(
+      "click",
+      () => addToCart(key)
+    );
+
+    card.appendChild(imageWrap);
+    card.appendChild(info);
+
+    productsContainer.appendChild(card);
+  });
+}
+
+async function loadProducts() {
+  productsContainer.innerHTML =
+    '<div class="loading">Chargement des produits...</div>';
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("products")
+      .select("*")
+      .order("id", { ascending: false });
+
+    if (error) {
+      console.error("Erreur Supabase :", error);
+
+      productsContainer.textContent =
+        "Impossible de charger les produits. Vérifiez la connexion Supabase.";
+
+      return;
+    }
+
+    window.bfsProducts = data || [];
+
+    categoryFilter.innerHTML =
+      '<option value="">Toutes les catégories</option>';
+
+    const categories = [
+      ...new Set(
+        window.bfsProducts
+          .map(product => productCategory(product).trim())
+          .filter(Boolean)
+      )
+    ].sort((a, b) => a.localeCompare(b));
+
+    categories.forEach(category => {
+      const option = document.createElement("option");
+      option.value = category;
+      option.textContent = category;
+      categoryFilter.appendChild(option);
+    });
+
+    renderProducts();
+
+  } catch (error) {
+    console.error("Erreur de chargement des produits :", error);
+
+    productsContainer.textContent =
+      "Une erreur est survenue lors du chargement des produits.";
+  }
+}
+
+productSearch.addEventListener("input", renderProducts);
+categoryFilter.addEventListener("change", renderProducts);
 
     renderCart();
     loadProducts();
