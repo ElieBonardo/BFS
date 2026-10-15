@@ -925,12 +925,11 @@ async function loadProducts() {
 
     renderProducts();
 
-  } catch (error) {
-    console.error("Erreur de chargement des produits :", error);
+ } catch (error) {
+  console.error("Erreur de chargement des produits :", error);
 
-    productsContainer.textContent =
-      "Une erreur est survenue lors du chargement des produits.";
-  }
+  productsContainer.textContent =
+    "Erreur : " + (error.message || String(error));
 }
 
 productSearch.addEventListener("input", renderProducts);
