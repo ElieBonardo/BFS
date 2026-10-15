@@ -411,14 +411,22 @@ function productKey(product) {
   return String(product.id ?? product.name);
 }
 
-function productPrice(product) {
-  const price = Number(product.price);
 
-  return Number.isFinite(price) && price >= 0
-    ? price
-    : 0;
+function productName(product) {
+  return String(
+    product.name ??
+    product.Name ??
+    product.nom ??
+    product.title ??
+    "Produit"
+  );
 }
 
+function productPrice(product) {
+  const rawPrice =
+    product.price ??
+    product.Price ??
+    product.prix;
 
   if (rawPrice === null || rawPrice === undefined) {
     return 0;
@@ -426,7 +434,7 @@ function productPrice(product) {
 
   const normalizedPrice =
     typeof rawPrice === "string"
-      ? rawPrice.trim().replace(",", ".")
+      ? rawPrice.trim().replace(/\s/g, "").replace(",", ".")
       : rawPrice;
 
   const price = Number(normalizedPrice);
@@ -436,7 +444,6 @@ function productPrice(product) {
     : 0;
 }
 
-  }
 
   function addToCart(key) {
     const existing = cart.get(key);
