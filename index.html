@@ -667,10 +667,10 @@ function addToCart(key) {
 
     try {
       const { data, error } = await supabaseClient
-        .from("products")
-        .select("*")
-        .order("id", { ascending: false });
-
+  .from("products")
+  .select("*")
+  .order("id", { ascending: false })
+  .abortSignal(AbortSignal.timeout(10000));
       if (error) {
         console.error("Erreur Supabase :", error);
         productsContainer.textContent =
