@@ -445,26 +445,37 @@ function productPrice(product) {
 }
 
 
-  function addToCart(key) {
-    const existing = cart.get(key);
+  
+function addToCart(key) {
+  const product = window.bfsProducts.find(
+    item => productKey(item) === key
+  );
 
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      const product = window.bfsProducts.find(
-        item => productKey(item) === key
-      );
-
-      if (!product) return;
-
-      cart.set(key, {
-        product,
-        quantity: 1
-      });
-    }
-
-    renderCart();
+  if (!product) {
+    console.error("Produit introuvable dans BFS :", key);
+    return;
   }
+
+  console.log("Produit ajouté au panier :", product);
+
+  const existing = cart.get(key);
+
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    cart.set(key, {
+      product: {
+        ...product,
+        name: product.name ?? product.Name ?? product.nom ?? product.title,
+        price: product.price ?? product.Price ?? product.prix
+      },
+      quantity: 1
+    });
+  }
+
+  renderCart();
+}
+
 
   function changeQuantity(key, amount) {
     const item = cart.get(key);
