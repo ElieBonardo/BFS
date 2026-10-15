@@ -406,22 +406,19 @@
 
   // Les noms de colonnes correspondent à public.products.
   
+
 function productKey(product) {
-  return String(
-    product.id ??
-    product.name ??
-    product.Name ??
-    product.nom ??
-    product.title ??
-    ""
-  );
+  return String(product.id ?? product.name);
 }
 
 function productPrice(product) {
-  const rawPrice =
-    product.price ??
-    product.Price ??
-    product.prix;
+  const price = Number(product.price);
+
+  return Number.isFinite(price) && price >= 0
+    ? price
+    : 0;
+}
+
 
   if (rawPrice === null || rawPrice === undefined) {
     return 0;
