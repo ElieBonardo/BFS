@@ -797,23 +797,32 @@ document
         Cette version enregistre l'URL dans la colonne image.
         Vérifie que cette colonne existe dans public.products.
       */
-      const { error: insertError } = await supabaseClient
-        .from("products")
-        .insert({
-          name,
-          price,
-          description,
-          category,
-          image: publicData.publicUrl
-        });
-      if (insertError) throw insertError;
-      status.textContent = "Produit ajouté avec succès.";
-      document.getElementById("addProductForm").reset();
-      await loadAdminProducts();
-    } catch (error) {
-      console.error("Erreur ajout produit :", error);
-      status.textContent = "Erreur : " + error.message;
-    }
+      const stock = Number(document.getElementById("productStock").value);
+      const { error: insertError } = await   .from("products")
+
+  .insert({
+
+    name,
+
+    price,
+
+    description,
+
+    category,
+
+    stock,
+
+    image: publicData.publicUrl
+
+  });
+
+if (insertError) throw insertError;
+
+status.textContent = "Produit ajouté avec succès.";
+
+document.getElementById("addProductForm").reset();
+
+await loadAdminProducts();
   });
 /* 8. CHARGEMENT DES COMMANDES ET STATISTIQUES */
 async function loadAdminOrders() {
