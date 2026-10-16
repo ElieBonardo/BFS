@@ -889,10 +889,11 @@ async function loadProducts() {
     '<div class="loading">Chargement des produits...</div>';
 
   try {
-    const { data, error } = await supabaseClient
-      .from("products")
-      .select("*")
-      .order("id", { ascending: false });
+   const { data, error } = await supabaseClient
+  .from("products")
+  .select("*")
+  .order("id", { ascending: false })
+  .abortSignal(AbortSignal.timeout(15000));
 
     if (error) {
       console.error("Erreur Supabase :", error);
