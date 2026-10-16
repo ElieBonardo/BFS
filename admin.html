@@ -797,24 +797,22 @@ document
         Cette version enregistre l'URL dans la colonne image.
         Vérifie que cette colonne existe dans public.products.
       */
-      const stock = Number(document.getElementById("productStock").value);
-      const { error: insertError } = await   .from("products")
+      const stock = Number(
+  document.getElementById("productStock").value
+);
 
+const { error: insertError } = await supabaseClient
+  .from("products")
   .insert({
-
     name,
-
     price,
-
     description,
-
     category,
-
     stock,
-
     image: publicData.publicUrl
-
   });
+
+if (insertError) throw insertError;
 
 if (insertError) throw insertError;
 
