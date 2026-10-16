@@ -380,15 +380,15 @@
         >
         <label for="productDescription">Description</label>
         <textarea id="productDescription" rows="3"></textarea>
-        <label for="productCategory">Catégorie</label>
-        <input type="text" id="productCategory">
-        <label for="productImage">Photo du produit</label>
-        <input
-          type="file"
-          id="productImage"
-          accept="image/*"
-          required
-        >
+       <label for="productStock">Quantité en stock</label>
+<input
+  type="number"
+  id="productStock"
+  min="0"
+  step="1"
+  value="0"
+  required
+>
         <button type="submit">Ajouter le produit</button>
         <p id="addProductMessage" role="status"></p>
       </form>
