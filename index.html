@@ -884,16 +884,116 @@ function escapeHTML(value) {
   });
 }
 
+function renderProducts() {
+  const products = window.bfsProducts || [];
+
+  const searchText = (productSearch.value || "")
+    .trim()
+    .toLowerCase();
+
+  const selectedCategory = categoryFilter.value;
+
+  const filteredProducts = products.filter(product => {
+    const name = productName(product);
+    const description = productDescription(product);
+    const category = productCategory(product);
+
+    const searchableText =
+      `${name} ${description} ${category}`.toLowerCase();
+
+    const matchesSearch = searchableText.includes(searchText);
+
+    const matchesCategory =
+      !selectedCategory || category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
+  productsContainer.innerHTML = "";
+
+  if (filteredProducts.length === 0) {
+    productsContainer.innerHTML =
+      '<div class="loading">Aucun produit trouvé.</div>';
+    return;
+  }
+
+  filteredProducts.forEach(product => {
+    const key = productKey(product);
+    const name = productName(product);
+    const imageURL = productImageURL(product);
+    const price = productPrice(product);
+
+    const card = document.createElement("article");
+    card.className = "product";
+
+    const imageWrap = document.createElement("div");
+    imageWrap.className = "product-image-wrap";
+
+    if (imageURL) {
+      const image = document.createElement("img");
+
+      image.src = imageURL;
+      image.alt = name;
+      image.loading = "lazy";
+      image.decoding = "async";
+
+      image.addEventListener("error", () => {
+        imageWrap.innerHTML =
+          '<div class="image-placeholder">Photo indisponible</div>';
+
+        console.error("Erreur de chargement de la photo :", imageURL);
+      }, { once: true });
+
+      imageWrap.appendChild(image);
+    } else {
+      imageWrap.innerHTML =
+        '<div class="image-placeholder">Aucune photo renseignée</div>';
+    }
+
+    const info = document.createElement("div");
+    info.className = "product-info";
+
+    info.innerHTML = `
+      <h2>${escapeHTML(name)}</h2>
+
+      <div class="description">
+        ${escapeHTML(productDescription(product))}
+      </div>
+
+      <div class="price">
+        ${formatPrice(price)}$
+      </div>
+
+      <div class="category">
+        ${escapeHTML(productCategory(product))}
+      </div>
+
+      <button class="add-button" type="button">
+        Ajouter au panier
+      </button>
+    `;
+
+    info.querySelector(".add-button").addEventListener(
+      "click",
+      () => addToCart(key)
+    );
+
+    card.appendChild(imageWrap);
+    card.appendChild(info);
+
+    productsContainer.appendChild(card);
+  });
+}
+
 async function loadProducts() {
   productsContainer.innerHTML =
     '<div class="loading">Chargement des produits...</div>';
 
   try {
-   const { data, error } = await supabaseClient
-  .from("products")
-  .select("*")
-  .order("id", { ascending: false })
-  .abortSignal(AbortSignal.timeout(15000));
+    const { data, error } = await supabaseClient
+      .from("products")
+      .select("*")
+      .order("id", { ascending: false });
 
     if (error) {
       console.error("Erreur Supabase :", error);
@@ -926,11 +1026,12 @@ async function loadProducts() {
 
     renderProducts();
 
- } catch (error) {
-  console.error("Erreur de chargement des produits :", error);
+  } catch (error) {
+    console.error("Erreur de chargement des produits :", error);
 
-  productsContainer.textContent =
-    "Erreur : " + (error.message || String(error));
+    productsContainer.textContent =
+      "Une erreur est survenue lors du chargement des produits.";
+  }
 }
 
 productSearch.addEventListener("input", renderProducts);
