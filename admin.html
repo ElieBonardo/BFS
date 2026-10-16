@@ -814,10 +814,15 @@ document
 
       if (insertError) throw insertError;
 
-      status.textContent = "Produit ajouté avec succès.";
-      document.getElementById("addProductForm").reset();
-      await loadAdminProducts();
-    });
+status.textContent = "Produit ajouté avec succès.";
+document.getElementById("addProductForm").reset();
+await loadAdminProducts();
+
+} catch (error) {
+  console.error("Erreur ajout produit :", error);
+  status.textContent = "Erreur : " + error.message;
+}
+});
 /* 8. CHARGEMENT DES COMMANDES ET STATISTIQUES */
 async function loadAdminOrders() {
   const container = document.getElementById("adminOrders");
