@@ -1007,6 +1007,39 @@ logoutButton.addEventListener("click", async () => {
 showPanel("dashboardStats");
 dashboard.style.display = "none";
 loginSection.style.display = "block";
+/* RESTAURER LA SESSION ADMIN AU RECHARGEMENT */
+async function restoreAdminSession() {
+  try {
+    const { data, error } =
+      await supabaseClient.auth.getSession();
+
+    if (error) throw error;
+
+    if (!data.session) return;
+
+    loginSection.style.display = "none";
+    dashboard.style.display = "block";
+    dashboard.classList.remove("menu-open");
+
+    sidebarToggle.setAttribute("aria-expanded", "false");
+    message.textContent = "";
+
+    showPanel("dashboardStats");
+
+    await Promise.all([
+      loadAdminProducts(),
+      loadAdminOrders()
+    ]);
+  } catch (error) {
+    console.error(
+      "Erreur de restauration de session :",
+      error
+    );
+  }
+}
+
+restoreAdminSession();
+
 </script>
 </body>
 </html>
