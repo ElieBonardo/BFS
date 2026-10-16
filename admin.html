@@ -471,7 +471,10 @@ sidebarToggle.addEventListener("click", () => {
 menuLinks.forEach(link => {
   link.addEventListener("click", event => {
     event.preventDefault();
+
+    localStorage.setItem("bfsAdminPanel", link.dataset.panel);
     showPanel(link.dataset.panel);
+
     dashboard.classList.remove("menu-open");
     sidebarToggle.setAttribute("aria-expanded", "false");
   });
@@ -1024,7 +1027,8 @@ async function restoreAdminSession() {
     sidebarToggle.setAttribute("aria-expanded", "false");
     message.textContent = "";
 
-    showPanel("dashboardStats");
+    const savedPanel = localStorage.getItem("bfsAdminPanel");
+showPanel(savedPanel || "dashboardStats");
 
     await Promise.all([
       loadAdminProducts(),
