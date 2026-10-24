@@ -805,15 +805,15 @@ document
       );
 
       const { error: insertError } = await supabaseClient
-        .from("products")
-        .insert({
-          name,
-          price,
-          description,
-          category,
-          stock,
-          image: publicData.publicUrl
-        });
+      .from("products")
+.insert({
+  Name: name,
+  Price: price,
+  Description: description,
+  category: category,
+  stock: stock,
+  image_url: publicData.publicUrl
+});
 
       if (insertError) throw insertError;
 
