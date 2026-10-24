@@ -367,31 +367,48 @@
     <section id="productsPanel" class="bfs-panel" hidden>
       <h1>Gestion des produits</h1>
       <h2>Ajouter un produit</h2>
-      <form id="addProductForm">
-        <label for="productName">Nom du produit</label>
-        <input type="text" id="productName" required>
-        <label for="productPrice">Prix en dollars</label>
-        <input
-          type="number"
-          id="productPrice"
-          min="0"
-          step="0.01"
-          required
-        >
-        <label for="productDescription">Description</label>
-        <textarea id="productDescription" rows="3"></textarea>
-       <label for="productStock">Quantité en stock</label>
+  <form id="addProductForm">
+  <label for="productName">Nom du produit</label>
+  <input type="text" id="productName" required>
+
+Prix en dollars
 <input
-  type="number"
-  id="productStock"
-  min="0"
-  step="1"
-  value="0"
-  required
->
-        <button type="submit">Ajouter le produit</button>
-        <p id="addProductMessage" role="status"></p>
-      </form>
+type=“number”
+id=“productPrice”
+min=“0”
+step=“0.01”
+required
+
+Description
+
+  <textarea id="productDescription" rows="3"></textarea>
+
+Catégorie
+<input
+type=“text”
+id=“productCategory”
+placeholder=“Ex. : Maillot, T-shirt, pantalon”
+
+Quantité en stock
+<input
+type=“number”
+id=“productStock”
+min=“0”
+step=“1”
+value=“0”
+required
+
+Photo du produit
+<input
+type=“file”
+id=“productImage”
+accept=“image/*”
+required
+
+Ajouter le produit
+
+  <p id="addProductMessage" role="status"></p>
+</form>
       <hr>
       <h2>Produits existants</h2>
       <div id="adminProducts">
@@ -745,86 +762,73 @@ async function saveProductChanges(
 }
 /* 7. AJOUT D'UN PRODUIT AVEC PHOTO */
 document
-  .getElementById("addProductForm")
-  .addEventListener("submit", async event => {
-    event.preventDefault();
-    const status = document.getElementById("addProductMessage");
-    const name =
-      document.getElementById("productName").value.trim();
-    const priceText =
-      document.getElementById("productPrice").value;
-    const price = Number(priceText);
-    const description =
-      document.getElementById("productDescription").value.trim();
-    const category =
-      document.getElementById("productCategory").value.trim();
-    const file =
-      document.getElementById("productImage").files[0];
-    if (
-      !name ||
-      !file ||
-      priceText.trim() === "" ||
-      !Number.isFinite(price) ||
-      price < 0
-    ) {
-      status.textContent =
-        "Remplissez le nom, le prix et choisissez une photo.";
-      return;
-    }
-    status.textContent = "Enregistrement en cours...";
-    try {
-      const extension = file.name.includes(".")
-        ? file.name.split(".").pop().toLowerCase()
-        : "jpg";
-      const filePath =
-        `${Date.now()}-${crypto.randomUUID()}.${extension}`;
-      const { data: uploaded, error: uploadError } =
-        await supabaseClient
-          .storage
-          .from("products")
-          .upload(filePath, file, {
-            contentType: file.type || "image/jpeg",
-            upsert: false
-          });
-      if (uploadError) throw uploadError;
-      const { data: publicData } = supabaseClient
-        .storage
-        .from("products")
-        .getPublicUrl(uploaded.path);
-      if (!publicData || !publicData.publicUrl) {
-        throw new Error(
-          "Impossible de récupérer l'adresse publique de la photo."
-        );
-      }
-      /*
-        Cette version enregistre l'URL dans la colonne image.
-        Vérifie que cette colonne existe dans public.products.
-      */
-            const stock = Number(
-        document.getElementById("productStock").value
-      );
+.getElementById(“addProductForm”)
+.addEventListener(“submit”, async event => {
+event.preventDefault();
 
-      const { error: insertError } = await supabaseClient
-      .from("products")
-.insert({
-  Name: name,
-  Price: price,
-  Description: description,
-  category: category,
-  stock: stock,
-  image_url: publicData.publicUrl
-});
-
-      if (insertError) throw insertError;
-
-status.textContent = "Produit ajouté avec succès.";
-document.getElementById("addProductForm").reset();
-await loadAdminProducts();
-
+const form = event.currentTarget;
+const status = document.getElementById("addProductMessage");
+const name = document.getElementById("productName").value.trim();
+const priceText = document.getElementById("productPrice").value;
+const price = Number(priceText);
+const description = document.getElementById("productDescription").value.trim();
+const category = document.getElementById("productCategory").value.trim();
+const stockText = document.getElementById("productStock").value;
+const stock = Number(stockText);
+const file = document.getElementById("productImage").files[0];
+if (
+  !name ||
+  priceText.trim() === "" ||
+  !Number.isFinite(price) ||
+  price < 0 ||
+  stockText.trim() === "" ||
+  !Number.isInteger(stock) ||
+  stock < 0 ||
+  !file
+) {
+  status.textContent = "Vérifiez le nom, le prix, le stock et la photo.";
+  return;
+}
+status.textContent = "Enregistrement en cours...";
+try {
+  const extension = file.name.includes(".")
+    ? file.name.split(".").pop().toLowerCase()
+    : "jpg";
+  const filePath = `${Date.now()}-${crypto.randomUUID()}.${extension}`;
+  const { data: uploaded, error: uploadError } = await supabaseClient
+    .storage
+    .from("products")
+    .upload(filePath, file, {
+      contentType: file.type || "image/jpeg",
+      upsert: false
+    });
+  if (uploadError) throw uploadError;
+  const { data: publicData } = supabaseClient
+    .storage
+    .from("products")
+    .getPublicUrl(uploaded.path);
+  if (!publicData || !publicData.publicUrl) {
+    throw new Error("Impossible de récupérer l'adresse publique de la photo.");
+  }
+  const { error: insertError } = await supabaseClient
+    .from("products")
+    .insert({
+      Name: name,
+      Price: price,
+      Description: description,
+      category: category,
+      stock: stock,
+      image_url: publicData.publicUrl
+    });
+  if (insertError) throw insertError;
+  status.textContent = "Produit ajouté avec succès.";
+  form.reset();
+  await loadAdminProducts();
 } catch (error) {
   console.error("Erreur ajout produit :", error);
   status.textContent = "Erreur : " + error.message;
 }
+
 });
 /* 8. CHARGEMENT DES COMMANDES ET STATISTIQUES */
 async function loadAdminOrders() {
