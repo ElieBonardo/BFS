@@ -720,15 +720,15 @@ async function saveProductChanges(
 ) {
   try {
     const { data, error } = await supabaseClient
-      .from("products")
-      .update({
-        name,
-        price,
-        description,
-        category
-      })
-      .eq("id", id)
-      .select();
+     .from("products")
+.update({
+  Name: name,
+  Price: price,
+  Description: description,
+  category: category
+})
+.eq("id", id)
+.select();
     if (error) throw error;
     if (!data || data.length === 0) {
       alert(
