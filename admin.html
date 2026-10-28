@@ -656,17 +656,32 @@ editButton.addEventListener("click", async () => {
   );
   if (newDescription === null) return;
   const newCategory = prompt(
-    "Catégorie :",
-    product.category ?? ""
-  );
-  if (newCategory === null) return;
+  "Catégorie :",
+  product.category ?? ""
+);
+if (newCategory === null) return;
+const stockText = prompt(
+  "Quantité en stock :",
+  product.stock ?? 0
+);
+if (stockText === null) return;
+const newStock = Number(stockText);
+if (
+  stockText.trim() === "" ||
+  !Number.isInteger(newStock) ||
+  newStock < 0
+) {
+  alert("La quantité doit être un nombre entier positif ou égal à zéro.");
+  return;
+}
   await saveProductChanges(
-    product.id,
-    newName.trim(),
-    newPrice,
-    newDescription.trim(),
-    newCategory.trim()
-  );
+  product.id,
+  newName.trim(),
+  newPrice,
+  newDescription.trim(),
+  newCategory.trim(),
+  newStock
+);
 });
 
       card.appendChild(editButton);
