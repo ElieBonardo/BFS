@@ -731,19 +731,21 @@ async function saveProductChanges(
   name,
   price,
   description,
-  category
+  category,
+  stock
 ) {
   try {
     const { data, error } = await supabaseClient
-     .from("products")
-.update({
-  Name: name,
-  Price: price,
-  Description: description,
-  category: category
-})
-.eq("id", id)
-.select();
+      .from("products")
+      .update({
+        Name: name,
+        Price: price,
+        Description: description,
+        category: category,
+        stock: stock
+      })
+      .eq("id", id)
+      .select();
     if (error) throw error;
     if (!data || data.length === 0) {
       alert(
