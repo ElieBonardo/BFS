@@ -982,13 +982,19 @@ function renderProducts() {
         ${escapeHTML(productDescription(product))}
       </div>
 
-      <div class="price">
-        ${formatPrice(price)}$
-      </div>
-
-      <div class="category">
-        ${escapeHTML(productCategory(product))}
-      </div>
+     <div class="price">
+  ${formatPrice(price)}$
+</div>
+<div class="category">
+  ${escapeHTML(productCategory(product))}
+</div>
+<div class="stock">
+  ${
+    Number(product.stock) > 0
+      ? `En stock : ${Number(product.stock)}`
+      : "Rupture de stock"
+  }
+</div>
 
       <button class="add-button" type="button">
         Ajouter au panier
