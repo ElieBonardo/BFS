@@ -762,7 +762,7 @@ async function changeProductPhoto(product) {
       const { error: uploadError } = await supabaseClient
         .storage
         .from("products")
-        .upload(filePath, file, { upsert: true });
+      .upload(filePath, file, { upsert: false });
       if (uploadError) throw uploadError;
       const { data: publicData } = supabaseClient
         .storage
