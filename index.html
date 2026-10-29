@@ -774,12 +774,39 @@ function escapeHTML(value) {
 
         // Enregistrer la commande dans Supabase.
         try {
-          const { error } = await supabaseClient
-            .from("orders")
-            .insert([{
-              items: orderItems,
-              total: total
-            }]);
+  const { data, error } = await supabaseClient
+    .rpc("create_order_with_stock", {
+      p_items: orderItems,
+      p_total: total
+    });
+
+  if (error) {
+    console.error(
+      "Erreur lors de l'enregistrement de la commande :",
+      error
+    );
+
+    alert(
+      "La commande n'a pas été enregistrée. Vérifiez le stock disponible. " +
+      error.message
+    );
+    return;
+  }
+
+  console.log(
+    "Commande enregistrée et stock mis à jour :",
+    data
+  );
+
+  alert("Commande enregistrée et stock mis à jour avec succès.");
+
+} catch (error) {
+  console.error("Erreur d'enregistrement :", error);
+
+  alert(
+    "Impossible d'enregistrer la commande : " + error.message
+  );
+}
 
           if (error) {
             console.error(
