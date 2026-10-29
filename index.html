@@ -808,26 +808,7 @@ function escapeHTML(value) {
   );
 }
 
-          if (error) {
-            console.error(
-              "Erreur Supabase lors de l'enregistrement :",
-              error
-            );
-
-            alert(
-              "WhatsApp a été ouvert, mais l'enregistrement de la commande a échoué."
-            );
-            return;
-          }
-
-          console.log("Commande BFS enregistrée dans Supabase.");
-        } catch (error) {
-          console.error("Erreur d'enregistrement :", error);
-
-          alert(
-            "WhatsApp a été ouvert, mais la commande n'a pas pu être enregistrée."
-          );
-        }
+          
       }
     );
 
