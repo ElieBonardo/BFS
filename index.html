@@ -794,11 +794,14 @@ function escapeHTML(value) {
   }
 
   console.log(
-    "Commande enregistrée et stock mis à jour :",
-    data
-  );
+  "Commande enregistrée et stock mis à jour :",
+  data
+);
 
-  alert("Commande enregistrée et stock mis à jour avec succès.");
+alert("Commande enregistrée et stock mis à jour avec succès.");
+
+cart.clear();
+renderCart();
 
 } catch (error) {
   console.error("Erreur d'enregistrement :", error);
