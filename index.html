@@ -393,6 +393,30 @@
   min-width: 0;
   box-sizing: border-box;
 }
+.cart-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: none;
+  background: transparent;
+  font-size: 25px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+  padding: 10px 0 20px;
+  color: #111;
+}
+
+#cart-arrow {
+  color: #1683e8;
+  font-size: 30px;
+}
+
+.cart-content[hidden] {
+  display: none !important;
+}
+
     
   </style>
 </head>
@@ -418,20 +442,32 @@
   <main class="container">
     <section class="cart" aria-labelledby="cart-title">
       <h2 id="cart-title">
-        Mon panier (<span id="cart-count">0</span>)
-      </h2>
+        Mon panier (<span id="cart-count">0</<button
+  id="cart-toggle"
+  class="cart-toggle"
+  type="button"
+  aria-expanded="true"
+  aria-controls="cart-content"
+>
+  <span>
+    Mon panier (<span id="cart-count">0</span>)
+  </span>
+  <span id="cart-arrow">−</span>
+</button>
 
-      <div id="cart-items">
-        <p class="empty-cart">Votre panier est vide.</p>
-      </div>
+<div id="cart-content" class="cart-content">
+  <div id="cart-items">
+    <p class="empty-cart">Votre panier est vide.</p>
+  </div>
 
-      <div class="cart-total">
-        Total : <span id="cart-total">0</span>$
-      </div>
+  <div class="cart-total">
+    Total : <span id="cart-total">0</span>$
+  </div>
 
-      <button id="checkout" class="checkout" type="button">
-        Commander sur WhatsApp
-      </button>
+  <button id="checkout" class="checkout" type="button">
+    Commander sur WhatsApp
+  </button>
+</div>
     </section>
 
    <div class="section-heading">
@@ -524,6 +560,19 @@ const productSearch =
 
 const categoryFilter =
   document.getElementById("category-filter");
+  
+  
+  const cartToggle = document.getElementById("cart-toggle");
+const cartContent = document.getElementById("cart-content");
+const cartArrow = document.getElementById("cart-arrow");
+
+cartToggle.addEventListener("click", () => {
+  const isOpen = cartToggle.getAttribute("aria-expanded") === "true";
+
+  cartToggle.setAttribute("aria-expanded", String(!isOpen));
+  cartContent.hidden = isOpen;
+  cartArrow.textContent = isOpen ? "+" : "−";
+});
 
 function escapeHTML(value) {
       return String(value ?? "").replace(/[&<>"']/g, char => ({
