@@ -439,41 +439,38 @@
     <p>Élégance • Qualité • Propreté</p>
   </header>
 
-  <main class="container">
-    <section class="cart" aria-labelledby="cart-title">
-      <h2 id="cart-title">
-        Mon panier (<span id="cart-count">0</<button
-  id="cart-toggle"
-  class="cart-toggle"
-  type="button"
-  aria-expanded="true"
-  aria-controls="cart-content"
->
-  <span>
-    Mon panier (<span id="cart-count">0</span>)
-  </span>
-  <span id="cart-arrow">−</span>
-</button>
+<main class="container">
+  <section class="cart" aria-labelledby="cart-toggle">
 
-<div id="cart-content" class="cart-content">
-  <div id="cart-items">
-    <p class="empty-cart">Votre panier est vide.</p>
-  </div>
+    <button
+      id="cart-toggle"
+      class="cart-toggle"
+      type="button"
+      aria-expanded="true"
+      aria-controls="cart-content"
+    >
+      <span>
+        Mon panier (<span id="cart-count">0</span>)
+      </span>
+      <span id="cart-arrow">−</span>
+    </button>
 
-  <div class="cart-total">
-    Total : <span id="cart-total">0</span>$
-  </div>
+    <div id="cart-content" class="cart-content">
 
-  <button id="checkout" class="checkout" type="button">
-    Commander sur WhatsApp
-  </button>
-</div>
-    </section>
+      <div id="cart-items">
+        <p class="empty-cart">Votre panier est vide.</p>
+      </div>
 
-   <div class="section-heading">
-  <p class="section-kicker">La sélection BFS</p>
-  <h2 class="section-title">Nos produits</h2>
-</div>
+      <div class="cart-total">
+        Total : <span id="cart-total">0</span>$
+      </div>
+
+      <button id="checkout" class="checkout" type="button">
+        Commander sur WhatsApp
+      </button>
+
+    </div>
+  </section>
 
 <div class="product-tools">
   <input
@@ -486,6 +483,11 @@
   <select id="category-filter" aria-label="Filtrer par catégorie">
     <option value="">Toutes les catégories</option>
   </select>
+  <div class="section-heading">
+  <p class="section-kicker">La sélection BFS</p>
+  <h2 class="section-title">Nos produits</h2>
+</div>
+  
 </div>
 
     <div id="products" class="products" aria-live="polite">
