@@ -480,6 +480,37 @@
     const WHATSAPP_NUMBER = "243900820742";
 
     const cart = new Map();
+
+function saveCart() {
+  const savedCart = Array.from(cart.entries()).map(([key, item]) => ({
+    key: key,
+    productId: item.product.id,
+    quantity: item.quantity
+  }));
+
+  localStorage.setItem("bfs_cart", JSON.stringify(savedCart));
+}
+
+function restoreCart() {
+  const savedCart = JSON.parse(
+    localStorage.getItem("bfs_cart") || "[]"
+  );
+
+  cart.clear();
+
+  savedCart.forEach(item => {
+    const product = window.bfsProducts.find(
+      product => String(product.id) === String(item.productId)
+    );
+
+    if (product && Number(item.quantity) > 0) {
+      cart.set(String(item.key), {
+        product: product,
+        quantity: Number(item.quantity)
+      });
+    }
+  });
+}
     window.bfsProducts = [];
 
     const productsContainer =
@@ -603,7 +634,8 @@ function escapeHTML(value) {
         });
       }
 
-      renderCart();
+      saveCart();
+renderCart();
     }
 
     function changeQuantity(key, amount) {
@@ -801,8 +833,8 @@ function escapeHTML(value) {
 alert("Commande enregistrée et stock mis à jour avec succès.");
 
 cart.clear();
+localStorage.removeItem("bfs_cart");
 renderCart();
-
 } catch (error) {
   console.error("Erreur d'enregistrement :", error);
 
@@ -1063,7 +1095,9 @@ async function loadProducts() {
       categoryFilter.appendChild(option);
     });
 
-    renderProducts();
+    restoreCart();
+renderProducts();
+renderCart();
 
   } catch (error) {
     console.error("Erreur de chargement des produits :", error);
