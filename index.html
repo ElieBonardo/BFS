@@ -416,7 +416,12 @@
 .cart-content[hidden] {
   display: none !important;
 }
-
+.add-button:disabled {
+  background: #999;
+  color: white;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
     
   </style>
 </head>
@@ -1038,6 +1043,8 @@ function renderProducts() {
     const name = productName(product);
     const imageURL = productImageURL(product);
     const price = productPrice(product);
+    const stock = Number(product.stock);
+const inStock = Number.isFinite(stock) && stock > 0;
 
     const card = document.createElement("article");
     card.className = "product";
@@ -1090,15 +1097,21 @@ function renderProducts() {
   }
 </div>
 
-      <button class="add-button" type="button">
-        Ajouter au panier
-      </button>
-    `;
+    <button
+  class="add-button"
+  type="button"
+  ${inStock ? "" : "disabled"}
+>
+  ${inStock ? "Ajouter au panier" : "Indisponible"}
+</button>
+`;
 
-    info.querySelector(".add-button").addEventListener(
-      "click",
-      () => addToCart(key)
-    );
+    if (inStock) {
+      info.querySelector(".add-button").addEventListener(
+        "click",
+        () => addToCart(key)
+      );
+    }
 
     card.appendChild(imageWrap);
     card.appendChild(info);
