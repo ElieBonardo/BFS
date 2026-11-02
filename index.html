@@ -863,34 +863,44 @@ renderCart();
         // Enregistrer la commande dans Supabase.
         try {
   const { data, error } = await supabaseClient
-    .rpc("create_order_with_stock", {
-      p_items: orderItems,
-      p_total: total
-    });
+  .rpc("create_order_with_stock", {
+    p_items: orderItems,
+    p_total: total
+  });
 
-  if (error) {
-    console.error(
-      "Erreur lors de l'enregistrement de la commande :",
-      error
-    );
+if (error) {
+  console.error(
+    "Erreur lors de l'enregistrement de la commande :",
+    error
+  );
 
-    alert(
-      "La commande n'a pas été enregistrée. Vérifiez le stock disponible. " +
-      error.message
-    );
-    return;
-  }
+  alert(
+    "La commande n'a pas été enregistrée. Vérifiez le stock disponible. " +
+    error.message
+  );
+  return;
+}
 
-  console.log(
-  "Commande enregistrée et stock mis à jour :",
-  data
+console.log("Commande enregistrée :", data);
+
+if (!data || !data.success || !data.reference) {
+  alert(
+    "La commande a été traitée, mais sa référence n'a pas été récupérée. Contactez BFS avant de recommencer."
+  );
+  return;
+}
+
+alert(
+  "🎉 Votre commande est enregistrée avec succès !\n\n" +
+  "Votre référence : " + data.reference + "\n\n" +
+  "Veuillez conserver cette référence pour retrouver facilement votre commande auprès de BFS.\n\n" +
+  "Merci d'avoir choisi Bonardo Fashion Store."
 );
-
-alert("Commande enregistrée et stock mis à jour avec succès.");
 
 cart.clear();
 localStorage.removeItem("bfs_cart");
 renderCart();
+
 } catch (error) {
   console.error("Erreur d'enregistrement :", error);
 
@@ -898,10 +908,6 @@ renderCart();
     "Impossible d'enregistrer la commande : " + error.message
   );
 }
-
-          
-      }
-    );
 
     function renderProducts() {
   const products = window.bfsProducts || [];
