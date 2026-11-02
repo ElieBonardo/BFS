@@ -420,7 +420,17 @@
     <!-- COMMANDES CLIENTS -->
     <section id="ordersPanel" class="bfs-panel" hidden>
       <h1>Commandes clients</h1>
-      <label for="orderStatusFilter">Filtrer par statut</label>
+
+<label for="orderSearchInput">Rechercher une commande par référence</label>
+<input
+  type="search"
+  id="orderSearchInput"
+  placeholder="Ex. BFS-2026-036"
+  autocomplete="off"
+  style="width:100%; padding:12px; margin:10px 0 15px; border-radius:8px;"
+>
+
+<label for="orderStatusFilter">Filtrer par statut</label>
       <select id="orderStatusFilter">
         <option value="Toutes">Toutes les commandes</option>
         <option value="Nouvelle">Nouvelle</option>
@@ -953,13 +963,23 @@ function renderOrders() {
   const container = document.getElementById("adminOrders");
 
   const filter =
-    document.getElementById("orderStatusFilter").value;
+  document.getElementById("orderStatusFilter").value;
 
-  const orders = filter === "Toutes"
-    ? currentOrders
-    : currentOrders.filter(order =>
-        (order.status || "Nouvelle") === filter
-      );
+const searchInput =
+  document.getElementById("orderSearchInput");
+
+const searchTerm = searchInput.value.trim().toLowerCase();
+
+const orders = currentOrders.filter(order => {
+  const matchesStatus =
+    filter === "Toutes" ||
+    (order.status || "Nouvelle") === filter;
+
+  const matchesReference =
+    (order.reference || "").toLowerCase().includes(searchTerm);
+
+  return matchesStatus && matchesReference;
+});
 
   container.innerHTML = "";
 
@@ -1143,6 +1163,10 @@ function renderOrders() {
 document
   .getElementById("orderStatusFilter")
   .addEventListener("change", renderOrders);
+  document
+  .getElementById("orderSearchInput")
+  .addEventListener("input", renderOrders);
+  
 refreshOrdersButton.addEventListener("click", async () => {
   refreshOrdersButton.disabled = true;
   try {
