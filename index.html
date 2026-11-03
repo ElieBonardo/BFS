@@ -832,7 +832,7 @@ function updatePaymentTotal() {
 
   const fee =
     (method === "M-Pesa" || method === "Airtel Money")
-      ? total * 0.03
+      ? Number((total * 0.03).toFixed(2))
       : 0;
 
   paymentFeeDisplay.textContent =
