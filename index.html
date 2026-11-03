@@ -464,6 +464,32 @@
   text-decoration: none;
 }
 
+.payment-details {
+  margin-top: 12px;
+  padding: 12px 15px;
+  border: 1px solid #d4af37;
+  border-radius: 10px;
+  background: #f8f8f8;
+  color: #222;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.payment-details strong {
+  font-size: 14px;
+  color: #111;
+}
+
+.payment-details small {
+  display: inline-block;
+  margin-top: 5px;
+  color: #555;
+  font-size: 12px;
+}
+
+.payment-details[hidden] {
+  display: none;
+}
     
   </style>
 </head>
@@ -537,7 +563,9 @@
   <p id="final-total">Total à payer : 0 $</p>
 </div>
 
-<div class="bfs-payment-info">
+<div id="payment-details" class="payment-details" hidden>
+  <p id="payment-details-text"></p>
+</div>
   <h3>Instructions de paiement BFS</h3>
 
   <div class="payment-info-item">
@@ -963,6 +991,48 @@ paymentMethodSelect.addEventListener(
   "change",
   updatePaymentTotal
 );
+const paymentDetails =
+  document.getElementById("payment-details");
+
+const paymentDetailsText =
+  document.getElementById("payment-details-text");
+
+function updatePaymentDetails() {
+  const method = paymentMethodSelect.value;
+
+  paymentDetails.hidden = !method;
+
+  if (method === "M-Pesa") {
+    paymentDetailsText.innerHTML =
+      "<strong>Vodacom / M-Pesa</strong><br>" +
+      "+243 831 771 245<br>" +
+      "<small>Après paiement, envoyez votre preuve sur WhatsApp : " +
+      "+243 900 820 742</small>";
+
+  } else if (method === "Airtel Money") {
+    paymentDetailsText.innerHTML =
+      "<strong>Airtel Money</strong><br>" +
+      "+243 994 520 386<br>" +
+      "<small>Après paiement, envoyez votre preuve sur WhatsApp : " +
+      "+243 900 820 742</small>";
+
+  } else if (method === "Point de vente") {
+    paymentDetailsText.innerHTML =
+      "<strong>Paiement au point de vente</strong><br>" +
+      "Payez directement chez BFS.";
+
+  } else {
+    paymentDetails.hidden = true;
+  }
+}
+
+paymentMethodSelect.addEventListener(
+  "change",
+  updatePaymentDetails
+);
+
+updatePaymentDetails();
+
 
 updatePaymentTotal();
 
@@ -981,6 +1051,28 @@ document.getElementById("checkout").addEventListener(
       alert("Veuillez choisir un moyen de paiement.");
       return;
     }
+    const isMobilePayment =
+  paymentMethod === "M-Pesa" ||
+  paymentMethod === "Airtel Money";
+
+const customerPhone = customerPhoneInput.value.trim();
+
+if (isMobilePayment && !customerPhone) {
+  alert("Veuillez saisir votre numéro de téléphone.");
+  customerPhoneInput.focus();
+  return;
+}
+
+if (
+  isMobilePayment &&
+  !/^\+?[0-9 ]{9,16}$/.test(customerPhone)
+) {
+  alert("Veuillez saisir un numéro de téléphone valide.");
+  customerPhoneInput.focus();
+  return;
+}
+    
+    
 
     let total = 0;
 
@@ -1034,7 +1126,11 @@ lines.push(
   "Frais de paiement : " + formatPrice(paymentFee) + "$",
   "TOTAL À PAYER : " + formatPrice(finalTotal) + "$"
 );
-
+if (isMobilePayment) {
+  lines.push(
+    "Numéro du client : " + customerPhone
+  );
+}
           // Préparer l'ouverture de WhatsApp après validation.
 
 
@@ -1045,10 +1141,7 @@ try {
   p_items: orderItems,
   p_total: total,
   p_payment_method: paymentMethod,
-  p_customer_phone:
-    paymentMethod === "Point de vente"
-      ? null
-      : customerPhoneInput.value.trim()
+ p_customer_phone: isMobilePayment ? customerPhone : null
 });
 
   if (error) {
@@ -1065,61 +1158,17 @@ try {
     return;
   }
 
-console.log("Commande enregistrée :", data);
-
-if (!data || !data.success || !data.reference) {
-  alert(
-    "La commande a été traitée, mais sa référence n'a pas été récupérée. Contactez BFS avant de recommencer."
-  );
-  return;
-}
-
-const reference = data.reference;
-const paymentFee = Number(data.payment_fee || 0);
-const finalTotal = Number(data.final_total || total);
-
-let paymentInstructions = "";
-
-if (paymentMethod === "M-Pesa") {
-  paymentInstructions =
-    "Paiement M-Pesa\n" +
-    "Numéro : +243 831 771 245\n";
-}
-
-if (paymentMethod === "Airtel Money") {
-  paymentInstructions =
-    "Paiement Airtel Money\n" +
-    "Numéro : +243 994 520 386\n";
-}
-
-if (paymentMethod === "Point de vente") {
-  paymentInstructions =
-    "Paiement directement au point de vente BFS.\n";
-}
-
 const whatsappMessage =
   "Bonjour BFS, voici ma preuve de paiement.\n\n" +
   "Référence : " + reference + "\n" +
   "Moyen de paiement : " + paymentMethod + "\n" +
+  (isMobilePayment
+    ? "Numéro du client : " + customerPhone + "\n"
+    : "") +
   "Montant des articles : " + formatPrice(total) + " $\n" +
   "Frais : " + formatPrice(paymentFee) + " $\n" +
   "Total à payer : " + formatPrice(finalTotal) + " $\n\n" +
   "Merci de vérifier mon paiement.";
-
-if (paymentMethod !== "Point de vente") {
-  paymentInstructions +=
-    "Frais : " + formatPrice(paymentFee) + " $\n" +
-    "Total à payer : " + formatPrice(finalTotal) + " $\n\n" +
-    "Après paiement, envoyez votre preuve sur WhatsApp BFS :\n" +
-    "+243 900 820 742";
-}
-if (paymentMethod !== "Point de vente") {
-  const whatsappURL =
-    "https://wa.me/243900820742?text=" +
-    encodeURIComponent(whatsappMessage);
-
-  window.location.href = whatsappURL;
-}
 
 alert(
   "🎉 Commande enregistrée avec succès !\n\n" +
@@ -1127,14 +1176,22 @@ alert(
   paymentInstructions
 );
 
-
 cart.clear();
 localStorage.removeItem("bfs_cart");
 renderCart();
 
 paymentMethodSelect.value = "";
+customerPhoneInput.value = "";
 updatePaymentTotal();
+updatePaymentDetails();
 
+if (isMobilePayment) {
+  const whatsappURL =
+    "https://wa.me/243900820742?text=" +
+    encodeURIComponent(whatsappMessage);
+
+  window.location.href = whatsappURL;
+}
 } catch (error) {
   console.error("Erreur d'enregistrement :", error);
 
