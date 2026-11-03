@@ -422,6 +422,40 @@
   cursor: not-allowed;
   opacity: 0.7;
 }
+.bfs-payment-info {
+  background: #111;
+  color: #fff;
+  border: 1px solid #c0c0c0;
+  border-radius: 12px;
+  padding: 18px;
+  margin: 18px 0;
+}
+
+.bfs-payment-info h3 {
+  color: #d4af37;
+  margin-bottom: 15px;
+}
+
+.payment-info-item {
+  border-bottom: 1px solid #444;
+  padding: 10px 0;
+}
+
+.payment-info-item strong {
+  color: #d4af37;
+}
+
+.payment-info-item p {
+  margin: 5px 0;
+}
+
+.payment-note {
+  color: #ddd;
+  font-weight: bold;
+  margin: 12px 0;
+}
+
+
     
   </style>
 </head>
@@ -483,7 +517,33 @@
   <p id="payment-fee">Frais de paiement : 0 $</p>
   <p id="final-total">Total à payer : 0 $</p>
 </div>
+<div class="bfs-payment-info">
+  <h3>Instructions de paiement BFS</h3>
 
+  <div class="payment-info-item">
+    <strong>M-Pesa</strong>
+    <p>+243 831 771 245</p>
+  </div>
+
+  <div class="payment-info-item">
+    <strong>Airtel Money</strong>
+    <p>+243 994 520 386</p>
+  </div>
+
+  <p class="payment-note">
+    Frais de paiement mobile : 3 %.
+  </p>
+
+  <div class="payment-info-item">
+    <strong>Paiement au point de vente</strong>
+    <p>Payez directement chez BFS.</p>
+  </div>
+
+  <div class="payment-info-item">
+    <strong>Envoi de la preuve de paiement</strong>
+    <p>WhatsApp : +243 900 820 742</p>
+  </div>
+</div>
       <button id="checkout" class="checkout" type="button">
         Commander sur WhatsApp
       </button>
