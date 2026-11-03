@@ -996,17 +996,18 @@ if (paymentMethod !== "Point de vente") {
     "Après paiement, envoyez votre preuve sur WhatsApp BFS :\n" +
     "+243 900 820 742";
 }
+if (paymentMethod !== "Point de vente" && whatsappWindow) {
+  whatsappWindow.location.replace(
+    "https://wa.me/243900820742?text=" +
+    encodeURIComponent(whatsappMessage)
+  );
+}
+
 alert(
   "🎉 Commande enregistrée avec succès !\n\n" +
   "Référence : " + reference + "\n\n" +
   paymentInstructions
 );
-
-if (paymentMethod !== "Point de vente" && whatsappWindow) {
-  whatsappWindow.location.href =
-    "https://wa.me/243900820742?text=" +
-    encodeURIComponent(whatsappMessage);
-}
 
 if (paymentMethod === "Point de vente" && whatsappWindow) {
   whatsappWindow.close();
