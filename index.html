@@ -917,10 +917,7 @@ lines.push(
 );
 
           // Préparer l'ouverture de WhatsApp après validation.
-const whatsappWindow = window.open(
-  "about:blank",
-  "_blank"
-);
+
 
 // Enregistrer la commande dans Supabase.
 try {
@@ -937,9 +934,6 @@ try {
       error
     );
 
-    if (whatsappWindow) {
-      whatsappWindow.close();
-    }
 
     alert(
       "La commande n'a pas été enregistrée. Vérifiez le stock disponible. " +
@@ -996,11 +990,12 @@ if (paymentMethod !== "Point de vente") {
     "Après paiement, envoyez votre preuve sur WhatsApp BFS :\n" +
     "+243 900 820 742";
 }
-if (paymentMethod !== "Point de vente" && whatsappWindow) {
-  whatsappWindow.location.replace(
+if (paymentMethod !== "Point de vente") {
+  const whatsappURL =
     "https://wa.me/243900820742?text=" +
-    encodeURIComponent(whatsappMessage)
-  );
+    encodeURIComponent(whatsappMessage);
+
+  window.location.href = whatsappURL;
 }
 
 alert(
@@ -1009,9 +1004,6 @@ alert(
   paymentInstructions
 );
 
-if (paymentMethod === "Point de vente" && whatsappWindow) {
-  whatsappWindow.close();
-}
 
 cart.clear();
 localStorage.removeItem("bfs_cart");
@@ -1023,9 +1015,6 @@ updatePaymentTotal();
 } catch (error) {
   console.error("Erreur d'enregistrement :", error);
 
-  if (whatsappWindow) {
-    whatsappWindow.close();
-  }
 
   alert(
     "Impossible d'enregistrer la commande : " + error.message
