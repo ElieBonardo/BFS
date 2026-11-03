@@ -466,9 +466,23 @@
         <p class="empty-cart">Votre panier est vide.</p>
       </div>
 
-      <div class="cart-total">
-        Total : <span id="cart-total">0</span>$
-      </div>
+   <div class="cart-total">
+  Total : <span id="cart-total">0</span>$
+</div>
+
+<div class="payment-selection">
+  <label for="payment-method">Choisissez votre moyen de paiement :</label>
+
+  <select id="payment-method">
+    <option value="">-- Choisir un moyen de paiement --</option>
+    <option value="M-Pesa">M-Pesa</option>
+    <option value="Airtel Money">Airtel Money</option>
+    <option value="Point de vente">Paiement au point de vente</option>
+  </select>
+
+  <p id="payment-fee">Frais de paiement : 0 $</p>
+  <p id="final-total">Total à payer : 0 $</p>
+</div>
 
       <button id="checkout" class="checkout" type="button">
         Commander sur WhatsApp
@@ -728,10 +742,12 @@ renderCart();
         formatPrice(total);
 
       if (cart.size === 0) {
-        cartItemsContainer.innerHTML =
-          '<p class="empty-cart">Votre panier est vide.</p>';
-        return;
-      }
+  cartItemsContainer.innerHTML =
+    '<p class="empty-cart">Votre panier est vide.</p>';
+
+  updatePaymentTotal();
+  return;
+}
 
       cartItemsContainer.innerHTML =
         Array.from(cart.entries()).map(([key, item]) => {
@@ -777,6 +793,7 @@ renderCart();
             </div>
           `;
         }).join("");
+        updatePaymentTotal();
     }
 
     cartItemsContainer.addEventListener("click", event => {
@@ -796,15 +813,58 @@ renderCart();
       }
     });
 
-    document.getElementById("checkout").addEventListener(
-      "click",
-      async () => {
-        if (cart.size === 0) {
-          alert("Votre panier est vide. Ajoutez d'abord un produit.");
-          return;
-        }
+    const paymentMethodSelect =
+  document.getElementById("payment-method");
 
-        let total = 0;
+const paymentFeeDisplay =
+  document.getElementById("payment-fee");
+
+const finalTotalDisplay =
+  document.getElementById("final-total");
+
+function updatePaymentTotal() {
+  const method = paymentMethodSelect.value;
+  let total = 0;
+
+  cart.forEach(item => {
+    total += productPrice(item.product) * item.quantity;
+  });
+
+  const fee =
+    (method === "M-Pesa" || method === "Airtel Money")
+      ? total * 0.03
+      : 0;
+
+  paymentFeeDisplay.textContent =
+    "Frais de paiement : " + formatPrice(fee) + " $";
+
+  finalTotalDisplay.textContent =
+    "Total à payer : " + formatPrice(total + fee) + " $";
+}
+
+paymentMethodSelect.addEventListener(
+  "change",
+  updatePaymentTotal
+);
+
+document.getElementById("checkout").addEventListener(
+  "click",
+  async () => {
+
+    if (cart.size === 0) {
+      alert("Votre panier est vide. Ajoutez d'abord un produit.");
+      return;
+    }
+
+    const paymentMethod = paymentMethodSelect.value;
+
+    if (!paymentMethod) {
+      alert("Veuillez choisir un moyen de paiement.");
+      return;
+    }
+
+    let total = 0;
+
 
         const lines = [
           "Bonjour BFS, je voudrais passer cette commande :",
@@ -838,48 +898,55 @@ renderCart();
         });
 
         lines.push(
-          "",
-          "TOTAL : " + formatPrice(total) + "$",
-          "",
-          "Merci de me confirmer la disponibilité."
-        );
+  "",
+  "Merci de me confirmer la disponibilité."
+);
+        const paymentFee =
+  (paymentMethod === "M-Pesa" ||
+   paymentMethod === "Airtel Money")
+    ? Number((total * 0.03).toFixed(2))
+    : 0;
 
-        const whatsappURL =
-          "https://wa.me/" + WHATSAPP_NUMBER +
-          "?text=" + encodeURIComponent(lines.join("\n"));
+const finalTotal = total + paymentFee;
 
-        // Ouvrir WhatsApp dès le clic du client.
-        const whatsappWindow = window.open(
-          whatsappURL,
-          "_blank"
-        );
+lines.push(
+  "",
+  "MOYEN DE PAIEMENT : " + paymentMethod,
+  "Frais de paiement : " + formatPrice(paymentFee) + "$",
+  "TOTAL À PAYER : " + formatPrice(finalTotal) + "$"
+);
 
-        if (!whatsappWindow) {
-          alert(
-            "WhatsApp n'a pas pu s'ouvrir. Vérifiez les réglages du navigateur."
-          );
-        }
+          // Préparer l'ouverture de WhatsApp après validation.
+const whatsappWindow = window.open(
+  "about:blank",
+  "_blank"
+);
 
-        // Enregistrer la commande dans Supabase.
-        try {
+// Enregistrer la commande dans Supabase.
+try {
   const { data, error } = await supabaseClient
-  .rpc("create_order_with_stock", {
-    p_items: orderItems,
-    p_total: total
-  });
+    .rpc("create_order_with_stock", {
+      p_items: orderItems,
+      p_total: total,
+      p_payment_method: paymentMethod
+    });
 
-if (error) {
-  console.error(
-    "Erreur lors de l'enregistrement de la commande :",
-    error
-  );
+  if (error) {
+    console.error(
+      "Erreur lors de l'enregistrement de la commande :",
+      error
+    );
 
-  alert(
-    "La commande n'a pas été enregistrée. Vérifiez le stock disponible. " +
-    error.message
-  );
-  return;
-}
+    if (whatsappWindow) {
+      whatsappWindow.close();
+    }
+
+    alert(
+      "La commande n'a pas été enregistrée. Vérifiez le stock disponible. " +
+      error.message
+    );
+    return;
+  }
 
 console.log("Commande enregistrée :", data);
 
@@ -890,26 +957,81 @@ if (!data || !data.success || !data.reference) {
   return;
 }
 
+const reference = data.reference;
+const paymentFee = Number(data.payment_fee || 0);
+const finalTotal = Number(data.final_total || total);
+
+let paymentInstructions = "";
+
+if (paymentMethod === "M-Pesa") {
+  paymentInstructions =
+    "Paiement M-Pesa\n" +
+    "Numéro : +243 831 771 245\n";
+}
+
+if (paymentMethod === "Airtel Money") {
+  paymentInstructions =
+    "Paiement Airtel Money\n" +
+    "Numéro : +243 994 520 386\n";
+}
+
+if (paymentMethod === "Point de vente") {
+  paymentInstructions =
+    "Paiement directement au point de vente BFS.\n";
+}
+
+const whatsappMessage =
+  "Bonjour BFS, voici ma preuve de paiement.\n\n" +
+  "Référence : " + reference + "\n" +
+  "Moyen de paiement : " + paymentMethod + "\n" +
+  "Montant des articles : " + formatPrice(total) + " $\n" +
+  "Frais : " + formatPrice(paymentFee) + " $\n" +
+  "Total à payer : " + formatPrice(finalTotal) + " $\n\n" +
+  "Merci de vérifier mon paiement.";
+
+if (paymentMethod !== "Point de vente") {
+  paymentInstructions +=
+    "Frais : " + formatPrice(paymentFee) + " $\n" +
+    "Total à payer : " + formatPrice(finalTotal) + " $\n\n" +
+    "Après paiement, envoyez votre preuve sur WhatsApp BFS :\n" +
+    "+243 900 820 742";
+}
 alert(
-  "🎉 Votre commande est enregistrée avec succès !\n\n" +
-  "Votre référence : " + data.reference + "\n\n" +
-  "Veuillez conserver cette référence pour retrouver facilement votre commande auprès de BFS.\n\n" +
-  "Merci d'avoir choisi Bonardo Fashion Store."
+  "🎉 Commande enregistrée avec succès !\n\n" +
+  "Référence : " + reference + "\n\n" +
+  paymentInstructions
 );
+
+if (paymentMethod !== "Point de vente" && whatsappWindow) {
+  whatsappWindow.location.href =
+    "https://wa.me/243900820742?text=" +
+    encodeURIComponent(whatsappMessage);
+}
+
+if (paymentMethod === "Point de vente" && whatsappWindow) {
+  whatsappWindow.close();
+}
 
 cart.clear();
 localStorage.removeItem("bfs_cart");
 renderCart();
 
+paymentMethodSelect.value = "";
+updatePaymentTotal();
+
 } catch (error) {
   console.error("Erreur d'enregistrement :", error);
+
+  if (whatsappWindow) {
+    whatsappWindow.close();
+  }
 
   alert(
     "Impossible d'enregistrer la commande : " + error.message
   );
 }
-       }
-    );
+
+});
 
     function renderProducts() {
   const products = window.bfsProducts || [];
@@ -1012,7 +1134,7 @@ renderCart();
     productsContainer.appendChild(card);
   });
 }
-
+);
 function renderProducts() {
   const products = window.bfsProducts || [];
 
