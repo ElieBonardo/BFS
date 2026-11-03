@@ -517,21 +517,53 @@
 
   <select id="payment-method">
     <option value="">-- Choisir un moyen de paiement --</option>
-    <option value="M-Pesa">M-Pesa</option>
+    <option value="M-Pesa">Vodacom / M-Pesa</option>
     <option value="Airtel Money">Airtel Money</option>
+    <option value="Orange Money" disabled>Orange Money — Bientôt disponible</option>
     <option value="Point de vente">Paiement au point de vente</option>
   </select>
+
+  <div id="customer-phone-group" style="display: none;">
+    <label for="customer-phone">Votre numéro de téléphone :</label>
+    <input
+      type="tel"
+      id="customer-phone"
+      placeholder="+243XXXXXXXXX"
+      autocomplete="tel"
+    >
+  </div>
 
   <p id="payment-fee">Frais de paiement : 0 $</p>
   <p id="final-total">Total à payer : 0 $</p>
 </div>
+
 <div class="bfs-payment-info">
   <h3>Instructions de paiement BFS</h3>
 
   <div class="payment-info-item">
-    <strong>M-Pesa</strong>
+    <strong>Vodacom / M-Pesa</strong>
     <p>+243 831 771 245</p>
   </div>
+
+  <div class="payment-info-item">
+    <strong>Airtel Money</strong>
+    <p>+243 994 520 386</p>
+  </div>
+
+  <p class="payment-note">
+    Frais de paiement mobile : 3 %.
+  </p>
+
+  <div class="payment-info-item">
+    <strong>Paiement au point de vente</strong>
+    <p>Payez directement chez BFS.</p>
+  </div>
+
+  <div class="payment-info-item">
+    <strong>Envoi de la preuve de paiement</strong>
+    <p>WhatsApp : +243 900 820 742</p>
+  </div>
+</div>
 
   <div class="payment-info-item">
     <strong>Airtel Money</strong>
@@ -890,6 +922,12 @@ const paymentFeeDisplay =
 const finalTotalDisplay =
   document.getElementById("final-total");
 
+const customerPhoneGroup =
+  document.getElementById("customer-phone-group");
+
+const customerPhoneInput =
+  document.getElementById("customer-phone");
+
 function updatePaymentTotal() {
   const method = paymentMethodSelect.value;
   let total = 0;
@@ -898,10 +936,21 @@ function updatePaymentTotal() {
     total += productPrice(item.product) * item.quantity;
   });
 
-  const fee =
-    (method === "M-Pesa" || method === "Airtel Money")
-      ? Number((total * 0.03).toFixed(2))
-      : 0;
+  const isMobilePayment =
+    method === "M-Pesa" || method === "Airtel Money";
+
+  customerPhoneGroup.style.display =
+    isMobilePayment ? "block" : "none";
+
+  customerPhoneInput.required = isMobilePayment;
+
+  if (!isMobilePayment) {
+    customerPhoneInput.value = "";
+  }
+
+  const fee = isMobilePayment
+    ? Number((total * 0.03).toFixed(2))
+    : 0;
 
   paymentFeeDisplay.textContent =
     "Frais de paiement : " + formatPrice(fee) + " $";
@@ -914,6 +963,8 @@ paymentMethodSelect.addEventListener(
   "change",
   updatePaymentTotal
 );
+
+updatePaymentTotal();
 
 document.getElementById("checkout").addEventListener(
   "click",
@@ -990,11 +1041,15 @@ lines.push(
 // Enregistrer la commande dans Supabase.
 try {
   const { data, error } = await supabaseClient
-    .rpc("create_order_with_stock", {
-      p_items: orderItems,
-      p_total: total,
-      p_payment_method: paymentMethod
-    });
+   .rpc("create_order_with_stock", {
+  p_items: orderItems,
+  p_total: total,
+  p_payment_method: paymentMethod,
+  p_customer_phone:
+    paymentMethod === "Point de vente"
+      ? null
+      : customerPhoneInput.value.trim()
+});
 
   if (error) {
     console.error(
