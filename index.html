@@ -490,6 +490,68 @@
 .payment-details[hidden] {
   display: none;
 }
+
+.payment-menu {
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  color: #222;
+  font-size: 13px;
+}
+.payment-menu summary {
+  padding: 11px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+.payment-menu summary::after {
+  content: "+";
+  float: right;
+  font-size: 17px;
+}
+
+.payment-menu[open] summary::after {
+  content: "−";
+}
+
+.payment-menu-content {
+  padding: 0 14px 10px;
+  border-top: 1px solid #eee;
+  line-height: 1.5;
+}
+
+.payment-menu-content p {
+  margin: 9px 0;
+}
+
+.payment-menu summary {
+  padding: 11px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+.payment-menu summary::after {
+  content: "+";
+  float: right;
+  font-size: 17px;
+}
+
+.payment-menu[open] summary::after {
+  content: "−";
+}
+
+.payment-menu-content {
+  padding: 0 14px 10px;
+  border-top: 1px solid #eee;
+  line-height: 1.5;
+}
+
+.payment-menu-content p {
+  margin: 9px 0;
+}
     
   </style>
 </head>
@@ -563,49 +625,12 @@
   <p id="final-total">Total à payer : 0 $</p>
 </div>
 
-<div id="payment-details" class="payment-details" hidden>
-  <p id="payment-details-text"></p>
-</div>
-  <h3>Instructions de paiement BFS</h3>
-
-  <div class="payment-info-item">
-    <strong>Vodacom / M-Pesa</strong>
-    <p>+243 831 771 245</p>
+<details class="payment-menu" id="payment-menu">
+  <summary>Informations de paiement</summary>
+  <div class="payment-menu-content">
+    <p id="payment-details-text"></p>
   </div>
-
-  <div class="payment-info-item">
-    <strong>Airtel Money</strong>
-    <p>+243 994 520 386</p>
-  </div>
-
-  <p class="payment-note">
-    Frais de paiement mobile : 3 %.
-  </p>
-
-  <div class="payment-info-item">
-    <strong>Paiement au point de vente</strong>
-    <p>Payez directement chez BFS.</p>
-  </div>
-
-  <div class="payment-info-item">
-    <strong>Envoi de la preuve de paiement</strong>
-    <p>WhatsApp : +243 900 820 742</p>
-  </div>
-</div>
-
-  <div class="payment-info-item">
-    <strong>Airtel Money</strong>
-    <p>+243 994 520 386</p>
-  </div>
-
-  <p class="payment-note">
-    Frais de paiement mobile : 3 %.
-  </p>
-
-  <div class="payment-info-item">
-    <strong>Paiement au point de vente</strong>
-    <p>Payez directement chez BFS.</p>
-  </div>
+</details>
 
   <div class="payment-info-item">
     <strong>Envoi de la preuve de paiement</strong>
@@ -991,8 +1016,10 @@ paymentMethodSelect.addEventListener(
   "change",
   updatePaymentTotal
 );
-const paymentDetails =
-  document.getElementById("payment-details");
+
+updatePaymentDetails();
+const paymentMenu =
+  document.getElementById("payment-menu");
 
 const paymentDetailsText =
   document.getElementById("payment-details-text");
@@ -1000,7 +1027,7 @@ const paymentDetailsText =
 function updatePaymentDetails() {
   const method = paymentMethodSelect.value;
 
-  paymentDetails.hidden = !method;
+  paymentMenu.open = !!method;
 
   if (method === "M-Pesa") {
     paymentDetailsText.innerHTML =
@@ -1022,7 +1049,7 @@ function updatePaymentDetails() {
       "Payez directement chez BFS.";
 
   } else {
-    paymentDetails.hidden = true;
+    paymentDetailsText.innerHTML = "";
   }
 }
 
@@ -1032,8 +1059,6 @@ paymentMethodSelect.addEventListener(
 );
 
 updatePaymentDetails();
-
-
 updatePaymentTotal();
 
 document.getElementById("checkout").addEventListener(
