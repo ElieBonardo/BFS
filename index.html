@@ -842,38 +842,53 @@ function escapeHTML(value) {
       }
 
       const existing = cart.get(key);
+const stock = Number(product.stock);
 
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        cart.set(key, {
-          product: product,
-          quantity: 1
-        });
-      }
+if (existing && existing.quantity >= stock) {
+  alert("Désolé, la quantité disponible en stock est atteinte.");
+  return;
+}
 
-      saveCart();
+if (existing) {
+  existing.quantity += 1;
+} else {
+  cart.set(key, {
+    product: product,
+    quantity: 1
+  });
+}
+
+saveCart();
 renderCart();
     }
 
     function changeQuantity(key, amount) {
-      const item = cart.get(key);
+  const item = cart.get(key);
 
-      if (!item) return;
+  if (!item) return;
 
-      item.quantity += amount;
+  const stock = Number(item.product.stock);
 
-      if (item.quantity <= 0) {
-        cart.delete(key);
-      }
+  if (amount > 0 && item.quantity >= stock) {
+    alert("Désolé, la quantité disponible en stock est atteinte.");
+    return;
+  }
 
-      renderCart();
-    }
+  item.quantity += amount;
+
+  if (item.quantity <= 0) {
+    cart.delete(key);
+  }
+
+  saveCart();
+  renderCart();
+}
 
     function removeFromCart(key) {
-      cart.delete(key);
-      renderCart();
-    }
+  cart.delete(key);
+  saveCart();
+  renderCart();
+}
 
     function renderCart() {
       let count = 0;
@@ -976,6 +991,12 @@ const customerPhoneGroup =
 const customerPhoneInput =
   document.getElementById("customer-phone");
 
+const paymentMenu =
+  document.getElementById("payment-menu");
+
+const paymentDetailsText =
+  document.getElementById("payment-details-text");
+
 function updatePaymentTotal() {
   const method = paymentMethodSelect.value;
   let total = 0;
@@ -1006,18 +1027,6 @@ function updatePaymentTotal() {
   finalTotalDisplay.textContent =
     "Total à payer : " + formatPrice(total + fee) + " $";
 }
-
-paymentMethodSelect.addEventListener(
-  "change",
-  updatePaymentTotal
-);
-
-updatePaymentDetails();
-const paymentMenu =
-  document.getElementById("payment-menu");
-
-const paymentDetailsText =
-  document.getElementById("payment-details-text");
 
 function updatePaymentDetails() {
   const method = paymentMethodSelect.value;
@@ -1050,11 +1059,16 @@ function updatePaymentDetails() {
 
 paymentMethodSelect.addEventListener(
   "change",
+  updatePaymentTotal
+);
+
+paymentMethodSelect.addEventListener(
+  "change",
   updatePaymentDetails
 );
 
-updatePaymentDetails();
 updatePaymentTotal();
+updatePaymentDetails();
 
 document.getElementById("checkout").addEventListener(
   "click",
@@ -1178,6 +1192,33 @@ try {
     return;
   }
 
+if (!data || !data.success || !data.reference) {
+  alert("La commande n'a pas été confirmée par le serveur.");
+  return;
+}
+
+const reference = data.reference;
+const confirmedTotal = Number(data.total);
+const confirmedFee = Number(data.payment_fee);
+const confirmedFinalTotal = Number(data.final_total);
+
+let paymentInstructions = "";
+
+if (paymentMethod === "M-Pesa") {
+  paymentInstructions =
+    "Effectuez le paiement au numéro M-Pesa : +243 831 771 245.\n" +
+    "Envoyez ensuite votre preuve sur WhatsApp : +243 900 820 742.";
+
+} else if (paymentMethod === "Airtel Money") {
+  paymentInstructions =
+    "Effectuez le paiement au numéro Airtel Money : +243 994 520 386.\n" +
+    "Envoyez ensuite votre preuve sur WhatsApp : +243 900 820 742.";
+
+} else {
+  paymentInstructions =
+    "Veuillez payer directement au point de vente BFS.";
+}
+
 const whatsappMessage =
   "Bonjour BFS, voici ma preuve de paiement.\n\n" +
   "Référence : " + reference + "\n" +
@@ -1185,9 +1226,9 @@ const whatsappMessage =
   (isMobilePayment
     ? "Numéro du client : " + customerPhone + "\n"
     : "") +
-  "Montant des articles : " + formatPrice(total) + " $\n" +
-  "Frais : " + formatPrice(paymentFee) + " $\n" +
-  "Total à payer : " + formatPrice(finalTotal) + " $\n\n" +
+  "Montant des articles : " + formatPrice(confirmedTotal) + " $\n" +
+  "Frais : " + formatPrice(confirmedFee) + " $\n" +
+  "Total à payer : " + formatPrice(confirmedFinalTotal) + " $\n\n" +
   "Merci de vérifier mon paiement.";
 
 alert(
@@ -1195,13 +1236,13 @@ alert(
   "Référence : " + reference + "\n\n" +
   paymentInstructions
 );
-
 cart.clear();
 localStorage.removeItem("bfs_cart");
 renderCart();
 
 paymentMethodSelect.value = "";
 customerPhoneInput.value = "";
+
 updatePaymentTotal();
 updatePaymentDetails();
 
@@ -1212,9 +1253,9 @@ if (isMobilePayment) {
 
   window.location.href = whatsappURL;
 }
+
 } catch (error) {
   console.error("Erreur d'enregistrement :", error);
-
 
   alert(
     "Impossible d'enregistrer la commande : " + error.message
@@ -1222,108 +1263,6 @@ if (isMobilePayment) {
 }
 
 });
-
-    function renderProducts() {
-  const products = window.bfsProducts || [];
-
-  const searchText = (productSearch.value || "")
-    .trim()
-    .toLowerCase();
-
-  const selectedCategory = categoryFilter.value;
-
-  const filteredProducts = products.filter(product => {
-    const name = productName(product);
-    const description = productDescription(product);
-    const category = productCategory(product);
-
-    const searchableText =
-      `${name} ${description} ${category}`.toLowerCase();
-
-    const matchesSearch = searchableText.includes(searchText);
-
-    const matchesCategory =
-  !selectedCategory ||
-  category.trim().toLowerCase() === selectedCategory.trim().toLowerCase();
-
-    return matchesSearch && matchesCategory;
-  });
-
-  productsContainer.innerHTML = "";
-
-  if (filteredProducts.length === 0) {
-    productsContainer.innerHTML =
-      '<div class="loading">Aucun produit trouvé.</div>';
-    return;
-  }
-
-  filteredProducts.forEach(product => {
-    const key = productKey(product);
-    const name = productName(product);
-    const imageURL = productImageURL(product);
-    const price = productPrice(product);
-
-    const card = document.createElement("article");
-    card.className = "product";
-
-    const imageWrap = document.createElement("div");
-    imageWrap.className = "product-image-wrap";
-
-    if (imageURL) {
-      const image = document.createElement("img");
-
-      image.src = imageURL;
-      image.alt = name;
-      image.loading = "lazy";
-      image.decoding = "async";
-
-      image.addEventListener("error", () => {
-        imageWrap.innerHTML =
-          '<div class="image-placeholder">Photo indisponible</div>';
-
-        console.error("Erreur de chargement de la photo :", imageURL);
-      }, { once: true });
-
-      imageWrap.appendChild(image);
-    } else {
-      imageWrap.innerHTML =
-        '<div class="image-placeholder">Aucune photo renseignée</div>';
-    }
-
-    const info = document.createElement("div");
-    info.className = "product-info";
-
-    info.innerHTML = `
-      <h2>${escapeHTML(name)}</h2>
-
-      <div class="description">
-        ${escapeHTML(productDescription(product))}
-      </div>
-
-      <div class="price">
-        ${formatPrice(price)}$
-      </div>
-
-      <div class="category">
-        ${escapeHTML(productCategory(product))}
-      </div>
-
-      <button class="add-button" type="button">
-        Ajouter au panier
-      </button>
-    `;
-
-    info.querySelector(".add-button").addEventListener(
-      "click",
-      () => addToCart(key)
-    );
-
-        card.appendChild(imageWrap);
-    card.appendChild(info);
-
-    productsContainer.appendChild(card);
-  });
-}
 function renderProducts() {
   const products = window.bfsProducts || [];
 
@@ -1479,7 +1418,7 @@ async function loadProducts() {
     });
 
     restoreCart();
-renderProducts();
+  renderProducts();
 renderCart();
 
   } catch (error) {
@@ -1492,8 +1431,6 @@ renderCart();
 
 productSearch.addEventListener("input", renderProducts);
 categoryFilter.addEventListener("change", renderProducts);
-
-    renderCart();
     loadProducts();
   </script>
 </body>
