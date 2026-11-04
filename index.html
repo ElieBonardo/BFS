@@ -704,7 +704,9 @@
 .welcome-button:hover {
   transform: translateY(-3px);
 }
-
+#product-search {
+  scroll-margin-top: 20px;
+}
     
   </style>
 </head>
@@ -805,9 +807,13 @@
       soigneusement choisis pour vous.
     </p>
 
-    <a href="#product-search" class="welcome-button">
-      Découvrir nos collections
-    </a>
+   <button
+  type="button"
+  class="welcome-button"
+  onclick="document.getElementById('product-search').scrollIntoView({ behavior: 'smooth', block: 'start' });"
+>
+  Découvrir nos collections
+</button>
   </div>
 </section>
   
