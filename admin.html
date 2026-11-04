@@ -906,10 +906,21 @@ async function loadAdminOrders() {
   container.textContent = "Chargement des commandes...";
 
   try {
-    const { data, error } = await supabaseClient
-      .from("orders")
-      .select("id, reference, created_at, items, total, status")
-      .order("created_at", { ascending: false });
+ const { data, error } = await supabaseClient
+  .from("orders")
+  .select(`
+    id,
+    reference,
+    created_at,
+    items,
+    total,
+    status,
+    payment_method,
+    payment_status,
+    payment_fee,
+    customer_phone
+  `)
+  .order("created_at", { ascending: false });
 
     if (error) throw error;
 
@@ -961,150 +972,188 @@ async function loadAdminOrders() {
 /* 9. AFFICHAGE ET FILTRAGE DES COMMANDES */
 function renderOrders() {
   const container = document.getElementById("adminOrders");
+  const statusFilter = document.getElementById("orderStatusFilter");
+  const searchInput = document.getElementById("orderSearchInput");
 
-  const filter =
-  document.getElementById("orderStatusFilter").value;
-
-const searchInput =
-  document.getElementById("orderSearchInput");
-
-const searchTerm = searchInput.value.trim().toLowerCase();
-
-const orders = currentOrders.filter(order => {
-  const matchesStatus =
-    filter === "Toutes" ||
-    (order.status || "Nouvelle") === filter;
-
-  const matchesReference =
-    (order.reference || "").toLowerCase().includes(searchTerm);
-
-  return matchesStatus && matchesReference;
-});
+  const selectedStatus = statusFilter ? statusFilter.value : "Toutes";
+  const searchTerm = searchInput
+    ? searchInput.value.toLowerCase().trim()
+    : "";
 
   container.innerHTML = "";
 
-  if (orders.length === 0) {
-    container.textContent = "Aucune commande pour ce statut.";
+  const filteredOrders = currentOrders.filter(order => {
+    const matchesStatus =
+      selectedStatus === "Toutes" ||
+      (order.status || "Nouvelle") === selectedStatus;
+
+    const matchesSearch =
+      !searchTerm ||
+      String(order.reference || "").toLowerCase().includes(searchTerm) ||
+      String(order.customer_phone || "").toLowerCase().includes(searchTerm);
+
+    return matchesStatus && matchesSearch;
+  });
+
+  if (filteredOrders.length === 0) {
+    container.textContent = "Aucune commande trouvée.";
     return;
   }
 
-  orders.forEach(order => {
+  filteredOrders.forEach(order => {
     const card = document.createElement("div");
     card.className = "admin-product";
 
     const title = document.createElement("h3");
-    title.textContent = "Commande #" + order.id;
-    card.appendChild(title);
-
-    const reference = document.createElement("p");
-    reference.textContent =
-      "Référence : " + (order.reference || "Non disponible");
-    reference.style.fontWeight = "bold";
-    card.appendChild(reference);
+    title.textContent = "Commande " + (order.reference || order.id);
 
     const date = document.createElement("p");
-    const parsedDate = new Date(order.created_at);
-
     date.textContent = "Date : " +
-      (Number.isNaN(parsedDate.getTime())
-        ? "Date inconnue"
-        : parsedDate.toLocaleString("fr-FR"));
+      new Date(order.created_at).toLocaleString("fr-FR");
 
-    card.appendChild(date);
+    const itemsTitle = document.createElement("h4");
+    itemsTitle.textContent = "Articles commandés";
 
-    const total = document.createElement("p");
-    total.textContent = "Total : " + (order.total ?? 0) + "$";
-    card.appendChild(total);
+    const itemsList = document.createElement("ul");
 
-    const itemsTitle = document.createElement("p");
-    itemsTitle.textContent = "Articles commandés :";
-    card.appendChild(itemsTitle);
-
-    let items = order.items;
+    let items = order.items || [];
 
     if (typeof items === "string") {
       try {
         items = JSON.parse(items);
       } catch {
-        items = null;
+        items = [];
       }
     }
 
-    if (Array.isArray(items)) {
-      items.forEach(product => {
-        const itemBox = document.createElement("div");
+    items.forEach(product => {
+      const item = document.createElement("li");
 
-        itemBox.style.display = "flex";
-        itemBox.style.alignItems = "center";
-        itemBox.style.gap = "12px";
-        itemBox.style.marginBottom = "12px";
-        itemBox.style.padding = "10px";
-        itemBox.style.border = "1px solid #ddd";
-        itemBox.style.borderRadius = "8px";
+      const productId = String(
+        product.product_id ?? product.id ?? ""
+      );
 
-        if (product && typeof product === "object") {
-          const productId = String(product.product_id ?? "");
-          const imageUrl = adminProductImages.get(productId);
+      const imageUrl = adminProductImages.get(productId);
 
-          if (imageUrl) {
-            const image = document.createElement("img");
-            image.src = imageUrl;
-            image.alt = product.name || "Produit commandé";
-            image.style.width = "75px";
-            image.style.height = "75px";
-            image.style.objectFit = "contain";
-            image.style.borderRadius = "6px";
+      if (imageUrl) {
+        const img = document.createElement("img");
+        img.src = imageUrl;
+        img.alt = product.name || product.Name || "Produit";
+        img.style.width = "75px";
+        img.style.height = "75px";
+        img.style.objectFit = "cover";
+        img.style.borderRadius = "8px";
+        img.style.marginRight = "10px";
+        item.appendChild(img);
+      }
 
-            image.onerror = () => {
-              image.style.display = "none";
-            };
+      const name =
+        product.name ||
+        product.Name ||
+        product.title ||
+        product.product_name ||
+        "Produit";
 
-            itemBox.appendChild(image);
-          }
+      const quantity =
+        Number(product.quantity || product.qty || product.count || 1);
 
-          const details = document.createElement("div");
+      const price =
+        Number(product.price || product.Price || 0);
 
-          const name = document.createElement("strong");
-          name.textContent =
-            product.name ||
-            product.Name ||
-            product.title ||
-            product.product_name ||
-            "Article";
+      const details = document.createElement("span");
+      details.textContent =
+        `${name} × ${quantity} — ${(price * quantity).toFixed(2)} $`;
 
-          const quantity = document.createElement("p");
-          quantity.textContent =
-            "Quantité : " +
-            (product.quantity ?? product.qty ?? product.count ?? 1);
+      item.appendChild(details);
+      itemsList.appendChild(item);
+    });
 
-          const price = document.createElement("p");
-          price.textContent =
-            "Prix unitaire : " +
-            (product.price ?? "Non disponible") + " $";
+    const paymentTitle = document.createElement("h4");
+    paymentTitle.textContent = "Informations de paiement";
 
-          details.appendChild(name);
-          details.appendChild(quantity);
-          details.appendChild(price);
+    const paymentMethod = document.createElement("p");
+    paymentMethod.textContent =
+      "Moyen de paiement : " + (order.payment_method || "Non renseigné");
 
-          itemBox.appendChild(details);
-        } else {
-          itemBox.textContent = String(product);
-        }
+    const customerPhone = document.createElement("p");
+    customerPhone.textContent =
+      "Téléphone client : " + (order.customer_phone || "Non renseigné");
 
-        card.appendChild(itemBox);
-      });
-    } else {
-      const unavailable = document.createElement("p");
-      unavailable.textContent =
-        "Détails des articles indisponibles.";
-      card.appendChild(unavailable);
-    }
+    const articleTotal = Number(order.total) || 0;
+    const paymentFee = Number(order.payment_fee) || 0;
+    const finalTotal = articleTotal + paymentFee;
 
-    const statusLabel = document.createElement("label");
-    statusLabel.textContent = "Statut de la commande :";
+    const totalArticles = document.createElement("p");
+    totalArticles.textContent =
+      "Total des articles : " + articleTotal.toFixed(2) + " $";
+
+    const fee = document.createElement("p");
+    fee.textContent =
+      "Frais de paiement : " + paymentFee.toFixed(2) + " $";
+
+    const finalAmount = document.createElement("p");
+    finalAmount.textContent =
+      "TOTAL À PAYER : " + finalTotal.toFixed(2) + " $";
+    finalAmount.style.fontWeight = "bold";
+
+    const paymentStatusLabel = document.createElement("label");
+    paymentStatusLabel.textContent = "État du paiement : ";
+
+    const paymentStatusSelect = document.createElement("select");
+
+    ["Non payé", "Payé"].forEach(status => {
+      const option = document.createElement("option");
+      option.value = status;
+      option.textContent = status;
+      paymentStatusSelect.appendChild(option);
+    });
+
+    paymentStatusSelect.value =
+      order.payment_status === "Payé" ? "Payé" : "Non payé";
+
+    paymentStatusLabel.appendChild(paymentStatusSelect);
+
+    const paymentMessage = document.createElement("p");
+
+    paymentStatusSelect.addEventListener("change", async () => {
+      paymentStatusSelect.disabled = true;
+      paymentMessage.textContent = "Enregistrement...";
+
+      try {
+        const { error } = await supabaseClient
+          .from("orders")
+          .update({
+            payment_status: paymentStatusSelect.value
+          })
+          .eq("id", order.id);
+
+        if (error) throw error;
+
+        order.payment_status = paymentStatusSelect.value;
+
+        paymentMessage.textContent = "Paiement mis à jour.";
+        paymentMessage.style.color = "green";
+
+      } catch (error) {
+        console.error("Erreur paiement :", error);
+
+        paymentMessage.textContent =
+          "Erreur : " + error.message;
+
+        paymentMessage.style.color = "red";
+
+        paymentStatusSelect.value =
+          order.payment_status === "Payé" ? "Payé" : "Non payé";
+
+      } finally {
+        paymentStatusSelect.disabled = false;
+      }
+    });
+
+    const orderStatusLabel = document.createElement("label");
+    orderStatusLabel.textContent = "État de la commande : ";
 
     const statusSelect = document.createElement("select");
-    const currentStatus = order.status || "Nouvelle";
 
     statuses.forEach(status => {
       const option = document.createElement("option");
@@ -1113,49 +1162,57 @@ const orders = currentOrders.filter(order => {
       statusSelect.appendChild(option);
     });
 
-    if (!statuses.includes(currentStatus)) {
-      const option = document.createElement("option");
-      option.value = currentStatus;
-      option.textContent = currentStatus;
-      statusSelect.appendChild(option);
-    }
+    statusSelect.value = order.status || "Nouvelle";
 
-    statusSelect.value = currentStatus;
-    statusLabel.appendChild(statusSelect);
-    card.appendChild(statusLabel);
+    orderStatusLabel.appendChild(statusSelect);
 
     const statusMessage = document.createElement("p");
-    card.appendChild(statusMessage);
 
     statusSelect.addEventListener("change", async () => {
-      const previousStatus = order.status || "Nouvelle";
-      const newStatus = statusSelect.value;
-
       statusSelect.disabled = true;
       statusMessage.textContent = "Enregistrement...";
 
       try {
         const { error } = await supabaseClient
           .from("orders")
-          .update({ status: newStatus })
+          .update({
+            status: statusSelect.value
+          })
           .eq("id", order.id);
 
         if (error) throw error;
 
-        order.status = newStatus;
-        statusMessage.textContent = "Statut enregistré.";
-
-        await loadAdminOrders();
+        order.status = statusSelect.value;
+        statusMessage.textContent = "Commande mise à jour.";
+        statusMessage.style.color = "green";
 
       } catch (error) {
-        statusSelect.value = previousStatus;
-        statusMessage.textContent =
-          "Erreur : " + error.message;
+        console.error("Erreur statut commande :", error);
+
+        statusMessage.textContent = "Erreur : " + error.message;
+        statusMessage.style.color = "red";
+
+        statusSelect.value = order.status || "Nouvelle";
 
       } finally {
         statusSelect.disabled = false;
       }
     });
+
+    card.appendChild(title);
+    card.appendChild(date);
+    card.appendChild(itemsTitle);
+    card.appendChild(itemsList);
+    card.appendChild(paymentTitle);
+    card.appendChild(paymentMethod);
+    card.appendChild(customerPhone);
+    card.appendChild(totalArticles);
+    card.appendChild(fee);
+    card.appendChild(finalAmount);
+    card.appendChild(paymentStatusLabel);
+    card.appendChild(paymentMessage);
+    card.appendChild(orderStatusLabel);
+    card.appendChild(statusMessage);
 
     container.appendChild(card);
   });
