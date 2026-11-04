@@ -707,16 +707,46 @@
 #product-search {
   scroll-margin-top: 20px;
 }
+
+.bfs-navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  padding: 15px 10px;
+  background: #111111;
+  border-bottom: 1px solid #c7c7c7;
+}
+
+.bfs-navigation a {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  transition: color 0.2s ease;
+}
+
+.bfs-navigation a:hover {
+  color: #c7c7c7;
+}
+
+@media (max-width: 600px) {
+  .bfs-navigation {
+    gap: 18px;
+    padding: 14px 5px;
+  }
+
+  .bfs-navigation a {
+    font-size: 12px;
+  }
+}
     
   </style>
 </head>
 
 
-
-
-
 <body>
-  <header class="site-header">
+ <header class="site-header" id="top">
     <div class="logo-container">
       <img
         src="./2B9CD460-6536-4582-A364-76DF6EC42CB4.png"
@@ -728,6 +758,12 @@
     <h1>Bonardo Fashion Store BFS</h1>
     <p>Élégance • Qualité • Propreté</p>
   </header>
+  
+<nav class="bfs-navigation" aria-label="Navigation principale">
+  <a href="#top">Accueil</a>
+  <a href="#product-search">Nos produits</a>
+  <a href="#cart-toggle">Mon panier</a>
+</nav>  
 
 <main class="container">
   <section class="cart" aria-labelledby="cart-toggle">
