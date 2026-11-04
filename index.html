@@ -647,6 +647,64 @@
 .payment-menu-content p {
   margin: 9px 0;
 }
+.welcome-section {
+  position: relative;
+  padding: 55px 30px;
+  margin: 25px 0 35px;
+  overflow: hidden;
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse at top right, #444444, transparent 55%),
+    linear-gradient(135deg, #050505, #202020, #080808);
+  border: 1px solid #777777;
+  color: #ffffff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.welcome-content {
+  max-width: 650px;
+  margin: auto;
+  text-align: center;
+}
+
+.welcome-label {
+  color: #c7c7c7;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  margin-bottom: 18px;
+}
+
+.welcome-content h2 {
+  font-size: clamp(27px, 5vw, 42px);
+  line-height: 1.25;
+  margin: 0 0 18px;
+  letter-spacing: 1px;
+}
+
+.welcome-description {
+  color: #d0d0d0;
+  font-size: 14px;
+  line-height: 1.8;
+  margin-bottom: 25px;
+}
+
+.welcome-button {
+  display: inline-block;
+  padding: 14px 24px;
+  background: linear-gradient(145deg, #ffffff, #c7c7c7);
+  color: #080808;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: bold;
+  transition: transform 0.2s ease;
+}
+
+.welcome-button:hover {
+  transform: translateY(-3px);
+}
+
     
   </style>
 </head>
@@ -733,6 +791,26 @@
 
     </div>
   </section>
+  <section class="welcome-section">
+  <div class="welcome-content">
+    <p class="welcome-label">BIENVENUE CHEZ BFS</p>
+
+    <h2>
+      L'élégance commence<br>
+      par votre style.
+    </h2>
+
+    <p class="welcome-description">
+      Découvrez notre sélection de vêtements et d'articles
+      soigneusement choisis pour vous.
+    </p>
+
+    <a href="#product-search" class="welcome-button">
+      Découvrir nos collections
+    </a>
+  </div>
+</section>
+  
 
 <div class="section-heading">
   <p class="section-kicker">La sélection BFS</p>
