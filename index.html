@@ -1646,6 +1646,8 @@ productSearch.addEventListener("input", renderProducts);
 categoryFilter.addEventListener("change", renderProducts);
     loadProducts();
     function openShop() {
+  sessionStorage.setItem("bfsShopOpened", "true");
+
   const welcome = document.getElementById("welcome-section");
   const shop = document.getElementById("shop-section");
 
@@ -1656,6 +1658,10 @@ categoryFilter.addEventListener("change", renderProducts);
     top: 0,
     behavior: "smooth"
   });
+}
+if (sessionStorage.getItem("bfsShopOpened") === "true") {
+  document.getElementById("welcome-section").style.display = "none";
+  document.getElementById("shop-section").style.display = "block";
 }
   </script>
 </body>
