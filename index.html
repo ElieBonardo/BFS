@@ -764,8 +764,30 @@
   <a href="#product-search">Nos produits</a>
   <a href="#cart-toggle">Mon panier</a>
 </nav>  
+<section class="welcome-section" id="welcome-section">
+  <div class="welcome-content">
+    <p class="welcome-label">BIENVENUE CHEZ BFS</p>
 
-<main class="container">
+    <h2>
+      L'élégance commence<br>
+      par votre style.
+    </h2>
+
+    <p class="welcome-description">
+      Découvrez notre sélection de vêtements et d'articles
+      soigneusement choisis pour vous.
+    </p>
+
+    <button
+      type="button"
+      class="welcome-button"
+      onclick="openShop()"
+    >
+      Découvrir nos collections
+    </button>
+  </div>
+</section>
+<main id="shop-section" class="container" style="display: none;">
   <section class="cart" aria-labelledby="cart-toggle">
 
     <button
@@ -829,29 +851,7 @@
 
     </div>
   </section>
-  <section class="welcome-section">
-  <div class="welcome-content">
-    <p class="welcome-label">BIENVENUE CHEZ BFS</p>
 
-    <h2>
-      L'élégance commence<br>
-      par votre style.
-    </h2>
-
-    <p class="welcome-description">
-      Découvrez notre sélection de vêtements et d'articles
-      soigneusement choisis pour vous.
-    </p>
-
-   <button
-  type="button"
-  class="welcome-button"
-  onclick="document.getElementById('product-search').scrollIntoView({ behavior: 'smooth', block: 'start' });"
->
-  Découvrir nos collections
-</button>
-  </div>
-</section>
   
 
 <div class="section-heading">
@@ -1645,6 +1645,18 @@ renderCart();
 productSearch.addEventListener("input", renderProducts);
 categoryFilter.addEventListener("change", renderProducts);
     loadProducts();
+    function openShop() {
+  const welcome = document.getElementById("welcome-section");
+  const shop = document.getElementById("shop-section");
+
+  welcome.style.display = "none";
+  shop.style.display = "block";
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
   </script>
 </body>
 </html>
