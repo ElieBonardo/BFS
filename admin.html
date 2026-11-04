@@ -362,6 +362,16 @@
           <strong id="statRevenue">0 $</strong>
         </div>
       </div>
+      
+      <div class="bfs-stat-card">
+  <h3>Commandes payées</h3>
+  <p id="statPaidOrders">0</p>
+</div>
+
+<div class="bfs-stat-card">
+  <h3>Commandes non payées</h3>
+  <p id="statUnpaidOrders">0</p>
+</div>
     </section>
     <!-- GESTION DES PRODUITS -->
     <section id="productsPanel" class="bfs-panel" hidden>
@@ -925,6 +935,15 @@ async function loadAdminOrders() {
     if (error) throw error;
 
     currentOrders = data || [];
+    document.getElementById("statPaidOrders").textContent =
+  currentOrders.filter(order =>
+    order.payment_status === "Payé"
+  ).length;
+
+document.getElementById("statUnpaidOrders").textContent =
+  currentOrders.filter(order =>
+    order.payment_status !== "Payé"
+  ).length;
 
     const { data: products, error: productsError } =
       await supabaseClient
