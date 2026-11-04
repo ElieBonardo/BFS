@@ -1246,13 +1246,11 @@ customerPhoneInput.value = "";
 updatePaymentTotal();
 updatePaymentDetails();
 
-if (isMobilePayment) {
-  const whatsappURL =
-    "https://wa.me/243900820742?text=" +
-    encodeURIComponent(whatsappMessage);
+const whatsappURL =
+  "https://wa.me/243900820742?text=" +
+  encodeURIComponent(whatsappMessage);
 
-  window.location.href = whatsappURL;
-}
+window.location.href = whatsappURL;
 
 } catch (error) {
   console.error("Erreur d'enregistrement :", error);
