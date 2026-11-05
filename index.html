@@ -1580,35 +1580,30 @@ if (paymentMethod === "M-Pesa") {
     "Veuillez payer directement au point de vente BFS.";
 }
 
-const whatsappMessage =
-  "Bonjour BFS, voici ma preuve de paiement.\n\n" +
-  "Référence : " + reference + "\n" +
-  "Moyen de paiement : " + paymentMethod + "\n" +
-  (isMobilePayment
-    ? "Numéro du client : " + customerPhone + "\n"
-    : "") +
-  "Montant des articles : " + formatPrice(confirmedTotal) + " $\n" +
-  "Frais : " + formatPrice(confirmedFee) + " $\n" +
-  "Total à payer : " + formatPrice(confirmedFinalTotal) + " $\n\n" +
-  "Merci de vérifier mon paiement.";
+let whatsappMessage = "";
 
-alert(
-  "🎉 Commande enregistrée avec succès !\n\n" +
-  "Référence : " + reference + "\n\n" +
-  paymentInstructions
-);
-cart.clear();
-localStorage.removeItem("bfs_cart");
-renderCart();
-
-paymentMethodSelect.value = "";
-customerPhoneInput.value = "";
-
-updatePaymentTotal();
-updatePaymentDetails();
+if (isMobilePayment) {
+  whatsappMessage =
+    "Bonjour BFS, je viens d'effectuer mon paiement mobile.\n\n" +
+    "Référence : " + reference + "\n" +
+    "Moyen de paiement : " + paymentMethod + "\n" +
+    "Numéro du client : " + customerPhone + "\n" +
+    "Montant des articles : " + formatPrice(confirmedTotal) + " $\n" +
+    "Frais : " + formatPrice(confirmedFee) + " $\n" +
+    "Total payé : " + formatPrice(confirmedFinalTotal) + " $\n\n" +
+    "Merci de vérifier mon paiement.";
+} else {
+  whatsappMessage =
+    "Bonjour BFS, je viens de passer une commande avec paiement au point de vente.\n\n" +
+    "Référence : " + reference + "\n" +
+    "Moyen de paiement : " + paymentMethod + "\n" +
+    "Montant des articles : " + formatPrice(confirmedTotal) + " $\n" +
+    "Total à payer : " + formatPrice(confirmedFinalTotal) + " $\n\n" +
+    "Merci de confirmer ma commande.";
+}
 
 const whatsappURL =
-  "https://wa.me/243900820742?text=" +
+  "https://api.whatsapp.com/send?phone=243900820742&text=" +
   encodeURIComponent(whatsappMessage);
 
 window.location.href = whatsappURL;
