@@ -299,6 +299,24 @@
         grid-template-columns: 1fr;
       }
     }
+    .back-to-shop {
+  display: block;
+  margin: 20px 12px;
+  padding: 12px;
+  text-align: center;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid #d4af37;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.back-to-shop:hover {
+  background: #333333;
+}
+    
   </style>
 </head>
 <body>
@@ -345,8 +363,15 @@
       <a href="#ordersPanel" data-panel="ordersPanel">
         Commandes clients
       </a>
-    </nav>
-    <button id="logoutButton" type="button">Se déconnecter</button>
+      </nav>
+
+    <a href="./index.html" class="back-to-shop">
+      ← Retour à la boutique
+    </a>
+
+    <button id="logoutButton" type="button">
+      Se déconnecter
+    </button>
   </aside>
   <main id="bfsAdminContent">
     <!-- TABLEAU DE BORD -->
