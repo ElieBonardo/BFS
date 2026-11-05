@@ -759,11 +759,16 @@
     <p>Élégance • Qualité • Propreté</p>
   </header>
   
-<nav class="bfs-navigation" aria-label="Navigation principale">
-  <a href="#top">Accueil</a>
+<nav
+  id="bfs-navigation"
+  class="bfs-navigation"
+  aria-label="Navigation principale"
+  style="display: none;"
+>
+  <a href="#welcome-section" onclick="showWelcome()">Accueil</a>
   <a href="#product-search">Nos produits</a>
   <a href="#cart-toggle">Mon panier</a>
-</nav>  
+</nav>
 <section class="welcome-section" id="welcome-section">
   <div class="welcome-content">
     <p class="welcome-label">BIENVENUE CHEZ BFS</p>
@@ -1648,20 +1653,33 @@ categoryFilter.addEventListener("change", renderProducts);
     function openShop() {
   sessionStorage.setItem("bfsShopOpened", "true");
 
-  const welcome = document.getElementById("welcome-section");
-  const shop = document.getElementById("shop-section");
-
-  welcome.style.display = "none";
-  shop.style.display = "block";
+  document.getElementById("welcome-section").style.display = "none";
+  document.getElementById("shop-section").style.display = "block";
+  document.getElementById("bfs-navigation").style.display = "flex";
 
   window.scrollTo({
     top: 0,
     behavior: "smooth"
   });
 }
+
+function showWelcome() {
+  sessionStorage.removeItem("bfsShopOpened");
+
+  document.getElementById("welcome-section").style.display = "block";
+  document.getElementById("shop-section").style.display = "none";
+  document.getElementById("bfs-navigation").style.display = "none";
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+
 if (sessionStorage.getItem("bfsShopOpened") === "true") {
   document.getElementById("welcome-section").style.display = "none";
   document.getElementById("shop-section").style.display = "block";
+  document.getElementById("bfs-navigation").style.display = "flex";
 }
   </script>
 </body>
