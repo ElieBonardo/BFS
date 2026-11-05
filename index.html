@@ -1620,7 +1620,7 @@ const whatsappURL =
   "https://api.whatsapp.com/send?phone=243900820742&text=" +
   encodeURIComponent(whatsappMessage);
 
-window.location.href = whatsappURL;
+window.open(whatsappURL, "_blank");
 
 } catch (error) {
   console.error("Erreur d'enregistrement :", error);
