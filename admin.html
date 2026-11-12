@@ -1398,37 +1398,35 @@ loginSection.style.display = "block";
 async function restoreAdminSession() {
   try {
     const { data, error } =
-            const { data, error } =
-        await supabaseClient.auth.getSession();
+      await supabaseClient.auth.getSession();
 
-      if (error) throw error;
+    if (error) throw error;
 
-      if (!data.session) return;
+    if (!data.session) return;
 
-      // Recharger les droits de l'administrateur
-      await loadAdminAccess();
+    // Recharger les droits de l'administrateur
+    await loadAdminAccess();
 
-      loginSection.style.display = "none";
-      dashboard.style.display = "block";
-      dashboard.classList.remove("menu-open");
+    loginSection.style.display = "none";
+    dashboard.style.display = "block";
+    dashboard.classList.remove("menu-open");
 
-      sidebarToggle.setAttribute("aria-expanded", "false");
-      message.textContent = "";
+    sidebarToggle.setAttribute("aria-expanded", "false");
+    message.textContent = "";
 
-      // Le propriétaire retrouve son dernier écran.
-      // Le gestionnaire arrive sur son écran autorisé.
-      const savedPanel = localStorage.getItem("bfsAdminPanel");
+    const savedPanel = localStorage.getItem("bfsAdminPanel");
 
-      if (currentRole === "owner") {
-        showPanel(savedPanel || "dashboardStats");
+    if (currentRole === "owner") {
+      showPanel(savedPanel || "dashboardStats");
 
-        await Promise.all([
-          loadAdminProducts(),
-          loadAdminOrders()
-        ]);
-      } else {
-        showPanel("dashboardStats");
-      }
+      await Promise.all([
+        loadAdminProducts(),
+        loadAdminOrders()
+      ]);
+    } else {
+      showPanel("dashboardStats");
+    }
+
   } catch (error) {
     console.error(
       "Erreur de restauration de session :",
