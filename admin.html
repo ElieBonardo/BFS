@@ -791,7 +791,28 @@ document
     console.log("Boutique active :", allowedStore.name);
   });
 
+/* NAVIGATION DES PANNEAUX */
+function showPanel(panelId) {
 
+  // Le gestionnaire accède uniquement au stock
+  if (
+    currentRole === "manager" &&
+    panelId !== "inventoryPanel"
+  ) {
+    return;
+  }
+
+  panels.forEach(panel => {
+    panel.hidden = panel.id !== panelId;
+  });
+
+  menuLinks.forEach(link => {
+    link.classList.toggle(
+      "active",
+      link.dataset.panel === panelId
+    );
+  });
+}
 /* 3. NAVIGATION DU MENU */
 menuLinks.forEach(link => {
   link.addEventListener("click", event => {
