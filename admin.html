@@ -537,6 +537,64 @@ const statuses = [
   "Livrée",
   "Annulée"
 ];
+
+/* 3. GESTION DES RÔLES ET DES BOUTIQUES */
+
+let currentUser = null;
+let currentRole = null;
+let accessibleStores = [];
+let currentStoreId = null;
+
+async function loadAdminAccess() {
+  const { data: userData, error: userError } =
+    await supabaseClient.auth.getUser();
+
+  if (userError || !userData.user) {
+    throw new Error("Utilisateur non connecté.");
+  }
+
+  currentUser = userData.user;
+
+  const { data: memberships, error: membershipError } =
+    await supabaseClient
+      .from("store_members")
+      .select("store_id, role")
+      .eq("user_id", currentUser.id);
+
+  if (membershipError) throw membershipError;
+
+  if (!memberships || memberships.length === 0) {
+    throw new Error("Aucun accès boutique attribué à ce compte.");
+  }
+
+  currentRole = memberships.some(item => item.role === "owner")
+    ? "owner"
+    : "manager";
+
+  const storeIds = memberships.map(item => item.store_id);
+
+  const { data: stores, error: storesError } =
+    await supabaseClient
+      .from("stores")
+      .select("id, code, name")
+      .in("id", storeIds);
+
+  if (storesError) throw storesError;
+
+  accessibleStores = stores || [];
+
+  if (accessibleStores.length === 0) {
+    throw new Error("Aucune boutique accessible.");
+  }
+
+  currentStoreId = currentRole === "manager"
+    ? accessibleStores[0].id
+    : 1;
+
+  console.log("Rôle :", currentRole);
+  console.log("Boutiques accessibles :", accessibleStores);
+}
+
 /* 3. NAVIGATION DU MENU */
 function showPanel(panelId) {
   panels.forEach(panel => {
@@ -568,10 +626,12 @@ menuLinks.forEach(link => {
 loginButton.addEventListener("click", async () => {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
+
   if (!email || !password) {
     message.textContent = "Veuillez remplir les deux champs.";
     return;
   }
+
   if (
     !SUPABASE_KEY ||
     SUPABASE_KEY === "COLLE_ICI_TA_CLE_PUBLIQUE_SUPABASE"
@@ -580,28 +640,44 @@ loginButton.addEventListener("click", async () => {
       "Ajoutez votre clé publique Supabase dans le code.";
     return;
   }
+
   loginButton.disabled = true;
   message.textContent = "Connexion en cours...";
+
   try {
     const { data, error } =
       await supabaseClient.auth.signInWithPassword({
         email,
         password
       });
+
     if (error) throw error;
+
     if (!data.user) {
       throw new Error("Compte administrateur introuvable.");
     }
+
+    // Charger le rôle et les boutiques accessibles
+    await loadAdminAccess();
+
     loginSection.style.display = "none";
     dashboard.style.display = "block";
     dashboard.classList.remove("menu-open");
     sidebarToggle.setAttribute("aria-expanded", "false");
     message.textContent = "";
+
     showPanel("dashboardStats");
-    await Promise.all([
-      loadAdminProducts(),
-      loadAdminOrders()
-    ]);
+
+    // Seul le propriétaire charge les produits et commandes
+    if (currentRole === "owner") {
+      await Promise.all([
+        loadAdminProducts(),
+        loadAdminOrders()
+      ]);
+    }
+
+    console.log("Connexion réussie :", currentRole);
+
   } catch (error) {
     console.error("Erreur connexion :", error);
     message.textContent =
@@ -1322,26 +1398,37 @@ loginSection.style.display = "block";
 async function restoreAdminSession() {
   try {
     const { data, error } =
-      await supabaseClient.auth.getSession();
+            const { data, error } =
+        await supabaseClient.auth.getSession();
 
-    if (error) throw error;
+      if (error) throw error;
 
-    if (!data.session) return;
+      if (!data.session) return;
 
-    loginSection.style.display = "none";
-    dashboard.style.display = "block";
-    dashboard.classList.remove("menu-open");
+      // Recharger les droits de l'administrateur
+      await loadAdminAccess();
 
-    sidebarToggle.setAttribute("aria-expanded", "false");
-    message.textContent = "";
+      loginSection.style.display = "none";
+      dashboard.style.display = "block";
+      dashboard.classList.remove("menu-open");
 
-    const savedPanel = localStorage.getItem("bfsAdminPanel");
-showPanel(savedPanel || "dashboardStats");
+      sidebarToggle.setAttribute("aria-expanded", "false");
+      message.textContent = "";
 
-    await Promise.all([
-      loadAdminProducts(),
-      loadAdminOrders()
-    ]);
+      // Le propriétaire retrouve son dernier écran.
+      // Le gestionnaire arrive sur son écran autorisé.
+      const savedPanel = localStorage.getItem("bfsAdminPanel");
+
+      if (currentRole === "owner") {
+        showPanel(savedPanel || "dashboardStats");
+
+        await Promise.all([
+          loadAdminProducts(),
+          loadAdminOrders()
+        ]);
+      } else {
+        showPanel("dashboardStats");
+      }
   } catch (error) {
     console.error(
       "Erreur de restauration de session :",
