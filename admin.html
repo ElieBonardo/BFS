@@ -1649,8 +1649,12 @@ async function restoreAdminSession() {
         loadAdminProducts(),
         loadAdminOrders()
       ]);
+
+    } else if (currentRole === "manager") {
+      showPanel("inventoryPanel");
+
     } else {
-      showPanel("dashboardStats");
+      throw new Error("Rôle administrateur non reconnu.");
     }
 
   } catch (error) {
