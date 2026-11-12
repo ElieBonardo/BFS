@@ -756,6 +756,88 @@ async function loadStoreInventory() {
       card.appendChild(price);
       card.appendChild(category);
 
+      // Modification réservée au gestionnaire
+      if (currentRole === "manager") {
+
+        const actions = document.createElement("div");
+
+        const increaseButton = document.createElement("button");
+        increaseButton.type = "button";
+        increaseButton.textContent = "+ Augmenter";
+
+        const decreaseButton = document.createElement("button");
+        decreaseButton.type = "button";
+        decreaseButton.textContent = "− Diminuer";
+
+        async function adjustStock(direction) {
+          const amountText = prompt(
+            direction === "increase"
+              ? "Combien d'unités souhaitez-vous ajouter ?"
+              : "Combien d'unités souhaitez-vous retirer ?"
+          );
+
+          if (amountText === null) return;
+
+          const amount = Number(amountText);
+
+          if (!Number.isInteger(amount) || amount <= 0) {
+            alert("Entrez une quantité entière supérieure à zéro.");
+            return;
+          }
+
+          const currentQuantity = Number(item.quantity);
+
+          const newQuantity = direction === "increase"
+            ? currentQuantity + amount
+            : currentQuantity - amount;
+
+          if (newQuantity < 0) {
+            alert("Stock insuffisant pour effectuer ce retrait.");
+            return;
+          }
+
+          increaseButton.disabled = true;
+          decreaseButton.disabled = true;
+
+          try {
+            const { error } = await supabaseClient.rpc(
+              "bfs_set_store_stock",
+              {
+                p_store_id: item.store_id,
+                p_product_id: item.product_id,
+                p_quantity: newQuantity
+              }
+            );
+
+            if (error) throw error;
+
+            alert("Stock modifié avec succès.");
+
+            await loadStoreInventory();
+
+          } catch (error) {
+            console.error("Erreur modification stock :", error);
+            alert("Erreur : " + error.message);
+
+            increaseButton.disabled = false;
+            decreaseButton.disabled = false;
+          }
+        }
+
+        increaseButton.addEventListener("click", () => {
+          adjustStock("increase");
+        });
+
+        decreaseButton.addEventListener("click", () => {
+          adjustStock("decrease");
+        });
+
+        actions.appendChild(increaseButton);
+        actions.appendChild(decreaseButton);
+
+        card.appendChild(actions);
+      }
+
       container.appendChild(card);
     });
 
