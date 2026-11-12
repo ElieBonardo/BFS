@@ -357,6 +357,10 @@
       <a href="#dashboardStats" data-panel="dashboardStats">
         Tableau de bord
       </a>
+      <a href="#inventoryPanel" data-panel="inventoryPanel">
+  Stock des boutiques
+</a>
+      
       <a href="#productsPanel" data-panel="productsPanel">
         Produits
       </a>
@@ -374,6 +378,33 @@
     </button>
   </aside>
   <main id="bfsAdminContent">
+    
+    <div id="storeContext" style="
+  padding:18px;
+  margin-bottom:20px;
+  background:#111;
+  color:white;
+  border:1px solid #d4af37;
+  border-radius:12px;
+">
+  <h3 style="color:#d4af37;margin-top:0;">
+    Boutique active
+  </h3>
+
+  <p id="activeStoreName">
+    Chargement de la boutique...
+  </p>
+
+  <label id="storeSelectorLabel" for="storeSelector">
+    Choisir une boutique
+  </label>
+
+  <select id="storeSelector">
+    <option value="">Chargement...</option>
+  </select>
+
+  <p id="storeContextMessage"></p>
+</div>
     <!-- TABLEAU DE BORD -->
    <section id="dashboardStats" class="bfs-panel">
   <h1>Tableau de bord BFS</h1>
@@ -418,6 +449,21 @@
 
   </div>
 </section>
+<!-- STOCK DES BOUTIQUES -->
+<section id="inventoryPanel" class="bfs-panel" hidden>
+
+  <h1>Stock des boutiques</h1>
+
+  <p>
+    Consultez les quantités disponibles dans la boutique active.
+  </p>
+
+  <div id="storeInventory">
+    Chargement du stock...
+  </div>
+
+</section>
+
     <!-- GESTION DES PRODUITS -->
     <section id="productsPanel" class="bfs-panel" hidden>
       <h1>Gestion des produits</h1>
@@ -594,6 +640,157 @@ async function loadAdminAccess() {
   console.log("Rôle :", currentRole);
   console.log("Boutiques accessibles :", accessibleStores);
 }
+/* 3B. SÉLECTEUR DE BOUTIQUE */
+
+async function renderStoreSelector() {
+  const selector = document.getElementById("storeSelector");
+  const activeName = document.getElementById("activeStoreName");
+  const selectorLabel = document.getElementById("storeSelectorLabel");
+
+  selector.innerHTML = "";
+
+  accessibleStores.forEach(store => {
+    const option = document.createElement("option");
+    option.value = store.id;
+    option.textContent = store.name;
+    selector.appendChild(option);
+  });
+
+  selector.value = String(currentStoreId);
+
+  const activeStore = accessibleStores.find(
+    store => Number(store.id) === Number(currentStoreId)
+  );
+
+  activeName.textContent = activeStore
+    ? activeStore.name
+    : "Boutique inconnue";
+
+  if (currentRole === "manager") {
+    selector.disabled = true;
+    selectorLabel.style.display = "none";
+  } else {
+    selector.disabled = false;
+    selectorLabel.style.display = "block";
+  }
+}
+
+/* 3C. CHARGEMENT DU STOCK */
+
+async function loadStoreInventory() {
+  const container = document.getElementById("storeInventory");
+
+  container.textContent = "Chargement du stock...";
+
+  try {
+    if (!currentStoreId) {
+      throw new Error("Aucune boutique sélectionnée.");
+    }
+
+    const { data, error } = await supabaseClient
+      .from("store_inventory")
+      .select(`
+        store_id,
+        product_id,
+        quantity,
+        average_unit_cost,
+        cost_known_quantity,
+        products (
+          id,
+          Name,
+          Price,
+          image_url,
+          category
+        )
+      `)
+      .eq("store_id", currentStoreId)
+      .order("product_id", { ascending: true });
+
+    if (error) throw error;
+
+    const inventory = data || [];
+
+    container.innerHTML = "";
+
+    if (inventory.length === 0) {
+      container.textContent =
+        "Aucun stock enregistré dans cette boutique.";
+      return;
+    }
+
+    inventory.forEach(item => {
+      const product = Array.isArray(item.products)
+        ? item.products[0]
+        : item.products;
+
+      const card = document.createElement("div");
+      card.className = "admin-product";
+
+      const title = document.createElement("h3");
+      title.textContent = product?.Name || "Produit sans nom";
+
+      const quantity = document.createElement("p");
+      quantity.textContent =
+        "Quantité disponible : " + item.quantity;
+
+      const price = document.createElement("p");
+      price.textContent =
+        "Prix de vente : " +
+        (product?.Price ?? "Non renseigné") + " $";
+
+      const category = document.createElement("p");
+      category.textContent =
+        "Catégorie : " + (product?.category || "Non renseignée");
+
+      card.appendChild(title);
+
+      if (product?.image_url) {
+        const img = document.createElement("img");
+        img.src = product.image_url;
+        img.alt = product.Name || "Produit BFS";
+        img.loading = "lazy";
+        card.appendChild(img);
+      }
+
+      card.appendChild(quantity);
+      card.appendChild(price);
+      card.appendChild(category);
+
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("Erreur stock boutique :", error);
+
+    container.textContent =
+      "Erreur de chargement du stock : " + error.message;
+  }
+}
+
+/* 3D. CHANGEMENT DE BOUTIQUE */
+
+document
+  .getElementById("storeSelector")
+  .addEventListener("change", async event => {
+    const selectedId = Number(event.target.value);
+
+    const allowedStore = accessibleStores.find(
+      store => Number(store.id) === selectedId
+    );
+
+    if (!allowedStore) {
+      event.target.value = String(currentStoreId);
+      return;
+    }
+
+    currentStoreId = allowedStore.id;
+
+    await renderStoreSelector();
+    await loadStoreInventory();
+
+    console.log("Boutique active :", allowedStore.name);
+  });
+
 
 /* 3. NAVIGATION DU MENU */
 function showPanel(panelId) {
@@ -1406,6 +1603,8 @@ async function restoreAdminSession() {
 
     // Recharger les droits de l'administrateur
     await loadAdminAccess();
+    await renderStoreSelector();
+    await loadStoreInventory();
 
     loginSection.style.display = "none";
     dashboard.style.display = "block";
@@ -1436,6 +1635,8 @@ async function restoreAdminSession() {
 }
 
 restoreAdminSession();
+await renderStoreSelector();
+await loadStoreInventory();
 
 </script>
 </body>
