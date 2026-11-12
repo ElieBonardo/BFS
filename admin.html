@@ -1695,6 +1695,8 @@ refreshOrdersButton.addEventListener("click", async () => {
 });
 /* 10. DECONNEXION */
 logoutButton.addEventListener("click", async () => {
+  alert("Le bouton de déconnexion fonctionne.");
+
   logoutButton.disabled = true;
   try {
     const { error } = await supabaseClient.auth.signOut();
