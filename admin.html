@@ -916,6 +916,20 @@ menuLinks.forEach(link => {
     sidebarToggle.setAttribute("aria-expanded", "false");
   });
 }); 
+/* OUVRIR ET FERMER LE MENU LATÉRAL */
+sidebarToggle.addEventListener("click", () => {
+  const isOpen = dashboard.classList.toggle("menu-open");
+
+  sidebarToggle.setAttribute(
+    "aria-expanded",
+    String(isOpen)
+  );
+
+  sidebarToggle.setAttribute(
+    "aria-label",
+    isOpen ? "Fermer le menu" : "Ouvrir le menu"
+  );
+});
 /* 4. CONNEXION */
 loginButton.addEventListener("click", async () => {
   const email = document.getElementById("email").value.trim();
@@ -1695,7 +1709,7 @@ refreshOrdersButton.addEventListener("click", async () => {
 });
 /* 10. DECONNEXION */
 logoutButton.addEventListener("click", async () => {
-  alert("Le bouton de déconnexion fonctionne.");
+  
 
   logoutButton.disabled = true;
   try {
