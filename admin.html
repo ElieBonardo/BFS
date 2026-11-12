@@ -999,9 +999,22 @@ editButton.addEventListener("click", async () => {
   product.category ?? ""
 );
 if (newCategory === null) return;
+const { data: currentInventory, error: inventoryError } =
+  await supabaseClient
+    .from("store_inventory")
+    .select("quantity")
+    .eq("store_id", currentStoreId)
+    .eq("product_id", product.id)
+    .maybeSingle();
+
+if (inventoryError) {
+  alert("Erreur de lecture du stock : " + inventoryError.message);
+  return;
+}
+
 const stockText = prompt(
-  "Quantité en stock :",
-  product.stock ?? 0
+  "Quantité en stock pour cette boutique :",
+  currentInventory?.quantity ?? 0
 );
 if (stockText === null) return;
 const newStock = Number(stockText);
@@ -1132,26 +1145,40 @@ async function saveProductChanges(
   stock
 ) {
   try {
+    if (currentStoreId === null || currentStoreId === undefined) {
+      alert("Veuillez d'abord sélectionner une boutique.");
+      return;
+    }
+    // 1. Enregistrer le stock de la boutique sélectionnée
+    const { data: stockResult, error: stockError } =
+      await supabaseClient.rpc("bfs_set_store_stock", {
+        p_store_id: currentStoreId,
+        p_product_id: id,
+        p_quantity: Number(stock)
+      });
+    if (stockError) throw stockError;
+    // 2. Modifier les informations générales du produit
     const { data, error } = await supabaseClient
       .from("products")
       .update({
         Name: name,
         Price: price,
         Description: description,
-        category: category,
-        stock: stock
+        category: category
       })
       .eq("id", id)
-      .select();
+      .select("id");
     if (error) throw error;
     if (!data || data.length === 0) {
-      alert(
-        "Aucun produit modifié. Vérifiez la règle RLS UPDATE."
-      );
+      alert("Aucun produit modifié. Vérifiez la règle RLS UPDATE.");
       return;
     }
-    alert("Produit modifié avec succès.");
-    await loadAdminProducts();
+    alert("Produit et stock de la boutique modifiés avec succès.");
+    // 3. Actualiser les affichages
+    await Promise.all([
+      loadAdminProducts(),
+      loadStoreInventory()
+    ]);
   } catch (error) {
     console.error("Erreur modification :", error);
     alert("Erreur de modification : " + error.message);
