@@ -793,27 +793,21 @@ document
 
 
 /* 3. NAVIGATION DU MENU */
-function showPanel(panelId) {
-  panels.forEach(panel => {
-    panel.hidden = panel.id !== panelId;
-  });
-  menuLinks.forEach(link => {
-    link.classList.toggle(
-      "active",
-      link.dataset.panel === panelId
-    );
-  });
-}
-sidebarToggle.addEventListener("click", () => {
-  const isOpen = dashboard.classList.toggle("menu-open");
-  sidebarToggle.setAttribute("aria-expanded", String(isOpen));
-});
 menuLinks.forEach(link => {
   link.addEventListener("click", event => {
     event.preventDefault();
 
-    localStorage.setItem("bfsAdminPanel", link.dataset.panel);
-    showPanel(link.dataset.panel);
+    const panelId = link.dataset.panel;
+
+    if (
+      currentRole === "manager" &&
+      panelId !== "inventoryPanel"
+    ) {
+      return;
+    }
+
+    localStorage.setItem("bfsAdminPanel", panelId);
+    showPanel(panelId);
 
     dashboard.classList.remove("menu-open");
     sidebarToggle.setAttribute("aria-expanded", "false");
