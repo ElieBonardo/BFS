@@ -715,9 +715,6 @@ async function loadStoreInventory() {
       .order("product_id", { ascending: true });
 
     if (error) throw error;
-    console.log("Session récupérée :", data.session);
-    
-
     const inventory = data || [];
 
     container.innerHTML = "";
