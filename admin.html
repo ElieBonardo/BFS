@@ -2065,56 +2065,48 @@ async function loadAdminOrders() {
   container.textContent = "Chargement des commandes...";
 
   try {
-// Récupérer les commandes en ligne de la boutique active
-const { data: websiteSales, error: salesError } =
-  await supabaseClient
-    .from("sales")
-    .select("order_id")
-    .eq("store_id", Number(currentStoreId))
-    .eq("sale_source", "website");
 
-if (salesError) throw salesError;
+    // COMMANDES EN LIGNE
+    let data = [];
 
-const orderIds = (websiteSales || [])
-  .map(sale => sale.order_id)
-  .filter(id => id !== null);
+    // Les commandes du site sont attribuées à la boutique principale
+    if (Number(currentStoreId) === 1) {
 
-let data = [];
+      const { data: orders, error } = await supabaseClient
+        .from("orders")
+        .select(`
+          id,
+          reference,
+          created_at,
+          items,
+          total,
+          status,
+          payment_method,
+          payment_status,
+          payment_fee,
+          customer_phone
+        `)
+        .order("created_at", { ascending: false });
 
-if (orderIds.length > 0) {
-  const { data: orders, error } = await supabaseClient
-    .from("orders")
-    .select(`
-      id,
-      reference,
-      created_at,
-      items,
-      total,
-      status,
-      payment_method,
-      payment_status,
-      payment_fee,
-      customer_phone
-    `)
-    .in("id", orderIds)
-    .order("created_at", { ascending: false });
+      if (error) throw error;
 
-  if (error) throw error;
+      data = orders || [];
+    }
 
-  data = orders || [];
-}
+    currentOrders = data;
 
-    currentOrders = data || [];
+    // STATISTIQUES DE PAIEMENT
     document.getElementById("statPaidOrders").textContent =
-  currentOrders.filter(order =>
-    order.payment_status === "Payé"
-  ).length;
+      currentOrders.filter(order =>
+        order.payment_status === "Payé"
+      ).length;
 
-document.getElementById("statUnpaidOrders").textContent =
-  currentOrders.filter(order =>
-    order.payment_status !== "Payé"
-  ).length;
+    document.getElementById("statUnpaidOrders").textContent =
+      currentOrders.filter(order =>
+        order.payment_status !== "Payé"
+      ).length;
 
+    // IMAGES DES PRODUITS
     const { data: products, error: productsError } =
       await supabaseClient
         .from("products")
@@ -2129,6 +2121,7 @@ document.getElementById("statUnpaidOrders").textContent =
       ])
     );
 
+    // STATISTIQUES DES COMMANDES
     document.getElementById("statTotalOrders").textContent =
       currentOrders.length;
 
@@ -2146,42 +2139,52 @@ document.getElementById("statUnpaidOrders").textContent =
       (sum, order) => sum + (Number(order.total) || 0),
       0
     );
-    
+
     document.getElementById("statRevenue").textContent =
       revenue.toFixed(2) + " $";
 
-// STATISTIQUES DES VENTES PHYSIQUES
-try {
-  const { data: physicalSales, error: physicalError } =
-    await supabaseClient
-      .from("sales")
-      .select("id, total")
-      .eq("store_id", Number(currentStoreId))
-      .eq("sale_source", "physical");
 
-  if (physicalError) throw physicalError;
+    // STATISTIQUES DES VENTES PHYSIQUES
+    try {
 
-  document.getElementById("statPhysicalSales").textContent =
-    (physicalSales || []).length;
+      const { data: physicalSales, error: physicalError } =
+        await supabaseClient
+          .from("sales")
+          .select("id, total")
+          .eq("store_id", Number(currentStoreId))
+          .eq("sale_source", "physical");
 
-  const physicalRevenue = (physicalSales || []).reduce(
-    (sum, sale) => sum + (Number(sale.total) || 0),
-    0
-  );
+      if (physicalError) throw physicalError;
 
-  document.getElementById("statPhysicalRevenue").textContent =
-    physicalRevenue.toFixed(2) + " $";
+      document.getElementById("statPhysicalSales").textContent =
+        (physicalSales || []).length;
 
-} catch (physicalError) {
-  console.error("Erreur statistiques ventes physiques :", physicalError);
+      const physicalRevenue = (physicalSales || []).reduce(
+        (sum, sale) => sum + (Number(sale.total) || 0),
+        0
+      );
 
-  document.getElementById("statPhysicalSales").textContent = "--";
-  document.getElementById("statPhysicalRevenue").textContent = "--";
-}
+      document.getElementById("statPhysicalRevenue").textContent =
+        physicalRevenue.toFixed(2) + " $";
+
+    } catch (physicalError) {
+
+      console.error(
+        "Erreur statistiques ventes physiques :",
+        physicalError
+      );
+
+      document.getElementById("statPhysicalSales").textContent = "--";
+      document.getElementById("statPhysicalRevenue").textContent = "--";
+    }
+
+    // AFFICHER LES COMMANDES
     renderOrders();
 
   } catch (error) {
+
     console.error("Erreur commandes :", error);
+
     container.textContent =
       "Erreur de chargement des commandes : " + error.message;
   }
