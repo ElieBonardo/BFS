@@ -2046,7 +2046,13 @@ try {
 }
 
 });
+
 /* 8. CHARGEMENT DES COMMANDES ET STATISTIQUES */
+async function loadAdminOrders() {
+  const container = document.getElementById("adminOrders");
+  container.textContent = "Chargement des commandes...";
+
+  try {
 // Récupérer les commandes en ligne de la boutique active
 const { data: websiteSales, error: salesError } =
   await supabaseClient
