@@ -715,6 +715,8 @@ async function loadStoreInventory() {
       .order("product_id", { ascending: true });
 
     if (error) throw error;
+    console.log("Session récupérée :", data.session);
+    
 
     const inventory = data || [];
 
@@ -822,6 +824,7 @@ async function loadStoreInventory() {
             alert("Stock modifié avec succès.");
 
             await loadStoreInventory();
+            
 
           } catch (error) {
             console.error("Erreur modification stock :", error);
@@ -877,7 +880,7 @@ document
 
     await renderStoreSelector();
     await loadStoreInventory();
-
+    console.log("Stock chargé.");
     console.log("Boutique active :", allowedStore.name);
   });
 
