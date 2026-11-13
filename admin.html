@@ -358,33 +358,46 @@
     aria-label="Ouvrir le menu"
     aria-expanded="false"
   >☰</button>
-  <aside id="bfsSidebar" class="bfs-sidebar">
-    <h2>BFS Admin</h2>
-    <p>Gestion de Bonardo Fashion Store</p>
-    <nav class="bfs-admin-menu">
-      <a href="#dashboardStats" data-panel="dashboardStats">
-        Tableau de bord
-      </a>
-      <a href="#inventoryPanel" data-panel="inventoryPanel">
-  Stock des boutiques
-</a>
-      
-      <a href="#productsPanel" data-panel="productsPanel">
-        Produits
-      </a>
-      <a href="#ordersPanel" data-panel="ordersPanel">
-        Commandes clients
-      </a>
-      </nav>
+<aside id="bfsSidebar" class="bfs-sidebar">
+  <h2>BFS Admin</h2>
+  <p>Gestion de Bonardo Fashion Store</p>
 
-    <a href="./index.html" class="back-to-shop">
-      ← Retour à la boutique
+  <nav class="bfs-admin-menu">
+
+    <a href="#dashboardStats" data-panel="dashboardStats">
+      Tableau de bord
     </a>
 
-    <button id="logoutButton" type="button">
-      Se déconnecter
-    </button>
-  </aside>
+    <a href="#inventoryPanel" data-panel="inventoryPanel">
+      Stock des boutiques
+    </a>
+
+    <a
+      href="#transfersPanel"
+      data-panel="transfersPanel"
+      data-owner-only="true"
+    >
+      Transferts entre boutiques
+    </a>
+
+    <a href="#productsPanel" data-panel="productsPanel">
+      Produits
+    </a>
+
+    <a href="#ordersPanel" data-panel="ordersPanel">
+      Commandes clients
+    </a>
+
+  </nav>
+
+  <a href="./index.html" class="back-to-shop">
+    ← Retour à la boutique
+  </a>
+
+  <button id="logoutButton" type="button">
+    Se déconnecter
+  </button>
+</aside>
   <main id="bfsAdminContent">
     
     <div id="storeContext" style="
@@ -682,6 +695,58 @@ async function renderStoreSelector() {
     selectorLabel.style.display = "block";
   }
 }
+/*  TRANSFERTS ENTRE BOUTIQUES  */
+
+async function loadTransferForm() {
+  if (currentRole !== "owner") return;
+
+  const source = document.getElementById("transferSource");
+  const destination = document.getElementById("transferDestination");
+  const productSelect = document.getElementById("transferProduct");
+
+  source.innerHTML = "";
+  destination.innerHTML = "";
+  productSelect.innerHTML =
+    '<option value="">Chargement des produits...</option>';
+
+  // Charger les boutiques
+  accessibleStores.forEach(store => {
+    const option1 = document.createElement("option");
+    option1.value = store.id;
+    option1.textContent = store.name;
+    source.appendChild(option1);
+
+    const option2 = document.createElement("option");
+    option2.value = store.id;
+    option2.textContent = store.name;
+    destination.appendChild(option2);
+  });
+
+  // Valeurs initiales
+  source.value = "1";
+  destination.value = "2";
+
+  // Charger les produits
+  const { data: products, error } = await supabaseClient
+    .from("products")
+    .select("id, Name, Price")
+    .order("Name");
+
+  if (error) {
+    throw error;
+  }
+
+  productSelect.innerHTML =
+    '<option value="">Sélectionner un produit</option>';
+
+  (products || []).forEach(product => {
+    const option = document.createElement("option");
+    option.value = product.id;
+    option.textContent = product.Name;
+    productSelect.appendChild(option);
+  });
+}
+
 
 /* 3C. CHARGEMENT DU STOCK */
 
@@ -892,9 +957,29 @@ function showPanel(panelId) {
     return;
   }
 
+  // Seul le propriétaire peut accéder aux transferts
+  if (
+    panelId === "transfersPanel" &&
+    currentRole !== "owner"
+  ) {
+    return;
+  }
+
   panels.forEach(panel => {
     panel.hidden = panel.id !== panelId;
   });
+  
+  if (
+  panelId === "transfersPanel" &&
+  currentRole === "owner"
+) {
+  loadTransferForm().catch(error => {
+    console.error("Erreur de chargement des transferts :", error);
+
+    document.getElementById("transferMessage").textContent =
+      "Erreur : " + error.message;
+  });
+}
 
   menuLinks.forEach(link => {
     link.classList.toggle(
