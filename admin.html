@@ -807,6 +807,108 @@ async function loadTransferForm() {
     `;
   };
 }
+async function loadTransferHistory() {
+  const container = document.getElementById("transferHistory");
+
+  container.textContent = "Chargement de l'historique...";
+
+  try {
+    const { data: transfers, error } = await supabaseClient
+      .from("stock_transfers")
+      .select(`
+        id,
+        source_store_id,
+        destination_store_id,
+        status,
+        notes,
+        created_at,
+        stock_transfer_items (
+          product_id,
+          quantity,
+          products (
+            Name,
+            image_url
+          )
+        )
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    if (!transfers || transfers.length === 0) {
+      container.textContent = "Aucun transfert enregistré.";
+      return;
+    }
+
+    container.innerHTML = "";
+
+    transfers.forEach(transfer => {
+      const source = accessibleStores.find(
+        store => Number(store.id) === Number(transfer.source_store_id)
+      );
+
+      const destination = accessibleStores.find(
+        store => Number(store.id) === Number(transfer.destination_store_id)
+      );
+
+      const card = document.createElement("div");
+
+      card.style.cssText =
+        "padding:15px;margin:12px 0;border:1px solid #ccc;border-radius:10px;";
+
+      const date = new Date(transfer.created_at).toLocaleString("fr-FR");
+
+      const items = (transfer.stock_transfer_items || [])
+        .map(item => `
+          <div style="display:flex;align-items:center;gap:10px;margin:10px 0;">
+            ${
+              item.products?.image_url
+                ? `<img src="${item.products.image_url}"
+                    style="width:55px;height:55px;object-fit:cover;border-radius:6px;">`
+                : ""
+            }
+            <span>
+              ${item.products?.Name || "Produit"}
+              — Quantité : ${item.quantity}
+            </span>
+          </div>
+        `).join("");
+
+      const title = document.createElement("h3");
+      title.textContent = `Transfert #${transfer.id}`;
+
+      const details = document.createElement("p");
+      details.textContent =
+        `${source?.name || "Boutique " + transfer.source_store_id} → ${destination?.name || "Boutique " + transfer.destination_store_id}`;
+
+      const dateElement = document.createElement("p");
+      dateElement.textContent = `Date : ${date}`;
+
+      const status = document.createElement("p");
+      status.textContent = `Statut : ${transfer.status}`;
+
+      const products = document.createElement("div");
+      products.innerHTML = items;
+
+      card.append(title, details, dateElement, status, products);
+
+      if (transfer.notes) {
+        const note = document.createElement("p");
+        note.textContent = `Note : ${transfer.notes}`;
+        card.appendChild(note);
+      }
+
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("Erreur historique transferts :", error);
+    container.textContent =
+      "Erreur de chargement de l'historique : " + error.message;
+  }
+}
+
+
 async function checkTransferStock() {
   const sourceId = document.getElementById("transferSource").value;
   const productId = document.getElementById("transferProduct").value;
@@ -1144,13 +1246,16 @@ function showPanel(panelId) {
   panelId === "transfersPanel" &&
   currentRole === "owner"
 ) {
-  loadTransferForm().catch(error => {
-    console.error("Erreur de chargement des transferts :", error);
+  loadTransferForm()
+    .then(() => loadTransferHistory())
+    .catch(error => {
+      console.error("Erreur de chargement des transferts :", error);
 
-    document.getElementById("transferMessage").textContent =
-      "Erreur : " + error.message;
-  });
+      document.getElementById("transferMessage").textContent =
+        "Erreur : " + error.message;
+    });
 }
+
 
   menuLinks.forEach(link => {
     link.classList.toggle(
