@@ -501,6 +501,8 @@
   <select id="transferProduct">
     <option value="">Sélectionner un produit</option>
   </select>
+  <div id="transferProductPreview" style="margin-top:12px;">
+</div>
 </div>
 <div>
   <label for="transferQuantity">Quantité</label>
@@ -736,13 +738,15 @@ async function loadTransferForm() {
   const source = document.getElementById("transferSource");
   const destination = document.getElementById("transferDestination");
   const productSelect = document.getElementById("transferProduct");
+  const preview = document.getElementById("transferProductPreview");
 
   source.innerHTML = "";
   destination.innerHTML = "";
+  preview.innerHTML = "";
+
   productSelect.innerHTML =
     '<option value="">Chargement des produits...</option>';
 
-  // Charger les boutiques
   accessibleStores.forEach(store => {
     const option1 = document.createElement("option");
     option1.value = store.id;
@@ -755,29 +759,53 @@ async function loadTransferForm() {
     destination.appendChild(option2);
   });
 
-  // Valeurs initiales
   source.value = "1";
   destination.value = "2";
 
-  // Charger les produits
   const { data: products, error } = await supabaseClient
     .from("products")
-    .select("id, Name, Price")
+    .select("id, Name, Price, image_url")
     .order("Name");
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   productSelect.innerHTML =
     '<option value="">Sélectionner un produit</option>';
 
   (products || []).forEach(product => {
     const option = document.createElement("option");
+
     option.value = product.id;
     option.textContent = product.Name;
+    option.dataset.image = product.image_url || "";
+
     productSelect.appendChild(option);
   });
+
+  productSelect.onchange = function () {
+    const selectedOption =
+      productSelect.options[productSelect.selectedIndex];
+
+    const image = selectedOption.dataset.image;
+    const name = selectedOption.textContent;
+
+    if (!productSelect.value) {
+      preview.innerHTML = "";
+      return;
+    }
+
+    preview.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;">
+        ${
+          image
+            ? `<img src="${image}" alt="${name}"
+                style="width:90px;height:90px;object-fit:cover;border-radius:8px;">`
+            : `<p>Photo non disponible</p>`
+        }
+        <strong>${name}</strong>
+      </div>
+    `;
+  };
 }
 async function checkTransferStock() {
   const sourceId = document.getElementById("transferSource").value;
