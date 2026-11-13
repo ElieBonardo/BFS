@@ -1917,15 +1917,6 @@ if (panelId === "salesPanel") {
     );
   });
 }
-if (panelId === "purchasesPanel") {
-  loadPurchaseForm()
-    .catch(error => {
-      console.error("Erreur de chargement des achats :", error);
-
-      document.getElementById("purchaseMessage").textContent =
-        "Erreur : " + error.message;
-    });
-}
 /* 3. NAVIGATION DU MENU */
 menuLinks.forEach(link => {
   link.addEventListener("click", event => {
