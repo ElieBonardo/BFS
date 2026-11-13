@@ -1728,54 +1728,49 @@ logoutButton.addEventListener("click", async () => {
   }
 });
 /* 11. ETAT INITIAL */
-showPanel("dashboardStats");
+async function restoreAdminSession() {
+loginSection.style.display = “none”;
+dashboard.style.display = “none”;
+
+try {
+const { data, error } =
+await supabaseClient.auth.getSession();
+
+if (error) throw error;
+if (!data.session) {
+  loginSection.style.display = "block";
+  return;
+}
+await loadAdminAccess();
+await renderStoreSelector();
+dashboard.style.display = "block";
+loginSection.style.display = "none";
+dashboard.classList.remove("menu-open");
+sidebarToggle.setAttribute("aria-expanded", "false");
+message.textContent = "";
+const savedPanel = localStorage.getItem("bfsAdminPanel");
+if (currentRole === "owner") {
+  showPanel(savedPanel || "dashboardStats");
+  await Promise.all([
+    loadAdminProducts(),
+    loadAdminOrders()
+  ]);
+} else if (currentRole === "manager") {
+  showPanel("inventoryPanel");
+  await loadStoreInventory();
+} else {
+  throw new Error("Rôle administrateur non reconnu.");
+}
+
+} catch (error) {
+console.error(“Erreur de restauration :”, error);
+
 dashboard.style.display = "none";
 loginSection.style.display = "block";
-/* RESTAURER LA SESSION ADMIN AU RECHARGEMENT */
-async function restoreAdminSession() {
-  try {
-    const { data, error } =
-      await supabaseClient.auth.getSession();
+message.textContent =
+  "Erreur de restauration : " + error.message;
 
-    if (error) throw error;
-
-    if (!data.session) return;
-
-    // Recharger les droits de l'administrateur
-    await loadAdminAccess();
-    await renderStoreSelector();
-    await loadStoreInventory();
-
-    loginSection.style.display = "none";
-    dashboard.style.display = "block";
-    dashboard.classList.remove("menu-open");
-
-    sidebarToggle.setAttribute("aria-expanded", "false");
-    message.textContent = "";
-
-    const savedPanel = localStorage.getItem("bfsAdminPanel");
-
-    if (currentRole === "owner") {
-      showPanel(savedPanel || "dashboardStats");
-
-      await Promise.all([
-        loadAdminProducts(),
-        loadAdminOrders()
-      ]);
-
-    } else if (currentRole === "manager") {
-      showPanel("inventoryPanel");
-
-    } else {
-      throw new Error("Rôle administrateur non reconnu.");
-    }
-
-  } catch (error) {
-    console.error(
-      "Erreur de restauration de session :",
-      error
-    );
-  }
+}
 }
 
 restoreAdminSession();
