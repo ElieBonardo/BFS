@@ -380,17 +380,25 @@
       Transferts entre boutiques
     </a>
 
+    <a
+      href="#purchasesPanel"
+      data-panel="purchasesPanel"
+      data-owner-only="true"
+    >
+      Achats & Approvisionnements
+    </a>
+
     <a href="#productsPanel" data-panel="productsPanel">
       Produits
     </a>
 
-   <a href="#ordersPanel" data-panel="ordersPanel">
-  Commandes clients
-</a>
+    <a href="#ordersPanel" data-panel="ordersPanel">
+      Commandes clients
+    </a>
 
-<a href="#salesPanel" data-panel="salesPanel">
-  Ventes physiques
-</a>
+    <a href="#salesPanel" data-panel="salesPanel">
+      Ventes physiques
+    </a>
 
   </nav>
 
@@ -531,6 +539,187 @@
   </div>
   <h2>Historique des transferts</h2>
   <div id="transferHistory">Chargement de l'historique...</div>
+</section>
+
+<section id="purchasesPanel" class="bfs-panel" hidden>
+
+  <h1>Achats & Approvisionnements</h1>
+  <p>Enregistrez vos achats, frais d'importation et répartitions de stock.</p>
+
+  <!-- INFORMATIONS GENERALES -->
+  <div class="purchase-form">
+
+    <h2>Informations sur l'achat</h2>
+
+    <div>
+      <label for="purchaseSupplier">Fournisseur</label>
+      <input
+        type="text"
+        id="purchaseSupplier"
+        placeholder="Nom du fournisseur"
+      >
+    </div>
+
+    <div>
+      <label for="purchaseCountry">Pays d'achat</label>
+      <input
+        type="text"
+        id="purchaseCountry"
+        placeholder="Exemple : Chine"
+      >
+    </div>
+
+    <div>
+      <label for="purchaseDate">Date d'achat</label>
+      <input type="date" id="purchaseDate">
+    </div>
+
+    <div>
+      <label for="purchaseCurrency">Devise d'achat</label>
+      <select id="purchaseCurrency">
+        <option value="USD">USD - Dollar</option>
+        <option value="CNY">CNY - Yuan chinois</option>
+        <option value="EUR">EUR - Euro</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="purchaseExchangeRate">
+        Valeur d'une unité de devise en USD
+      </label>
+      <input
+        type="number"
+        id="purchaseExchangeRate"
+        min="0.000001"
+        step="0.000001"
+        value="1"
+      >
+    </div>
+
+    <!-- PRODUITS ACHETES -->
+    <h2>Produits achetés</h2>
+
+    <div id="purchaseItemsContainer">
+
+      <div class="purchase-item-row">
+
+        <label>Produit</label>
+        <select class="purchase-product">
+          <option value="">Sélectionner un produit</option>
+        </select>
+
+        <div class="purchase-product-preview"></div>
+
+        <label>Quantité achetée</label>
+        <input
+          type="number"
+          class="purchase-quantity"
+          min="1"
+          step="1"
+          placeholder="Quantité"
+        >
+
+        <label>Prix unitaire dans la devise d'achat</label>
+        <input
+          type="number"
+          class="purchase-unit-cost"
+          min="0"
+          step="0.01"
+          placeholder="Prix unitaire"
+        >
+
+        <h3>Répartition des quantités</h3>
+
+        <label>Boutique principale</label>
+        <input
+          type="number"
+          class="purchase-store1-quantity"
+          min="0"
+          step="1"
+          value="0"
+        >
+
+        <label>Boutique 2</label>
+        <input
+          type="number"
+          class="purchase-store2-quantity"
+          min="0"
+          step="1"
+          value="0"
+        >
+
+        <hr>
+
+      </div>
+
+    </div>
+
+    <button id="addPurchaseItemButton" type="button">
+      + Ajouter un autre produit
+    </button>
+
+    <!-- FRAIS SUPPLEMENTAIRES -->
+    <h2>Frais supplémentaires</h2>
+
+    <div>
+      <label for="purchaseAdditionalCosts">
+        Transport, douane, livraison et autres frais
+      </label>
+
+      <input
+        type="number"
+        id="purchaseAdditionalCosts"
+        min="0"
+        step="0.01"
+        value="0"
+      >
+    </div>
+
+    <div>
+      <label for="purchaseNotes">Notes complémentaires</label>
+      <textarea
+        id="purchaseNotes"
+        placeholder="Détails de l'approvisionnement..."
+      ></textarea>
+    </div>
+
+    <!-- CALCUL -->
+    <h2>Résumé des coûts</h2>
+
+    <div class="purchase-summary">
+
+      <p>
+        Coût des produits :
+        <strong id="purchaseBaseTotal">0.00 $</strong>
+      </p>
+
+      <p>
+        Frais supplémentaires :
+        <strong id="purchaseExtraTotal">0.00 $</strong>
+      </p>
+
+      <p>
+        Coût total rendu :
+        <strong id="purchaseGrandTotal">0.00 $</strong>
+      </p>
+
+    </div>
+
+    <button id="savePurchaseButton" type="button">
+      Enregistrer l'achat
+    </button>
+
+    <p id="purchaseMessage"></p>
+
+  </div>
+
+  <!-- HISTORIQUE -->
+  <h2>Historique des achats</h2>
+
+  <div id="purchaseHistory">
+    Chargement de l'historique...
+  </div>
+
 </section>
     <!-- GESTION DES PRODUITS -->
     <section id="productsPanel" class="bfs-panel" hidden>
@@ -867,6 +1056,133 @@ async function loadTransferForm() {
       </div>
     `;
   };
+}
+  async function loadPurchaseForm() {
+  if (currentRole !== "owner") return;
+
+  const container = document.getElementById("purchaseItemsContainer");
+
+  if (!container) return;
+
+  const { data: products, error } = await supabaseClient
+    .from("products")
+    .select("id, Name, Price, image_url")
+    .order("Name");
+
+  if (error) throw error;
+
+  window.bfsPurchaseProducts = products || [];
+
+  function fillProductSelect(select) {
+    select.innerHTML =
+      '<option value="">Sélectionner un produit</option>';
+
+    window.bfsPurchaseProducts.forEach(product => {
+      const option = document.createElement("option");
+
+      option.value = product.id;
+      option.textContent = product.Name;
+      option.dataset.image = product.image_url || "";
+
+      select.appendChild(option);
+    });
+  }
+
+  function createPurchaseProductRow() {
+    const row = document.createElement("div");
+
+    row.className = "purchase-item-row";
+
+    row.innerHTML = `
+      <label>Produit</label>
+      <select class="purchase-product">
+        <option value="">Sélectionner un produit</option>
+      </select>
+
+      <div class="purchase-product-preview"></div>
+
+      <label>Quantité achetée</label>
+      <input type="number" class="purchase-quantity"
+        min="1" step="1" placeholder="Quantité">
+
+      <label>Prix unitaire dans la devise d'achat</label>
+      <input type="number" class="purchase-unit-cost"
+        min="0" step="0.01" placeholder="Prix unitaire">
+
+      <h3>Répartition des quantités</h3>
+
+      <label>Boutique principale</label>
+      <input type="number" class="purchase-store1-quantity"
+        min="0" step="1" value="0">
+
+      <label>Boutique 2</label>
+      <input type="number" class="purchase-store2-quantity"
+        min="0" step="1" value="0">
+
+      <button type="button" class="remove-purchase-item">
+        Supprimer ce produit
+      </button>
+
+      <hr>
+    `;
+
+    const select = row.querySelector(".purchase-product");
+    const preview = row.querySelector(".purchase-product-preview");
+
+    fillProductSelect(select);
+
+    select.addEventListener("change", () => {
+      const product = window.bfsPurchaseProducts.find(
+        item => String(item.id) === select.value
+      );
+
+      if (!product) {
+        preview.innerHTML = "";
+        return;
+      }
+
+      preview.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin:10px 0;">
+          ${
+            product.image_url
+              ? `<img src="${product.image_url}"
+                  alt="Photo du produit"
+                  style="width:90px;height:90px;object-fit:cover;border-radius:8px;">`
+              : "<p>Photo non disponible</p>"
+          }
+          <strong>${product.Name}</strong>
+        </div>
+      `;
+    });
+
+    row.querySelector(".remove-purchase-item")
+      .addEventListener("click", () => {
+        if (container.children.length > 1) {
+          row.remove();
+        } else {
+          alert("Un achat doit contenir au moins un produit.");
+        }
+      });
+
+    return row;
+  }
+
+  container.innerHTML = "";
+  container.appendChild(createPurchaseProductRow());
+
+  const addButton = document.getElementById("addPurchaseItemButton");
+
+  addButton.onclick = () => {
+    container.appendChild(createPurchaseProductRow());
+  };
+
+  const dateInput = document.getElementById("purchaseDate");
+
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().slice(0, 10);
+  }
+
+  console.log("Formulaire d'achat chargé :", products);
 }
 async function loadTransferHistory() {
   const container = document.getElementById("transferHistory");
@@ -1600,6 +1916,15 @@ if (panelId === "salesPanel") {
       link.dataset.panel === panelId
     );
   });
+}
+if (panelId === "purchasesPanel") {
+  loadPurchaseForm()
+    .catch(error => {
+      console.error("Erreur de chargement des achats :", error);
+
+      document.getElementById("purchaseMessage").textContent =
+        "Erreur : " + error.message;
+    });
 }
 /* 3. NAVIGATION DU MENU */
 menuLinks.forEach(link => {
