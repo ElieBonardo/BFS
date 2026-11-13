@@ -746,7 +746,39 @@ async function loadTransferForm() {
     productSelect.appendChild(option);
   });
 }
+async function checkTransferStock() {
+  const sourceId = document.getElementById("transferSource").value;
+  const productId = document.getElementById("transferProduct").value;
+  const message = document.getElementById("transferMessage");
 
+  if (!sourceId || !productId) {
+    message.textContent = "Sélectionnez une boutique et un produit.";
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("store_inventory")
+    .select("quantity")
+    .eq("store_id", sourceId)
+    .eq("product_id", productId)
+    .maybeSingle();
+
+  if (error) {
+    message.textContent = "Erreur : " + error.message;
+    return;
+  }
+
+  const quantity = data?.quantity ?? 0;
+
+  message.textContent =
+    `Stock disponible dans la boutique de départ : ${quantity}`;
+}
+
+document.getElementById("transferSource")
+  .addEventListener("change", checkTransferStock);
+
+document.getElementById("transferProduct")
+  .addEventListener("change", checkTransferStock);
 
 /* 3C. CHARGEMENT DU STOCK */
 
