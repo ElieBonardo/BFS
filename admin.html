@@ -1743,13 +1743,12 @@ async function restoreAdminSession() {
   dashboard.style.display = "none";
   return;
 }
-
-  await loadAdminAccess();
+await loadAdminAccess();
 await renderStoreSelector();
-
+await loadStoreInventory();
 loginSection.style.display = "none";
 dashboard.style.display = "block";
-    dashboard.classList.remove("menu-open");
+dashboard.classList.remove("menu-open");
 
     sidebarToggle.setAttribute("aria-expanded", "false");
     message.textContent = "";
