@@ -1465,8 +1465,17 @@ async function loadStoreInventory() {
             alert("Stock modifié avec succès.");
 
             await loadStoreInventory();
-            console.log("Stock chargé.");
+await loadAdminOrders();
 
+// Actualiser les ventes si leur section est ouverte
+const salesPanel = document.getElementById("salesPanel");
+
+if (salesPanel && !salesPanel.hidden) {
+  await loadSalesProducts();
+  await loadSalesHistory();
+}
+
+console.log("Stock et statistiques chargés.");
           } catch (error) {
             console.error("Erreur modification stock :", error);
             alert("Erreur : " + error.message);
