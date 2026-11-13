@@ -1629,58 +1629,43 @@ sidebarToggle.addEventListener("click", () => {
 loginButton.addEventListener("click", async () => {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
-
   if (!email || !password) {
     message.textContent = "Veuillez remplir les deux champs.";
     return;
   }
-
-  if (
-    !SUPABASE_KEY ||
-    SUPABASE_KEY === "COLLE_ICI_TA_CLE_PUBLIQUE_SUPABASE"
-  ) {
-    message.textContent =
-      "Ajoutez votre clé publique Supabase dans le code.";
-    return;
-  }
-
   loginButton.disabled = true;
   message.textContent = "Connexion en cours...";
-
   try {
     const { data, error } =
       await supabaseClient.auth.signInWithPassword({
         email,
         password
       });
-
     if (error) throw error;
-
     if (!data.user) {
       throw new Error("Compte administrateur introuvable.");
     }
-
-    // Charger le rôle et les boutiques accessibles
     await loadAdminAccess();
-
+    await renderStoreSelector();
     loginSection.style.display = "none";
     dashboard.style.display = "block";
     dashboard.classList.remove("menu-open");
     sidebarToggle.setAttribute("aria-expanded", "false");
     message.textContent = "";
-
-    showPanel("dashboardStats");
-
-    // Seul le propriétaire charge les produits et commandes
     if (currentRole === "owner") {
+      showPanel("dashboardStats");
       await Promise.all([
+        loadStoreInventory(),
         loadAdminProducts(),
         loadAdminOrders()
       ]);
+    } else if (currentRole === "manager") {
+      showPanel("inventoryPanel");
+      await loadStoreInventory();
+    } else {
+      throw new Error("Rôle administrateur non reconnu.");
     }
-
     console.log("Connexion réussie :", currentRole);
-
   } catch (error) {
     console.error("Erreur connexion :", error);
     message.textContent =
