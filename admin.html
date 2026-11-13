@@ -1744,12 +1744,11 @@ async function restoreAdminSession() {
   return;
 }
 
-    await loadAdminAccess();
-    await renderStoreSelector();
-    await loadStoreInventory();
+  await loadAdminAccess();
+await renderStoreSelector();
 
-    loginSection.style.display = "none";
-    dashboard.style.display = "block";
+loginSection.style.display = "none";
+dashboard.style.display = "block";
     dashboard.classList.remove("menu-open");
 
     sidebarToggle.setAttribute("aria-expanded", "false");
