@@ -321,6 +321,14 @@
 </head>
 <body>
 <div class="admin">
+  <div id="sessionLoading" style="
+  display:none;
+  text-align:center;
+  padding:40px 20px;
+">
+  <h2>BFS Admin</h2>
+  <p>Vérification de votre session...</p>
+</div>
   <div id="loginSection">
     <img
       src="2B9CD460-6536-4582-A364-76DF6EC42CB4.png"
@@ -1728,17 +1736,24 @@ logoutButton.addEventListener("click", async () => {
   }
 });
 /* 11. ETAT INITIAL */
+const sessionLoading =
+  document.getElementById("sessionLoading");
+
+sessionLoading.style.display = "block";
+loginSection.style.display = "none";
+dashboard.style.display = "none";
 loginSection.style.display = "none";
 dashboard.style.display = "none";
 
 async function restoreAdminSession() {
   try {
     const { data, error } =
-      await supabaseClient.auth.getSession();
+  await supabaseClient.auth.getSession();
 
-    if (error) throw error;
+if (error) throw error;
 
-    if (!data.session) {
+if (!data.session) {
+  sessionLoading.style.display = "none";
   loginSection.style.display = "block";
   dashboard.style.display = "none";
   return;
@@ -1746,6 +1761,7 @@ async function restoreAdminSession() {
 await loadAdminAccess();
 await renderStoreSelector();
 await loadStoreInventory();
+sessionLoading.style.display = "none";
 loginSection.style.display = "none";
 dashboard.style.display = "block";
 dashboard.classList.remove("menu-open");
@@ -1771,11 +1787,14 @@ dashboard.classList.remove("menu-open");
     }
 
   } catch (error) {
-    console.error(
-      "Erreur de restauration de session :",
-      error
-    );
-  }
+  console.error(
+    "Erreur de restauration de session :",
+    error
+  );
+
+  sessionLoading.style.display = "none";
+  loginSection.style.display = "block";
+  dashboard.style.display = "none";
 }
 
 restoreAdminSession();
