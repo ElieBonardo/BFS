@@ -1729,51 +1729,55 @@ logoutButton.addEventListener("click", async () => {
 });
 /* 11. ETAT INITIAL */
 async function restoreAdminSession() {
-loginSection.style.display = “none”;
-dashboard.style.display = “none”;
+  try {
+    const { data, error } =
+      await supabaseClient.auth.getSession();
 
-try {
-const { data, error } =
-await supabaseClient.auth.getSession();
+    if (error) throw error;
 
-if (error) throw error;
-if (!data.session) {
-  loginSection.style.display = "block";
-  return;
+    if (!data.session) return;
+
+    await loadAdminAccess();
+    await renderStoreSelector();
+    await loadStoreInventory();
+
+    loginSection.style.display = "none";
+    dashboard.style.display = "block";
+    dashboard.classList.remove("menu-open");
+
+    sidebarToggle.setAttribute("aria-expanded", "false");
+    message.textContent = "";
+
+    const savedPanel = localStorage.getItem("bfsAdminPanel");
+
+    if (currentRole === "owner") {
+      showPanel(savedPanel || "dashboardStats");
+
+      await Promise.all([
+        loadAdminProducts(),
+        loadAdminOrders()
+      ]);
+
+    } else if (currentRole === "manager") {
+      showPanel("inventoryPanel");
+
+    } else {
+      throw new Error("Rôle administrateur non reconnu.");
+    }
+
+  } catch (error) {
+    console.error(
+      "Erreur de restauration de session :",
+      error
+    );
+  }
 }
+
+
 await loadAdminAccess();
 await renderStoreSelector();
-dashboard.style.display = "block";
-loginSection.style.display = "none";
-dashboard.classList.remove("menu-open");
-sidebarToggle.setAttribute("aria-expanded", "false");
-message.textContent = "";
-const savedPanel = localStorage.getItem("bfsAdminPanel");
-if (currentRole === "owner") {
-  showPanel(savedPanel || "dashboardStats");
-  await Promise.all([
-    loadAdminProducts(),
-    loadAdminOrders()
-  ]);
-} else if (currentRole === "manager") {
-  showPanel("inventoryPanel");
-  await loadStoreInventory();
-} else {
-  throw new Error("Rôle administrateur non reconnu.");
-}
+await loadStoreInventory();
 
-} catch (error) {
-console.error(“Erreur de restauration :”, error);
-
-dashboard.style.display = "none";
-loginSection.style.display = "block";
-message.textContent =
-  "Erreur de restauration : " + error.message;
-
-}
-}
-
-restoreAdminSession();
 
 </script>
 </body>
