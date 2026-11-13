@@ -386,6 +386,7 @@
 
     <a href="#ordersPanel" data-panel="ordersPanel">
       Commandes clients
+      <a href="#salesPanel" data-panel="salesPanel">Ventes physiques</a>
     </a>
 
   </nav>
@@ -603,6 +604,55 @@
         Connectez-vous pour afficher les commandes.
       </div>
     </section>
+    
+    <section id="salesPanel" class="bfs-panel" hidden>
+
+  <h1>Ventes physiques</h1>
+
+  <p>
+    Enregistrez les ventes réalisées directement dans la boutique active.
+  </p>
+
+  <div class="sales-form">
+
+    <label for="saleProduct">Produit</label>
+    <select id="saleProduct">
+      <option value="">Sélectionner un produit</option>
+    </select>
+
+    <div id="saleProductPreview"></div>
+
+    <label for="saleQuantity">Quantité vendue</label>
+    <input
+      type="number"
+      id="saleQuantity"
+      min="1"
+      step="1"
+      placeholder="Quantité"
+    >
+
+    <label for="salePaymentMethod">Mode de paiement</label>
+    <select id="salePaymentMethod">
+      <option value="cash">Espèces</option>
+      <option value="mobile_money">Mobile Money</option>
+      <option value="other">Autre</option>
+    </select>
+
+    <button id="recordSaleButton" type="button">
+      Enregistrer la vente
+    </button>
+
+    <p id="saleMessage"></p>
+
+  </div>
+
+  <h2>Historique des ventes</h2>
+
+  <div id="salesHistory">
+    Chargement des ventes...
+  </div>
+
+</section>
   </main>
 </div>
 <script>
@@ -907,8 +957,256 @@ async function loadTransferHistory() {
       "Erreur de chargement de l'historique : " + error.message;
   }
 }
+async function loadSalesProducts() {
+  const productSelect = document.getElementById("saleProduct");
+  const preview = document.getElementById("saleProductPreview");
 
+  productSelect.innerHTML =
+    '<option value="">Chargement des produits...</option>';
 
+  preview.innerHTML = "";
+
+  try {
+    const { data: products, error: productsError } =
+      await supabaseClient
+        .from("products")
+        .select("id, Name, Price, image_url")
+        .order("Name");
+
+    if (productsError) throw productsError;
+
+    const { data: inventory, error: inventoryError } =
+      await supabaseClient
+        .from("store_inventory")
+        .select("product_id, quantity")
+        .eq("store_id", currentStoreId);
+
+    if (inventoryError) throw inventoryError;
+
+    const stockMap = new Map(
+      (inventory || []).map(item => [
+        Number(item.product_id),
+        Number(item.quantity)
+      ])
+    );
+
+    productSelect.innerHTML =
+      '<option value="">Sélectionner un produit</option>';
+
+    (products || []).forEach(product => {
+      const option = document.createElement("option");
+
+      option.value = product.id;
+      option.textContent = product.Name;
+      option.dataset.image = product.image_url || "";
+      option.dataset.price = product.Price;
+      option.dataset.stock =
+        stockMap.get(Number(product.id)) ?? 0;
+
+      productSelect.appendChild(option);
+    });
+
+    productSelect.onchange = function () {
+      const option =
+        productSelect.options[productSelect.selectedIndex];
+
+      if (!productSelect.value) {
+        preview.innerHTML = "";
+        return;
+      }
+
+      const image = option.dataset.image;
+      const price = option.dataset.price;
+      const stock = option.dataset.stock;
+
+      preview.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin:15px 0;">
+          ${
+            image
+              ? `<img src="${image}" alt="Produit"
+                  style="width:90px;height:90px;object-fit:cover;border-radius:8px;">`
+              : "<span>Photo non disponible</span>"
+          }
+          <div>
+            <strong>${option.textContent}</strong>
+            <p>Prix : ${price}</p>
+            <p>Stock disponible : ${stock}</p>
+          </div>
+        </div>
+      `;
+    };
+
+  } catch (error) {
+    console.error("Erreur chargement produits vente :", error);
+    productSelect.innerHTML =
+      '<option value="">Erreur de chargement</option>';
+  }
+}
+
+// ENREGISTRER UNE VENTE PHYSIQUE
+const recordSaleButton =
+  document.getElementById("recordSaleButton");
+
+if (recordSaleButton) {
+  recordSaleButton.addEventListener("click", async () => {
+
+    const productId = Number(
+      document.getElementById("saleProduct").value
+    );
+
+    const quantity = Number(
+      document.getElementById("saleQuantity").value
+    );
+
+    const message = document.getElementById("saleMessage");
+
+    if (!productId) {
+      message.textContent = "Sélectionnez un produit.";
+      return;
+    }
+
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      message.textContent = "Saisissez une quantité valide.";
+      return;
+    }
+
+    recordSaleButton.disabled = true;
+    recordSaleButton.textContent = "Enregistrement...";
+
+    try {
+      const { data, error } = await supabaseClient.rpc(
+        "bfs_record_physical_sale",
+        {
+          p_store_id: Number(currentStoreId),
+          p_items: [
+            {
+              product_id: productId,
+              quantity: quantity
+            }
+          ]
+        }
+      );
+
+      if (error) throw error;
+
+      if (!data || !data.success) {
+        throw new Error("La vente n'a pas été confirmée.");
+      }
+
+      message.textContent =
+        "Vente enregistrée ! Total : " + data.total;
+
+      document.getElementById("saleQuantity").value = "";
+
+      await loadSalesProducts();
+      await loadStoreInventory();
+      await loadSalesHistory();
+
+    } catch (error) {
+      console.error("Erreur vente physique :", error);
+      message.textContent =
+        "Échec de la vente : " + error.message;
+
+    } finally {
+      recordSaleButton.disabled = false;
+      recordSaleButton.textContent = "Enregistrer la vente";
+    }
+  });
+}
+
+// CHARGER L'HISTORIQUE DES VENTES PHYSIQUES
+async function loadSalesHistory() {
+  const container = document.getElementById("salesHistory");
+
+  container.textContent = "Chargement des ventes...";
+
+  try {
+    const { data: sales, error } = await supabaseClient
+      .from("sales")
+      .select(`
+        id,
+        store_id,
+        total,
+        created_at,
+        sale_source,
+        sale_items (
+          product_id,
+          quantity,
+          unit_price,
+          products (
+            Name,
+            image_url
+          )
+        )
+      `)
+      .eq("sale_source", "physical")
+      .eq("store_id", Number(currentStoreId))
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    container.innerHTML = "";
+
+    if (!sales || sales.length === 0) {
+      container.textContent = "Aucune vente physique enregistrée.";
+      return;
+    }
+
+    sales.forEach(sale => {
+      const card = document.createElement("div");
+
+      card.style.cssText =
+        "padding:15px;margin:12px 0;border:1px solid #ddd;border-radius:10px;";
+
+      const date = new Date(sale.created_at).toLocaleString("fr-CD");
+
+      const title = document.createElement("h3");
+      title.textContent = "Vente N° " + sale.id;
+
+      const dateText = document.createElement("p");
+      dateText.textContent = "Date : " + date;
+
+      card.append(title, dateText);
+
+      (sale.sale_items || []).forEach(item => {
+        const product = item.products || {};
+
+        const row = document.createElement("div");
+        row.style.cssText =
+          "display:flex;align-items:center;gap:12px;margin:12px 0;";
+
+        if (product.image_url) {
+          const img = document.createElement("img");
+          img.src = product.image_url;
+          img.alt = product.Name || "Produit";
+          img.style.cssText =
+            "width:65px;height:65px;object-fit:cover;border-radius:8px;";
+          row.appendChild(img);
+        }
+
+        const details = document.createElement("p");
+        details.textContent =
+          (product.Name || "Produit") +
+          " — Quantité : " + item.quantity +
+          " — Prix unitaire : " + item.unit_price;
+
+        row.appendChild(details);
+        card.appendChild(row);
+      });
+
+      const total = document.createElement("strong");
+      total.textContent = "Total : " + sale.total;
+
+      card.appendChild(total);
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("Erreur historique des ventes :", error);
+    container.textContent =
+      "Erreur de chargement : " + error.message;
+  }
+}
 async function checkTransferStock() {
   const sourceId = document.getElementById("transferSource").value;
   const productId = document.getElementById("transferProduct").value;
@@ -1256,6 +1554,16 @@ function showPanel(panelId) {
     });
 }
 
+if (panelId === "salesPanel") {
+  loadSalesProducts()
+    .then(() => loadSalesHistory())
+    .catch(error => {
+      console.error("Erreur de chargement des ventes :", error);
+
+      document.getElementById("saleMessage").textContent =
+        "Erreur : " + error.message;
+    });
+}
 
   menuLinks.forEach(link => {
     link.classList.toggle(
@@ -1272,11 +1580,12 @@ menuLinks.forEach(link => {
     const panelId = link.dataset.panel;
 
     if (
-      currentRole === "manager" &&
-      panelId !== "inventoryPanel"
-    ) {
-      return;
-    }
+  currentRole === "manager" &&
+  panelId !== "inventoryPanel" &&
+  panelId !== "salesPanel"
+) {
+  return;
+}
 
     localStorage.setItem("bfsAdminPanel", panelId);
     showPanel(panelId);
