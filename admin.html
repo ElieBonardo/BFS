@@ -1748,24 +1748,25 @@ dashboard.style.display = "none";
 async function restoreAdminSession() {
   try {
     const { data, error } =
-  await supabaseClient.auth.getSession();
+      await supabaseClient.auth.getSession();
 
-if (error) throw error;
+    if (error) throw error;
 
-if (!data.session) {
-  sessionLoading.style.display = "none";
-  loginSection.style.display = "block";
-  dashboard.style.display = "none";
-  return;
-}
-await loadAdminAccess();
-await renderStoreSelector();
-await loadStoreInventory();
-sessionLoading.style.display = "none";
-loginSection.style.display = "none";
-dashboard.style.display = "block";
-dashboard.classList.remove("menu-open");
+    if (!data.session) {
+      sessionLoading.style.display = "none";
+      loginSection.style.display = "block";
+      dashboard.style.display = "none";
+      return;
+    }
 
+    await loadAdminAccess();
+    await renderStoreSelector();
+
+    sessionLoading.style.display = "none";
+    loginSection.style.display = "none";
+    dashboard.style.display = "block";
+
+    dashboard.classList.remove("menu-open");
     sidebarToggle.setAttribute("aria-expanded", "false");
     message.textContent = "";
 
@@ -1773,6 +1774,8 @@ dashboard.classList.remove("menu-open");
 
     if (currentRole === "owner") {
       showPanel(savedPanel || "dashboardStats");
+
+      loadStoreInventory();
 
       await Promise.all([
         loadAdminProducts(),
@@ -1782,19 +1785,21 @@ dashboard.classList.remove("menu-open");
     } else if (currentRole === "manager") {
       showPanel("inventoryPanel");
 
+      await loadStoreInventory();
+
     } else {
       throw new Error("Rôle administrateur non reconnu.");
     }
 
   } catch (error) {
-  console.error(
-    "Erreur de restauration de session :",
-    error
-  );
+    console.error(
+      "Erreur de restauration de session :",
+      error
+    );
 
-  sessionLoading.style.display = "none";
-  loginSection.style.display = "block";
-  dashboard.style.display = "none";
+    sessionLoading.style.display = "none";
+    loginSection.style.display = "block";
+    dashboard.style.display = "none";
   }
 }
 
