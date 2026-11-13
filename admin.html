@@ -458,7 +458,15 @@
       <span class="bfs-stat-label">Chiffre d’affaires</span>
       <strong id="statRevenue">0 $</strong>
     </div>
+<div class="bfs-stat-card">
+  <span class="bfs-stat-label">Ventes physiques</span>
+  <strong id="statPhysicalSales">0</strong>
+</div>
 
+<div class="bfs-stat-card">
+  <span class="bfs-stat-label">Chiffre d’affaires physique</span>
+  <strong id="statPhysicalRevenue">0 $</strong>
+</div>
     <div class="bfs-stat-card">
       <span class="bfs-stat-label">Commandes payées</span>
       <strong id="statPaidOrders">0</strong>
@@ -2110,10 +2118,38 @@ document.getElementById("statUnpaidOrders").textContent =
       (sum, order) => sum + (Number(order.total) || 0),
       0
     );
-
+    
     document.getElementById("statRevenue").textContent =
       revenue.toFixed(2) + " $";
 
+// STATISTIQUES DES VENTES PHYSIQUES
+try {
+  const { data: physicalSales, error: physicalError } =
+    await supabaseClient
+      .from("sales")
+      .select("id, total")
+      .eq("store_id", Number(currentStoreId))
+      .eq("sale_source", "physical");
+
+  if (physicalError) throw physicalError;
+
+  document.getElementById("statPhysicalSales").textContent =
+    (physicalSales || []).length;
+
+  const physicalRevenue = (physicalSales || []).reduce(
+    (sum, sale) => sum + (Number(sale.total) || 0),
+    0
+  );
+
+  document.getElementById("statPhysicalRevenue").textContent =
+    physicalRevenue.toFixed(2) + " $";
+
+} catch (physicalError) {
+  console.error("Erreur statistiques ventes physiques :", physicalError);
+
+  document.getElementById("statPhysicalSales").textContent = "--";
+  document.getElementById("statPhysicalRevenue").textContent = "--";
+}
     renderOrders();
 
   } catch (error) {
