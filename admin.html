@@ -824,7 +824,7 @@ async function loadStoreInventory() {
             alert("Stock modifié avec succès.");
 
             await loadStoreInventory();
-            
+            console.log("Stock chargé.");
 
           } catch (error) {
             console.error("Erreur modification stock :", error);
