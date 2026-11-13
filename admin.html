@@ -484,7 +484,40 @@
   </div>
 
 </section>
-
+<section id="transfersPanel" class="bfs-panel" hidden>
+  <h1>Transferts entre boutiques</h1>
+  <p>Transférez des produits d'une boutique vers une autre.</p>
+  <div class="transfer-form">
+<div>
+  <label for="transferSource">Boutique de départ</label>
+  <select id="transferSource"></select>
+</div>
+<div>
+  <label for="transferDestination">Boutique de destination</label>
+  <select id="transferDestination"></select>
+</div>
+<div>
+  <label for="transferProduct">Produit à transférer</label>
+  <select id="transferProduct">
+    <option value="">Sélectionner un produit</option>
+  </select>
+</div>
+<div>
+  <label for="transferQuantity">Quantité</label>
+  <input type="number" id="transferQuantity" min="1" step="1">
+</div>
+<div>
+  <label for="transferNotes">Note (facultative)</label>
+  <textarea id="transferNotes"></textarea>
+</div>
+<button id="transferButton" type="button">
+  Valider le transfert
+</button>
+<p id="transferMessage"></p>
+  </div>
+  <h2>Historique des transferts</h2>
+  <div id="transferHistory">Chargement de l'historique...</div>
+</section>
     <!-- GESTION DES PRODUITS -->
     <section id="productsPanel" class="bfs-panel" hidden>
       <h1>Gestion des produits</h1>
