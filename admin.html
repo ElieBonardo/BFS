@@ -774,11 +774,25 @@ async function checkTransferStock() {
     `Stock disponible dans la boutique de départ : ${quantity}`;
 }
 
-document.getElementById("transferSource")
-  .addEventListener("change", checkTransferStock);
+const transferSourceElement =
+  document.getElementById("transferSource");
 
-document.getElementById("transferProduct")
-  .addEventListener("change", checkTransferStock);
+const transferProductElement =
+  document.getElementById("transferProduct");
+
+if (transferSourceElement) {
+  transferSourceElement.addEventListener(
+    "change",
+    checkTransferStock
+  );
+}
+
+if (transferProductElement) {
+  transferProductElement.addEventListener(
+    "change",
+    checkTransferStock
+  );
+}
 
 /* 3C. CHARGEMENT DU STOCK */
 
