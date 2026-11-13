@@ -2062,28 +2062,44 @@ try {
 
 });
 /* 8. CHARGEMENT DES COMMANDES ET STATISTIQUES */
-async function loadAdminOrders() {
-  const container = document.getElementById("adminOrders");
-  container.textContent = "Chargement des commandes...";
+// Récupérer les commandes en ligne de la boutique active
+const { data: websiteSales, error: salesError } =
+  await supabaseClient
+    .from("sales")
+    .select("order_id")
+    .eq("store_id", Number(currentStoreId))
+    .eq("sale_source", "website");
 
-  try {
- const { data, error } = await supabaseClient
-  .from("orders")
-  .select(`
-    id,
-    reference,
-    created_at,
-    items,
-    total,
-    status,
-    payment_method,
-    payment_status,
-    payment_fee,
-    customer_phone
-  `)
-  .order("created_at", { ascending: false });
+if (salesError) throw salesError;
 
-    if (error) throw error;
+const orderIds = (websiteSales || [])
+  .map(sale => sale.order_id)
+  .filter(id => id !== null);
+
+let data = [];
+
+if (orderIds.length > 0) {
+  const { data: orders, error } = await supabaseClient
+    .from("orders")
+    .select(`
+      id,
+      reference,
+      created_at,
+      items,
+      total,
+      status,
+      payment_method,
+      payment_status,
+      payment_fee,
+      customer_phone
+    `)
+    .in("id", orderIds)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  data = orders || [];
+}
 
     currentOrders = data || [];
     document.getElementById("statPaidOrders").textContent =
