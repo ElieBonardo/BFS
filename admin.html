@@ -854,6 +854,70 @@ if (transferProductElement) {
     checkTransferStock
   );
 }
+// VALIDER UN TRANSFERT ENTRE BOUTIQUES
+const transferButton = document.getElementById("transferButton");
+
+if (transferButton) {
+  transferButton.addEventListener("click", async () => {
+    const sourceId = Number(document.getElementById("transferSource").value);
+    const destinationId = Number(document.getElementById("transferDestination").value);
+    const productId = Number(document.getElementById("transferProduct").value);
+    const quantity = Number(document.getElementById("transferQuantity").value);
+    const notes = document.getElementById("transferNotes").value.trim();
+    const message = document.getElementById("transferMessage");
+
+    if (!sourceId || !destinationId || !productId) {
+      message.textContent = "Sélectionnez les deux boutiques et un produit.";
+      return;
+    }
+
+    if (sourceId === destinationId) {
+      message.textContent = "Les deux boutiques doivent être différentes.";
+      return;
+    }
+
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      message.textContent = "Saisissez une quantité valide.";
+      return;
+    }
+
+    transferButton.disabled = true;
+    transferButton.textContent = "Transfert en cours...";
+
+    try {
+      const { data, error } = await supabaseClient.rpc(
+        "bfs_transfer_stock",
+        {
+          p_source_store_id: sourceId,
+          p_destination_store_id: destinationId,
+          p_items: [{ product_id: productId, quantity }],
+          p_notes: notes || null
+        }
+      );
+
+      if (error) throw error;
+
+      message.textContent = "Transfert effectué avec succès !";
+
+      document.getElementById("transferQuantity").value = "";
+      document.getElementById("transferNotes").value = "";
+
+      await loadStoreInventory();
+      await checkTransferStock();
+
+    } catch (error) {
+      console.error("Erreur transfert :", error);
+      message.textContent = "Échec du transfert : " + error.message;
+    } finally {
+      transferButton.disabled = false;
+      transferButton.textContent = "Valider le transfert";
+    }
+  });
+}
+
+
+
+
 
 /* 3C. CHARGEMENT DU STOCK */
 
