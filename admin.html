@@ -384,10 +384,13 @@
       Produits
     </a>
 
-    <a href="#ordersPanel" data-panel="ordersPanel">
-      Commandes clients
-      <a href="#salesPanel" data-panel="salesPanel">Ventes physiques</a>
-    </a>
+   <a href="#ordersPanel" data-panel="ordersPanel">
+  Commandes clients
+</a>
+
+<a href="#salesPanel" data-panel="salesPanel">
+  Ventes physiques
+</a>
 
   </nav>
 
@@ -1530,7 +1533,15 @@ document
 
     await renderStoreSelector();
     await loadStoreInventory();
-    console.log("Stock chargé.");
+    await loadAdminOrders();
+
+    const salesPanel = document.getElementById("salesPanel");
+
+    if (salesPanel && !salesPanel.hidden) {
+      await loadSalesProducts();
+      await loadSalesHistory();
+    }
+
     console.log("Boutique active :", allowedStore.name);
   });
 
@@ -1538,12 +1549,13 @@ document
 function showPanel(panelId) {
 
   // Le gestionnaire accède uniquement au stock
-  if (
-    currentRole === "manager" &&
-    panelId !== "inventoryPanel"
-  ) {
-    return;
-  }
+if (
+  currentRole === "manager" &&
+  panelId !== "inventoryPanel" &&
+  panelId !== "salesPanel"
+) {
+  return;
+}
 
   // Seul le propriétaire peut accéder aux transferts
   if (
