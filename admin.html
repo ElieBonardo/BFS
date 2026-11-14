@@ -1101,6 +1101,175 @@ async function loadTransferForm() {
 
   updatePurchaseSummary();
   }
+  async function savePurchase() {
+  const button = document.getElementById("savePurchaseButton");
+  const message = document.getElementById("purchaseMessage");
+
+  if (currentRole !== "owner") {
+    message.textContent = "Accès réservé au propriétaire.";
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Enregistrement en cours...";
+  message.textContent = "";
+
+  try {
+    const supplier =
+      document.getElementById("purchaseSupplier").value.trim();
+
+    const country =
+      document.getElementById("purchaseCountry").value.trim();
+
+    const purchaseDate =
+      document.getElementById("purchaseDate").value;
+
+    const currency =
+      document.getElementById("purchaseCurrency").value;
+
+    const exchangeRate =
+      Number(document.getElementById("purchaseExchangeRate").value);
+
+    const additionalCosts =
+      Number(document.getElementById("purchaseAdditionalCosts").value);
+
+    const notes =
+      document.getElementById("purchaseNotes").value.trim();
+
+    if (!currency || !Number.isFinite(exchangeRate) || exchangeRate <= 0) {
+      throw new Error("Vérifie la devise et le taux de change.");
+    }
+
+    if (!Number.isFinite(additionalCosts) || additionalCosts < 0) {
+      throw new Error("Les frais supplémentaires sont invalides.");
+    }
+
+    const rows = document.querySelectorAll(".purchase-item-row");
+    const items = [];
+    const usedProducts = new Set();
+
+    rows.forEach((row, index) => {
+      const productId = row.querySelector(".purchase-product").value;
+
+      const quantity =
+        Number(row.querySelector(".purchase-quantity").value);
+
+      const unitCost =
+        Number(row.querySelector(".purchase-unit-cost").value);
+
+      const store1Quantity =
+        Number(row.querySelector(".purchase-store1-quantity").value);
+
+      const store2Quantity =
+        Number(row.querySelector(".purchase-store2-quantity").value);
+
+      if (!productId) {
+        throw new Error(`Sélectionne le produit de la ligne ${index + 1}.`);
+      }
+
+      if (usedProducts.has(productId)) {
+        throw new Error("Un même produit apparaît plusieurs fois. Regroupe ses quantités sur une seule ligne.");
+      }
+
+      usedProducts.add(productId);
+
+      if (!Number.isInteger(quantity) || quantity <= 0) {
+        throw new Error(`Quantité invalide à la ligne ${index + 1}.`);
+      }
+
+      if (!Number.isFinite(unitCost) || unitCost < 0) {
+        throw new Error(`Prix unitaire invalide à la ligne ${index + 1}.`);
+      }
+
+      if (
+        !Number.isInteger(store1Quantity) ||
+        !Number.isInteger(store2Quantity) ||
+        store1Quantity < 0 ||
+        store2Quantity < 0
+      ) {
+        throw new Error(`Répartition invalide à la ligne ${index + 1}.`);
+      }
+
+      if (store1Quantity + store2Quantity !== quantity) {
+        throw new Error(
+          `La répartition du produit de la ligne ${index + 1} doit être égale à la quantité achetée.`
+        );
+      }
+
+      const allocations = [];
+
+      if (store1Quantity > 0) {
+        allocations.push({
+          store_id: 1,
+          quantity: store1Quantity
+        });
+      }
+
+      if (store2Quantity > 0) {
+        allocations.push({
+          store_id: 2,
+          quantity: store2Quantity
+        });
+      }
+
+      items.push({
+        product_id: Number(productId),
+        quantity: quantity,
+        unit_cost: unitCost,
+        allocations: allocations
+      });
+    });
+
+    if (items.length === 0) {
+      throw new Error("Ajoute au moins un produit.");
+    }
+
+    const { data, error } = await supabaseClient.rpc(
+      "bfs_record_purchase",
+      {
+        p_supplier: supplier || null,
+        p_country: country || null,
+        p_purchase_date: purchaseDate || null,
+        p_currency: currency,
+        p_exchange_rate_to_usd: exchangeRate,
+        p_additional_costs: additionalCosts,
+        p_notes: notes || null,
+        p_items: items
+      }
+    );
+
+    if (error) throw error;
+
+    if (!data || !data.success) {
+      throw new Error("L'achat n'a pas été confirmé.");
+    }
+
+    message.textContent =
+      `Achat enregistré avec succès ! Référence : ${data.purchase_id}. Coût total : ${Number(data.total_cost_usd).toFixed(2)} $.`;
+
+    // Actualiser le stock affiché.
+    try {
+      await loadStoreInventory();
+    } catch (refreshError) {
+      console.error("Actualisation du stock :", refreshError);
+    }
+
+    try {
+      await loadAdminProducts();
+    } catch (refreshError) {
+      console.error("Actualisation des produits :", refreshError);
+    }
+
+  } catch (error) {
+    console.error("Erreur d'enregistrement de l'achat :", error);
+    message.textContent = "Échec de l'enregistrement : " + error.message;
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "Enregistrer l'achat";
+  }
+}
+  
 function updatePurchaseSummary() {
   const exchangeRate =
     Number(document.getElementById("purchaseExchangeRate").value) || 0;
@@ -1133,8 +1302,10 @@ function updatePurchaseSummary() {
 
   document.getElementById("purchaseGrandTotal").textContent =
     grandTotal.toFixed(2) + " $";
+ document.getElementById("savePurchaseButton").onclick =
+  savePurchase;   
+    
 }
-
 
   function createPurchaseProductRow() {
     const row = document.createElement("div");
