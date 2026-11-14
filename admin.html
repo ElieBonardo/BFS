@@ -1061,7 +1061,6 @@ async function loadTransferForm() {
   if (currentRole !== "owner") return;
 
   const container = document.getElementById("purchaseItemsContainer");
-
   if (!container) return;
 
   const { data: products, error } = await supabaseClient
@@ -1079,19 +1078,206 @@ async function loadTransferForm() {
 
     window.bfsPurchaseProducts.forEach(product => {
       const option = document.createElement("option");
-
       option.value = product.id;
       option.textContent = product.Name;
-      option.dataset.image = product.image_url || "";
-
       select.appendChild(option);
     });
-    
-      const purchaseContainer =
-    document.getElementById("purchaseItemsContainer");
+  }
 
-  purchaseContainer.oninput = updatePurchaseSummary;
-  purchaseContainer.onchange = updatePurchaseSummary;
+  function setupPurchaseRow(row) {
+    const select = row.querySelector(".purchase-product");
+    const preview = row.querySelector(".purchase-product-preview");
+
+    fillProductSelect(select);
+
+    select.onchange = () => {
+      const product = window.bfsPurchaseProducts.find(
+        item => String(item.id) === select.value
+      );
+
+      preview.innerHTML = "";
+
+      if (product && product.image_url) {
+        const img = document.createElement("img");
+        img.src = product.image_url;
+        img.alt = product.Name;
+        img.style.width = "90px";
+        img.style.height = "90px";
+        img.style.objectFit = "cover";
+        img.style.borderRadius = "8px";
+
+        preview.appendChild(img);
+      }
+
+      updatePurchaseSummary();
+    };
+  }
+  async function loadPurchaseHistory() {
+  const container = document.getElementById("purchaseHistory");
+
+  if (!container) return;
+
+  container.textContent = "Chargement de l'historique...";
+
+  try {
+    const { data: purchases, error } = await supabaseClient
+      .from("purchases")
+      .select(`
+        id,
+        supplier,
+        country,
+        purchase_date,
+        currency,
+        exchange_rate_to_usd,
+        additional_costs,
+        notes,
+        created_at,
+        purchase_items (
+          id,
+          product_id,
+          quantity,
+          unit_cost,
+          products (
+            Name
+          ),
+          purchase_item_allocations (
+            store_id,
+            quantity
+          )
+        )
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    container.innerHTML = "";
+
+    if (!purchases || purchases.length === 0) {
+      container.textContent = "Aucun achat enregistré pour le moment.";
+      return;
+    }
+
+    purchases.forEach(purchase => {
+      const card = document.createElement("div");
+      card.className = "purchase-history-card";
+
+      const title = document.createElement("h3");
+      title.textContent = "Achat #" + purchase.id;
+      card.appendChild(title);
+
+      const info = document.createElement("p");
+
+      info.textContent =
+        "Fournisseur : " + (purchase.supplier || "Non renseigné") +
+        " | Pays : " + (purchase.country || "Non renseigné") +
+        " | Date : " + (purchase.purchase_date || "Non renseignée");
+
+      card.appendChild(info);
+
+      const rate = Number(purchase.exchange_rate_to_usd) || 0;
+      const extra = Number(purchase.additional_costs) || 0;
+
+      let baseTotal = 0;
+
+      const itemsTitle = document.createElement("h4");
+      itemsTitle.textContent = "Produits achetés";
+      card.appendChild(itemsTitle);
+
+      const list = document.createElement("ul");
+
+      (purchase.purchase_items || []).forEach(item => {
+        const product = Array.isArray(item.products)
+          ? item.products[0]
+          : item.products;
+
+        const productName = product?.Name || "Produit #" + item.product_id;
+
+        const quantity = Number(item.quantity) || 0;
+        const unitCost = Number(item.unit_cost) || 0;
+
+        baseTotal += quantity * unitCost;
+
+        const allocations = item.purchase_item_allocations || [];
+
+        const allocationText = allocations.map(allocation => {
+          const storeName =
+            Number(allocation.store_id) === 1
+              ? "Boutique principale"
+              : "Boutique 2";
+
+          return storeName + " : " + allocation.quantity;
+        }).join(" | ");
+
+        const li = document.createElement("li");
+
+        li.textContent =
+          productName +
+          " — Quantité : " + quantity +
+          " — Prix unitaire : " + unitCost.toFixed(2) +
+          " " + purchase.currency +
+          " — " + (allocationText || "Aucune répartition");
+
+        list.appendChild(li);
+      });
+
+      card.appendChild(list);
+
+      const total = (baseTotal + extra) * rate;
+
+      const totalText = document.createElement("strong");
+      totalText.textContent =
+        "Coût total : " + total.toFixed(2) + " USD";
+
+      card.appendChild(totalText);
+
+      if (purchase.notes) {
+        const notes = document.createElement("p");
+        notes.textContent = "Notes : " + purchase.notes;
+        card.appendChild(notes);
+      }
+
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("Erreur historique des achats :", error);
+    container.textContent =
+      "Impossible de charger l'historique : " + error.message;
+  }
+}
+  
+
+  container.querySelectorAll(".purchase-item-row").forEach(setupPurchaseRow);
+
+  const addButton = document.getElementById("addPurchaseItemButton");
+
+  if (addButton) {
+    addButton.onclick = () => {
+      const firstRow = container.querySelector(".purchase-item-row");
+      const newRow = firstRow.cloneNode(true);
+
+      newRow.querySelectorAll("input").forEach(input => {
+        if (
+          input.classList.contains("purchase-store1-quantity") ||
+          input.classList.contains("purchase-store2-quantity")
+        ) {
+          input.value = "0";
+        } else {
+          input.value = "";
+        }
+      });
+
+      newRow.querySelector(".purchase-product-preview").innerHTML = "";
+
+      container.appendChild(newRow);
+
+      setupPurchaseRow(newRow);
+      updatePurchaseSummary();
+    };
+  }
+
+  container.oninput = updatePurchaseSummary;
+  container.onchange = updatePurchaseSummary;
 
   document.getElementById("purchaseExchangeRate").oninput =
     updatePurchaseSummary;
@@ -1100,7 +1286,7 @@ async function loadTransferForm() {
     updatePurchaseSummary;
 
   updatePurchaseSummary();
-  }
+}
   async function savePurchase() {
   const button = document.getElementById("savePurchaseButton");
   const message = document.getElementById("purchaseMessage");
@@ -1302,9 +1488,13 @@ function updatePurchaseSummary() {
 
   document.getElementById("purchaseGrandTotal").textContent =
     grandTotal.toFixed(2) + " $";
- document.getElementById("savePurchaseButton").onclick =
-  savePurchase;   
-    
+}
+
+const savePurchaseButton =
+  document.getElementById("savePurchaseButton");
+
+if (savePurchaseButton) {
+  savePurchaseButton.onclick = savePurchase;
 }
 
   function createPurchaseProductRow() {
@@ -2139,14 +2329,17 @@ function showPanel(panelId) {
   }
 
   // ACHATS
-  if (panelId === "purchasesPanel") {
-    loadPurchaseForm().catch(error => {
-      console.error("Erreur de chargement des achats :", error);
+if (panelId === "purchasesPanel") {
+  Promise.all([
+    loadPurchaseForm(),
+    loadPurchaseHistory()
+  ]).catch(error => {
+    console.error("Erreur de chargement des achats :", error);
 
-      document.getElementById("purchaseMessage").textContent =
-        "Erreur : " + error.message;
-    });
-  }
+    document.getElementById("purchaseMessage").textContent =
+      "Erreur : " + error.message;
+  });
+}
 
   menuLinks.forEach(link => {
     link.classList.toggle(
