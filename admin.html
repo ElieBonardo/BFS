@@ -1864,18 +1864,18 @@ document
 /* NAVIGATION DES PANNEAUX */
 function showPanel(panelId) {
 
-  // Le gestionnaire accède uniquement au stock
-if (
-  currentRole === "manager" &&
-  panelId !== "inventoryPanel" &&
-  panelId !== "salesPanel"
-) {
-  return;
-}
-
-  // Seul le propriétaire peut accéder aux transferts
+  // Le gestionnaire accède uniquement au stock et aux ventes physiques.
   if (
-    panelId === "transfersPanel" &&
+    currentRole === "manager" &&
+    panelId !== "inventoryPanel" &&
+    panelId !== "salesPanel"
+  ) {
+    return;
+  }
+
+  // Les transferts et les achats sont réservés au propriétaire.
+  if (
+    ["transfersPanel", "purchasesPanel"].includes(panelId) &&
     currentRole !== "owner"
   ) {
     return;
@@ -1884,31 +1884,50 @@ if (
   panels.forEach(panel => {
     panel.hidden = panel.id !== panelId;
   });
-  
-  if (
-  panelId === "transfersPanel" &&
-  currentRole === "owner"
-) {
-  loadTransferForm()
-    .then(() => loadTransferHistory())
-    .catch(error => {
-      console.error("Erreur de chargement des transferts :", error);
 
-      document.getElementById("transferMessage").textContent =
+  // Mémoriser le dernier panneau ouvert.
+  localStorage.setItem("bfsAdminPanel", panelId);
+
+  // TRANSFERTS
+  if (panelId === "transfersPanel") {
+    loadTransferForm()
+      .then(() => loadTransferHistory())
+      .catch(error => {
+        console.error("Erreur de chargement des transferts :", error);
+
+        document.getElementById("transferMessage").textContent =
+          "Erreur : " + error.message;
+      });
+  }
+
+  // COMMANDES CLIENTS
+  if (panelId === "ordersPanel") {
+    loadAdminOrders().catch(error => {
+      console.error("Erreur de chargement des commandes :", error);
+    });
+  }
+
+  // VENTES PHYSIQUES
+  if (panelId === "salesPanel") {
+    loadSalesProducts()
+      .then(() => loadSalesHistory())
+      .catch(error => {
+        console.error("Erreur de chargement des ventes :", error);
+
+        document.getElementById("saleMessage").textContent =
+          "Erreur : " + error.message;
+      });
+  }
+
+  // ACHATS
+  if (panelId === "purchasesPanel") {
+    loadPurchaseForm().catch(error => {
+      console.error("Erreur de chargement des achats :", error);
+
+      document.getElementById("purchaseMessage").textContent =
         "Erreur : " + error.message;
     });
-}
-
-if (panelId === "salesPanel") {
-  loadSalesProducts()
-    .then(() => loadSalesHistory())
-    .catch(error => {
-      console.error("Erreur de chargement des ventes :", error);
-
-      document.getElementById("saleMessage").textContent =
-        "Erreur : " + error.message;
-    });
-}
+  }
 
   menuLinks.forEach(link => {
     link.classList.toggle(
@@ -2812,9 +2831,11 @@ async function restoreAdminSession() {
       return;
     }
 
+    // Vérifier les accès de l'utilisateur.
     await loadAdminAccess();
     await renderStoreSelector();
 
+    // Afficher le tableau de bord.
     sessionLoading.style.display = "none";
     loginSection.style.display = "none";
     dashboard.style.display = "block";
@@ -2823,25 +2844,46 @@ async function restoreAdminSession() {
     sidebarToggle.setAttribute("aria-expanded", "false");
     message.textContent = "";
 
-    const savedPanel = localStorage.getItem("bfsAdminPanel");
+    // Retrouver le dernier panneau ouvert.
+    let savedPanel = localStorage.getItem("bfsAdminPanel");
+
+    const panelExists = panels.some(
+      panel => panel.id === savedPanel
+    );
+
+    if (!panelExists) {
+      savedPanel = "dashboardStats";
+    }
+
+    if (currentRole === "manager") {
+      savedPanel = "inventoryPanel";
+    }
+
+    showPanel(savedPanel);
+
+    // Charger les données indépendamment.
+    // Une erreur de chargement ne doit pas déconnecter l'utilisateur.
+
+    try {
+      await loadStoreInventory();
+    } catch (error) {
+      console.error("Erreur de chargement du stock :", error);
+    }
 
     if (currentRole === "owner") {
-      showPanel(savedPanel || "dashboardStats");
 
-      loadStoreInventory();
+      try {
+        await loadAdminProducts();
+      } catch (error) {
+        console.error("Erreur de chargement des produits :", error);
+      }
 
-      await Promise.all([
-        loadAdminProducts(),
-        loadAdminOrders()
-      ]);
+      try {
+        await loadAdminOrders();
+      } catch (error) {
+        console.error("Erreur de chargement des commandes :", error);
+      }
 
-    } else if (currentRole === "manager") {
-      showPanel("inventoryPanel");
-
-      await loadStoreInventory();
-
-    } else {
-      throw new Error("Rôle administrateur non reconnu.");
     }
 
   } catch (error) {
@@ -2853,6 +2895,9 @@ async function restoreAdminSession() {
     sessionLoading.style.display = "none";
     loginSection.style.display = "block";
     dashboard.style.display = "none";
+
+    message.textContent =
+      "Erreur de connexion : " + error.message;
   }
 }
 
