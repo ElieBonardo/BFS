@@ -2847,9 +2847,9 @@ async function restoreAdminSession() {
     // Retrouver le dernier panneau ouvert.
     let savedPanel = localStorage.getItem("bfsAdminPanel");
 
-    const panelExists = panels.some(
-      panel => panel.id === savedPanel
-    );
+    const panelExists = Array.from(panels).some(
+  panel => panel.id === savedPanel
+);
 
     if (!panelExists) {
       savedPanel = "dashboardStats";
