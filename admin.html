@@ -1086,7 +1086,55 @@ async function loadTransferForm() {
 
       select.appendChild(option);
     });
+    
+      const purchaseContainer =
+    document.getElementById("purchaseItemsContainer");
+
+  purchaseContainer.oninput = updatePurchaseSummary;
+  purchaseContainer.onchange = updatePurchaseSummary;
+
+  document.getElementById("purchaseExchangeRate").oninput =
+    updatePurchaseSummary;
+
+  document.getElementById("purchaseAdditionalCosts").oninput =
+    updatePurchaseSummary;
+
+  updatePurchaseSummary();
   }
+function updatePurchaseSummary() {
+  const exchangeRate =
+    Number(document.getElementById("purchaseExchangeRate").value) || 0;
+
+  const additionalCosts =
+    Number(document.getElementById("purchaseAdditionalCosts").value) || 0;
+
+  let baseTotal = 0;
+
+  document
+    .querySelectorAll(".purchase-item-row")
+    .forEach(row => {
+      const quantity =
+        Number(row.querySelector(".purchase-quantity").value) || 0;
+
+      const unitCost =
+        Number(row.querySelector(".purchase-unit-cost").value) || 0;
+
+      baseTotal += quantity * unitCost * exchangeRate;
+    });
+
+  const extraTotal = additionalCosts * exchangeRate;
+  const grandTotal = baseTotal + extraTotal;
+
+  document.getElementById("purchaseBaseTotal").textContent =
+    baseTotal.toFixed(2) + " $";
+
+  document.getElementById("purchaseExtraTotal").textContent =
+    extraTotal.toFixed(2) + " $";
+
+  document.getElementById("purchaseGrandTotal").textContent =
+    grandTotal.toFixed(2) + " $";
+}
+
 
   function createPurchaseProductRow() {
     const row = document.createElement("div");
