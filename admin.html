@@ -1112,7 +1112,50 @@ async function loadTransferForm() {
       updatePurchaseSummary();
     };
   }
-  async function loadPurchaseHistory() {
+  
+  
+
+  container.querySelectorAll(".purchase-item-row").forEach(setupPurchaseRow);
+
+  const addButton = document.getElementById("addPurchaseItemButton");
+
+  if (addButton) {
+    addButton.onclick = () => {
+      const firstRow = container.querySelector(".purchase-item-row");
+      const newRow = firstRow.cloneNode(true);
+
+      newRow.querySelectorAll("input").forEach(input => {
+        if (
+          input.classList.contains("purchase-store1-quantity") ||
+          input.classList.contains("purchase-store2-quantity")
+        ) {
+          input.value = "0";
+        } else {
+          input.value = "";
+        }
+      });
+
+      newRow.querySelector(".purchase-product-preview").innerHTML = "";
+
+      container.appendChild(newRow);
+
+      setupPurchaseRow(newRow);
+      updatePurchaseSummary();
+    };
+  }
+
+  container.oninput = updatePurchaseSummary;
+  container.onchange = updatePurchaseSummary;
+
+  document.getElementById("purchaseExchangeRate").oninput =
+    updatePurchaseSummary;
+
+  document.getElementById("purchaseAdditionalCosts").oninput =
+    updatePurchaseSummary;
+
+  updatePurchaseSummary();
+}
+async function loadPurchaseHistory() {
   const container = document.getElementById("purchaseHistory");
 
   if (!container) return;
@@ -1245,48 +1288,7 @@ async function loadTransferForm() {
       "Impossible de charger l'historique : " + error.message;
   }
 }
-  
 
-  container.querySelectorAll(".purchase-item-row").forEach(setupPurchaseRow);
-
-  const addButton = document.getElementById("addPurchaseItemButton");
-
-  if (addButton) {
-    addButton.onclick = () => {
-      const firstRow = container.querySelector(".purchase-item-row");
-      const newRow = firstRow.cloneNode(true);
-
-      newRow.querySelectorAll("input").forEach(input => {
-        if (
-          input.classList.contains("purchase-store1-quantity") ||
-          input.classList.contains("purchase-store2-quantity")
-        ) {
-          input.value = "0";
-        } else {
-          input.value = "";
-        }
-      });
-
-      newRow.querySelector(".purchase-product-preview").innerHTML = "";
-
-      container.appendChild(newRow);
-
-      setupPurchaseRow(newRow);
-      updatePurchaseSummary();
-    };
-  }
-
-  container.oninput = updatePurchaseSummary;
-  container.onchange = updatePurchaseSummary;
-
-  document.getElementById("purchaseExchangeRate").oninput =
-    updatePurchaseSummary;
-
-  document.getElementById("purchaseAdditionalCosts").oninput =
-    updatePurchaseSummary;
-
-  updatePurchaseSummary();
-}
   async function savePurchase() {
   const button = document.getElementById("savePurchaseButton");
   const message = document.getElementById("purchaseMessage");
@@ -1495,103 +1497,6 @@ const savePurchaseButton =
 
 if (savePurchaseButton) {
   savePurchaseButton.onclick = savePurchase;
-}
-
-  function createPurchaseProductRow() {
-    const row = document.createElement("div");
-
-    row.className = "purchase-item-row";
-
-    row.innerHTML = `
-      <label>Produit</label>
-      <select class="purchase-product">
-        <option value="">Sélectionner un produit</option>
-      </select>
-
-      <div class="purchase-product-preview"></div>
-
-      <label>Quantité achetée</label>
-      <input type="number" class="purchase-quantity"
-        min="1" step="1" placeholder="Quantité">
-
-      <label>Prix unitaire dans la devise d'achat</label>
-      <input type="number" class="purchase-unit-cost"
-        min="0" step="0.01" placeholder="Prix unitaire">
-
-      <h3>Répartition des quantités</h3>
-
-      <label>Boutique principale</label>
-      <input type="number" class="purchase-store1-quantity"
-        min="0" step="1" value="0">
-
-      <label>Boutique 2</label>
-      <input type="number" class="purchase-store2-quantity"
-        min="0" step="1" value="0">
-
-      <button type="button" class="remove-purchase-item">
-        Supprimer ce produit
-      </button>
-
-      <hr>
-    `;
-
-    const select = row.querySelector(".purchase-product");
-    const preview = row.querySelector(".purchase-product-preview");
-
-    fillProductSelect(select);
-
-    select.addEventListener("change", () => {
-      const product = window.bfsPurchaseProducts.find(
-        item => String(item.id) === select.value
-      );
-
-      if (!product) {
-        preview.innerHTML = "";
-        return;
-      }
-
-      preview.innerHTML = `
-        <div style="display:flex;align-items:center;gap:12px;margin:10px 0;">
-          ${
-            product.image_url
-              ? `<img src="${product.image_url}"
-                  alt="Photo du produit"
-                  style="width:90px;height:90px;object-fit:cover;border-radius:8px;">`
-              : "<p>Photo non disponible</p>"
-          }
-          <strong>${product.Name}</strong>
-        </div>
-      `;
-    });
-
-    row.querySelector(".remove-purchase-item")
-      .addEventListener("click", () => {
-        if (container.children.length > 1) {
-          row.remove();
-        } else {
-          alert("Un achat doit contenir au moins un produit.");
-        }
-      });
-
-    return row;
-  }
-
-  container.innerHTML = "";
-  container.appendChild(createPurchaseProductRow());
-
-  const addButton = document.getElementById("addPurchaseItemButton");
-
-  addButton.onclick = () => {
-    container.appendChild(createPurchaseProductRow());
-  };
-
-  const dateInput = document.getElementById("purchaseDate");
-
-  if (dateInput && !dateInput.value) {
-    dateInput.value = new Date().toISOString().slice(0, 10);
-  }
-
-  console.log("Formulaire d'achat chargé :", products);
 }
 async function loadTransferHistory() {
   const container = document.getElementById("transferHistory");
