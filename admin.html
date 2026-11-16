@@ -2787,13 +2787,22 @@ async function loadAdminOrders() {
         ["En préparation", "Expédiée"].includes(order.status)
       ).length;
 
-    const revenue = currentOrders.reduce(
-      (sum, order) => sum + (Number(order.total) || 0),
-      0
-    );
+    // CHIFFRE D'AFFAIRES RÉEL : VENTES ENREGISTRÉES
+const { data: revenueSales, error: revenueError } =
+  await supabaseClient
+    .from("sales")
+    .select("total")
+    .eq("store_id", Number(currentStoreId));
 
-    document.getElementById("statRevenue").textContent =
-      revenue.toFixed(2) + " $";
+if (revenueError) throw revenueError;
+
+const revenue = (revenueSales || []).reduce(
+  (sum, sale) => sum + (Number(sale.total) || 0),
+  0
+);
+
+document.getElementById("statRevenue").textContent =
+  revenue.toFixed(2) + " $";
 
 
     // STATISTIQUES DES VENTES PHYSIQUES
