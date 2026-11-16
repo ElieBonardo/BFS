@@ -840,6 +840,26 @@
     Les détails du rapport apparaîtront ici.
   </div>
 
+<!-- RENTABILITÉ PAR PRODUIT -->
+<h2>Rentabilité par produit</h2>
+
+<div class="bfs-stat-grid">
+
+  <div class="bfs-stat-card">
+    <span class="bfs-stat-label">Produits vendus</span>
+    <strong id="reportProductCount">0</strong>
+  </div>
+
+  <div class="bfs-stat-card">
+    <span class="bfs-stat-label">Quantités vendues</span>
+    <strong id="reportProductQuantity">0</strong>
+  </div>
+
+</div>
+
+<div id="reportProductProfitability">
+  Les résultats par produit apparaîtront ici.
+</div>
   <p id="reportUnknownCosts">
     Les coûts d'achat inconnus seront signalés séparément.
   </p>
@@ -2506,13 +2526,74 @@ async function loadFinancialReports() {
 
         const { data, error } = await supabaseClient
           .from("sale_items")
-          .select("sale_id, quantity, unit_price, unit_cost")
+        .select("sale_id, product_id, quantity, unit_price, unit_cost")
           .in("sale_id", saleIds);
 
         if (error) throw error;
 
         saleItems = data || [];
       }
+      
+      // RENTABILITÉ PAR PRODUIT
+const productIds = [
+  ...new Set(
+    saleItems
+      .map(item => item.product_id)
+      .filter(id => id !== null && id !== undefined)
+  )
+];
+
+let productNames = new Map();
+
+if (productIds.length > 0) {
+
+  const { data: products, error } = await supabaseClient
+    .from("products")
+    .select('id, "Name"')
+    .in("id", productIds);
+
+  if (error) throw error;
+
+  (products || []).forEach(product => {
+    productNames.set(product.id, product["Name"]);
+  });
+}
+
+const productResults = new Map();
+
+saleItems.forEach(item => {
+
+  const id = item.product_id ?? "unknown";
+
+  if (!productResults.has(id)) {
+    productResults.set(id, {
+      name: productNames.get(id) || "Produit #" + id,
+      quantity: 0,
+      revenue: 0,
+      knownCost: 0,
+      grossProfit: 0,
+      unknownLines: 0
+    });
+  }
+
+  const product = productResults.get(id);
+
+  const quantity = Number(item.quantity) || 0;
+  const price = Number(item.unit_price) || 0;
+
+  product.quantity += quantity;
+  product.revenue += quantity * price;
+
+  if (item.unit_cost === null || item.unit_cost === undefined) {
+    product.unknownLines++;
+  } else {
+    const cost = Number(item.unit_cost);
+
+    product.knownCost += quantity * cost;
+    product.grossProfit += quantity * (price - cost);
+  }
+});
+
 
       // 3. Calculer les coûts et bénéfices connus.
       let knownCost = 0;
@@ -2684,7 +2765,83 @@ async function loadFinancialReports() {
           </div>
         `;
       }
+// 9. Afficher la rentabilité par produit.
+const productCount = document.getElementById("reportProductCount");
+const productQuantity = document.getElementById("reportProductQuantity");
+const productContainer = document.getElementById("reportProductProfitability");
 
+const productsList = Array.from(productResults.values());
+
+const totalProductQuantity = productsList.reduce(
+  (sum, product) => sum + product.quantity,
+  0
+);
+
+productCount.textContent = productsList.length;
+productQuantity.textContent = totalProductQuantity;
+
+if (productsList.length === 0) {
+
+  productContainer.textContent =
+    "Aucun produit vendu pendant cette période.";
+
+} else {
+
+  const escapeHTML = value =>
+    String(value).replace(/[&<>"']/g, character => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    })[character]);
+
+  const rows = productsList
+    .sort((a, b) => b.revenue - a.revenue)
+    .map(product => {
+
+      const costText = product.unknownLines > 0
+        ? product.knownCost.toFixed(2) + " $ (partiel)"
+        : product.knownCost.toFixed(2) + " $";
+
+      const profitText = product.unknownLines > 0
+        ? product.grossProfit.toFixed(2) + " $ (partiel)"
+        : product.grossProfit.toFixed(2) + " $";
+
+      return `
+        <tr>
+          <td>${escapeHTML(product.name)}</td>
+          <td>${product.quantity}</td>
+          <td>${product.revenue.toFixed(2)} $</td>
+          <td>${costText}</td>
+          <td>${profitText}</td>
+        </tr>
+      `;
+    }).join("");
+
+  productContainer.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Produit</th>
+            <th>Quantité</th>
+            <th>Chiffre d'affaires</th>
+            <th>Coût connu</th>
+            <th>Bénéfice brut connu</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Les montants indiqués comme partiels ne comprennent pas
+      les coûts d'achat encore inconnus.
+    </p>
+  `;
+}
       message.textContent =
         "Rapport généré : " + start + " au " + end + ".";
 
