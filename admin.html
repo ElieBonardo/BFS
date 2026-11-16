@@ -387,6 +387,13 @@
     >
       Achats & Approvisionnements
     </a>
+    <a
+  href="#reportsPanel"
+  data-panel="reportsPanel"
+  data-owner-only="true"
+>
+  Rapports financiers
+</a>
 
     <a href="#productsPanel" data-panel="productsPanel">
       Produits
@@ -2201,13 +2208,13 @@ function showPanel(panelId) {
     return;
   }
 
-  // Les transferts et les achats sont réservés au propriétaire.
-  if (
-    ["transfersPanel", "purchasesPanel"].includes(panelId) &&
-    currentRole !== "owner"
-  ) {
-    return;
-  }
+ // Les transferts, achats et rapports sont réservés au propriétaire.
+if (
+  ["transfersPanel", "purchasesPanel", "reportsPanel"].includes(panelId) &&
+  currentRole !== "owner"
+) {
+  return;
+}
 
   panels.forEach(panel => {
     panel.hidden = panel.id !== panelId;
