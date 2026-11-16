@@ -454,6 +454,20 @@
       <span class="bfs-stat-label">Total des commandes</span>
       <strong id="statTotalOrders">0</strong>
     </div>
+    <div class="bfs-stat-card">
+  <span class="bfs-stat-label">Bénéfice brut connu</span>
+  <strong id="statGrossProfit">0 $</strong>
+</div>
+
+<div class="bfs-stat-card">
+  <span class="bfs-stat-label">Frais de paiement</span>
+  <strong id="statPaymentFees">0 $</strong>
+</div>
+
+<div class="bfs-stat-card">
+  <span class="bfs-stat-label">Bénéfice net connu</span>
+  <strong id="statNetProfit">0 $</strong>
+</div>
 
     <div class="bfs-stat-card">
       <span class="bfs-stat-label">Nouvelles commandes</span>
@@ -2838,6 +2852,88 @@ document.getElementById("statRevenue").textContent =
       document.getElementById("statPhysicalSales").textContent = "--";
       document.getElementById("statPhysicalRevenue").textContent = "--";
     }
+    
+    // RENTABILITÉ : BÉNÉFICES ET FRAIS
+try {
+  // Récupérer les ventes de la boutique active
+  const { data: profitSales, error: salesError } =
+    await supabaseClient
+      .from("sales")
+      .select("id, order_id")
+      .eq("store_id", Number(currentStoreId));
+
+  if (salesError) throw salesError;
+
+  const saleIds = (profitSales || []).map(sale => sale.id);
+
+  let grossProfit = 0;
+
+  // Calculer le bénéfice uniquement sur les coûts connus
+  if (saleIds.length > 0) {
+    const { data: profitItems, error: itemsError } =
+      await supabaseClient
+        .from("sale_items")
+        .select("quantity, unit_price, unit_cost")
+        .in("sale_id", saleIds);
+
+    if (itemsError) throw itemsError;
+
+    grossProfit = (profitItems || []).reduce((sum, item) => {
+      if (item.unit_cost === null || item.unit_cost === undefined) {
+        return sum;
+      }
+
+      const quantity = Number(item.quantity) || 0;
+      const price = Number(item.unit_price) || 0;
+      const cost = Number(item.unit_cost);
+
+      return sum + quantity * (price - cost);
+    }, 0);
+  }
+
+  // Récupérer les frais des commandes liées aux ventes
+  const orderIds = [...new Set(
+    (profitSales || [])
+      .map(sale => sale.order_id)
+      .filter(id => id !== null && id !== undefined)
+  )];
+
+  let paymentFees = 0;
+
+  if (orderIds.length > 0) {
+    const { data: paidOrders, error: ordersError } =
+      await supabaseClient
+        .from("orders")
+        .select("id, payment_fee")
+        .in("id", orderIds);
+
+    if (ordersError) throw ordersError;
+
+    paymentFees = (paidOrders || []).reduce(
+      (sum, order) => sum + (Number(order.payment_fee) || 0),
+      0
+    );
+  }
+
+  const netProfit = grossProfit - paymentFees;
+
+  document.getElementById("statGrossProfit").textContent =
+    grossProfit.toFixed(2) + " $";
+
+  document.getElementById("statPaymentFees").textContent =
+    paymentFees.toFixed(2) + " $";
+
+  document.getElementById("statNetProfit").textContent =
+    netProfit.toFixed(2) + " $";
+
+} catch (profitError) {
+  console.error("Erreur calcul rentabilité :", profitError);
+
+  document.getElementById("statGrossProfit").textContent = "--";
+  document.getElementById("statPaymentFees").textContent = "--";
+  document.getElementById("statNetProfit").textContent = "--";
+}
+    
 
     // AFFICHER LES COMMANDES
     renderOrders();
