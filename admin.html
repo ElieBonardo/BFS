@@ -742,6 +742,109 @@
   </div>
 
 </section>
+
+<!-- RAPPORTS FINANCIERS BFS -->
+<section id="reportsPanel" class="bfs-panel" hidden>
+
+  <h1>Rapports financiers</h1>
+  <p>Analysez les performances financières de vos boutiques BFS.</p>
+
+  <div class="purchase-form">
+
+    <h2>Filtres du rapport</h2>
+
+    <div>
+      <label for="reportPeriod">Période</label>
+      <select id="reportPeriod">
+        <option value="today">Aujourd'hui</option>
+        <option value="week">Cette semaine</option>
+        <option value="month" selected>Ce mois</option>
+        <option value="year">Cette année</option>
+        <option value="custom">Période personnalisée</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="reportStartDate">Date de début</label>
+      <input type="date" id="reportStartDate">
+    </div>
+
+    <div>
+      <label for="reportEndDate">Date de fin</label>
+      <input type="date" id="reportEndDate">
+    </div>
+
+    <button type="button" id="generateReportButton">
+      Générer le rapport
+    </button>
+
+    <p id="reportMessage"></p>
+
+  </div>
+
+  <h2>Résultats financiers</h2>
+
+  <div class="bfs-stat-grid">
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Chiffre d'affaires</span>
+      <strong id="reportRevenue">0.00 $</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Coût des marchandises vendues connu</span>
+      <strong id="reportKnownCost">0.00 $</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Bénéfice brut connu</span>
+      <strong id="reportGrossProfit">0.00 $</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Frais de paiement</span>
+      <strong id="reportPaymentFees">0.00 $</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Bénéfice net connu</span>
+      <strong id="reportNetProfit">0.00 $</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Ventes enregistrées</span>
+      <strong id="reportSalesCount">0</strong>
+    </div>
+
+  </div>
+
+  <h2>Répartition des ventes</h2>
+
+  <div class="bfs-stat-grid">
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Ventes en ligne</span>
+      <strong id="reportWebsiteRevenue">0.00 $</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Ventes physiques</span>
+      <strong id="reportPhysicalRevenue">0.00 $</strong>
+    </div>
+
+  </div>
+
+  <h2>Détails des ventes</h2>
+
+  <div id="reportSalesDetails">
+    Les détails du rapport apparaîtront ici.
+  </div>
+
+  <p id="reportUnknownCosts">
+    Les coûts d'achat inconnus seront signalés séparément.
+  </p>
+
+</section>
     <!-- GESTION DES PRODUITS -->
     <section id="productsPanel" class="bfs-panel" hidden>
       <h1>Gestion des produits</h1>
@@ -2254,18 +2357,25 @@ if (
       });
   }
 
-  // ACHATS
-if (panelId === "purchasesPanel") {
-  Promise.all([
-    loadPurchaseForm(),
-    loadPurchaseHistory()
-  ]).catch(error => {
-    console.error("Erreur de chargement des achats :", error);
+    // ACHATS
+  if (panelId === "purchasesPanel") {
+    Promise.all([
+      loadPurchaseForm(),
+      loadPurchaseHistory()
+    ]).catch(error => {
+      console.error("Erreur de chargement des achats :", error);
 
-    document.getElementById("purchaseMessage").textContent =
-      "Erreur : " + error.message;
-  });
-}
+      document.getElementById("purchaseMessage").textContent =
+        "Erreur : " + error.message;
+    });
+  }
+
+  // RAPPORTS FINANCIERS
+  if (panelId === "reportsPanel") {
+    if (typeof loadFinancialReports === "function") {
+      loadFinancialReports();
+    }
+  }
 
   menuLinks.forEach(link => {
     link.classList.toggle(
@@ -2273,6 +2383,336 @@ if (panelId === "purchasesPanel") {
       link.dataset.panel === panelId
     );
   });
+}
+
+/* =================================================
+   4. RAPPORTS FINANCIERS BFS
+================================================= */
+
+async function loadFinancialReports() {
+
+  const periodSelect = document.getElementById("reportPeriod");
+  const startInput = document.getElementById("reportStartDate");
+  const endInput = document.getElementById("reportEndDate");
+  const generateButton = document.getElementById("generateReportButton");
+
+  const message = document.getElementById("reportMessage");
+
+  if (!periodSelect || !generateButton) return;
+
+  const TIME_ZONE = "Africa/Lubumbashi";
+
+  // Obtenir la date locale de Goma.
+  function getLocalDate() {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: TIME_ZONE,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(new Date());
+
+    const values = {};
+
+    parts.forEach(part => {
+      values[part.type] = part.value;
+    });
+
+    return `${values.year}-${values.month}-${values.day}`;
+  }
+
+  function addDays(dateString, days) {
+    const date = new Date(dateString + "T12:00:00Z");
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
+  }
+
+  function getReportDates() {
+
+    const today = getLocalDate();
+    const period = periodSelect.value;
+
+    let start = today;
+    let end = today;
+
+    if (period === "week") {
+      const date = new Date(today + "T12:00:00Z");
+      const day = date.getUTCDay();
+      const difference = day === 0 ? 6 : day - 1;
+
+      start = addDays(today, -difference);
+
+    } else if (period === "month") {
+
+      start = today.slice(0, 7) + "-01";
+
+    } else if (period === "year") {
+
+      start = today.slice(0, 4) + "-01-01";
+
+    } else if (period === "custom") {
+
+      start = startInput.value;
+      end = endInput.value;
+
+      if (!start || !end || start > end) {
+        throw new Error("Veuillez choisir une période valide.");
+      }
+    }
+
+    if (period !== "custom") {
+      end = today;
+    }
+
+    return { start, end };
+  }
+
+  async function generateReport() {
+
+    try {
+
+      message.textContent = "Calcul du rapport en cours...";
+
+      const { start, end } = getReportDates();
+
+      // Goma : UTC+2 toute l'année.
+      const startISO = new Date(
+        start + "T00:00:00+02:00"
+      ).toISOString();
+
+      const endISO = new Date(
+        addDays(end, 1) + "T00:00:00+02:00"
+      ).toISOString();
+
+      // 1. Récupérer les ventes de la boutique active.
+      const { data: sales, error: salesError } =
+        await supabaseClient
+          .from("sales")
+          .select("id, order_id, sale_source, total, created_at")
+          .eq("store_id", Number(currentStoreId))
+          .gte("created_at", startISO)
+          .lt("created_at", endISO)
+          .order("created_at", { ascending: false });
+
+      if (salesError) throw salesError;
+
+      const allSales = sales || [];
+
+      const saleIds = allSales.map(sale => sale.id);
+
+      let saleItems = [];
+
+      // 2. Récupérer les articles vendus.
+      if (saleIds.length > 0) {
+
+        const { data, error } = await supabaseClient
+          .from("sale_items")
+          .select("sale_id, quantity, unit_price, unit_cost")
+          .in("sale_id", saleIds);
+
+        if (error) throw error;
+
+        saleItems = data || [];
+      }
+
+      // 3. Calculer les coûts et bénéfices connus.
+      let knownCost = 0;
+      let grossProfit = 0;
+      let unknownCostLines = 0;
+
+      const itemsBySale = new Map();
+
+      saleItems.forEach(item => {
+
+        if (!itemsBySale.has(item.sale_id)) {
+          itemsBySale.set(item.sale_id, []);
+        }
+
+        itemsBySale.get(item.sale_id).push(item);
+
+        const quantity = Number(item.quantity) || 0;
+        const price = Number(item.unit_price) || 0;
+
+        if (item.unit_cost === null || item.unit_cost === undefined) {
+          unknownCostLines++;
+          return;
+        }
+
+        const cost = Number(item.unit_cost);
+
+        knownCost += quantity * cost;
+
+        grossProfit += quantity * (price - cost);
+      });
+
+      // 4. Récupérer les frais de paiement des commandes en ligne.
+      const orderIds = [
+        ...new Set(
+          allSales
+            .filter(sale => sale.sale_source === "website")
+            .map(sale => sale.order_id)
+            .filter(id => id !== null && id !== undefined)
+        )
+      ];
+
+      let paymentFees = 0;
+
+      if (orderIds.length > 0) {
+
+        const { data: orders, error } = await supabaseClient
+          .from("orders")
+          .select("id, payment_fee")
+          .in("id", orderIds);
+
+        if (error) throw error;
+
+        paymentFees = (orders || []).reduce(
+          (sum, order) => sum + (Number(order.payment_fee) || 0),
+          0
+        );
+      }
+
+      // 5. Calculer les totaux.
+      const revenue = allSales.reduce(
+        (sum, sale) => sum + (Number(sale.total) || 0),
+        0
+      );
+
+      const websiteSales = allSales.filter(
+        sale => sale.sale_source === "website"
+      );
+
+      const physicalSales = allSales.filter(
+        sale => sale.sale_source === "physical"
+      );
+
+      const websiteRevenue = websiteSales.reduce(
+        (sum, sale) => sum + (Number(sale.total) || 0),
+        0
+      );
+
+      const physicalRevenue = physicalSales.reduce(
+        (sum, sale) => sum + (Number(sale.total) || 0),
+        0
+      );
+
+      const netProfit = grossProfit - paymentFees;
+
+      // 6. Afficher les résultats.
+      document.getElementById("reportRevenue").textContent =
+        revenue.toFixed(2) + " $";
+
+      document.getElementById("reportKnownCost").textContent =
+        knownCost.toFixed(2) + " $";
+
+      document.getElementById("reportGrossProfit").textContent =
+        grossProfit.toFixed(2) + " $";
+
+      document.getElementById("reportPaymentFees").textContent =
+        paymentFees.toFixed(2) + " $";
+
+      document.getElementById("reportNetProfit").textContent =
+        netProfit.toFixed(2) + " $";
+
+      document.getElementById("reportSalesCount").textContent =
+        allSales.length;
+
+      document.getElementById("reportWebsiteRevenue").textContent =
+        websiteRevenue.toFixed(2) + " $";
+
+      document.getElementById("reportPhysicalRevenue").textContent =
+        physicalRevenue.toFixed(2) + " $";
+
+      // 7. Signaler les coûts inconnus.
+      document.getElementById("reportUnknownCosts").textContent =
+        unknownCostLines > 0
+          ? unknownCostLines + " ligne(s) d'articles ont un coût d'achat inconnu. Le bénéfice affiché est donc partiel."
+          : "Tous les articles vendus ont un coût d'achat renseigné.";
+
+      // 8. Afficher les détails des ventes.
+      const details = document.getElementById("reportSalesDetails");
+
+      if (allSales.length === 0) {
+
+        details.textContent = "Aucune vente enregistrée pour cette période.";
+
+      } else {
+
+        const rows = allSales.map(sale => {
+
+          const items = itemsBySale.get(sale.id) || [];
+
+          const hasUnknownCost = items.some(
+            item => item.unit_cost === null || item.unit_cost === undefined
+          );
+
+          const date = new Intl.DateTimeFormat("fr-FR", {
+            timeZone: TIME_ZONE,
+            dateStyle: "short",
+            timeStyle: "short"
+          }).format(new Date(sale.created_at));
+
+          const type = sale.sale_source === "website"
+            ? "En ligne"
+            : "Physique";
+
+          return `
+            <tr>
+              <td>${date}</td>
+              <td>${type}</td>
+              <td>${Number(sale.total).toFixed(2)} $</td>
+              <td>${hasUnknownCost ? "Coût incomplet" : "Coût renseigné"}</td>
+            </tr>
+          `;
+
+        }).join("");
+
+        details.innerHTML = `
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Montant</th>
+                  <th>Coût d'achat</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      message.textContent =
+        "Rapport généré : " + start + " au " + end + ".";
+
+    } catch (error) {
+
+      console.error("Erreur rapport financier :", error);
+
+      message.textContent = "Erreur : " + error.message;
+    }
+  }
+
+  // Afficher les dates personnalisées uniquement si nécessaire.
+  function updateDateFields() {
+
+    const custom = periodSelect.value === "custom";
+
+    startInput.style.display = custom ? "block" : "none";
+    endInput.style.display = custom ? "block" : "none";
+  }
+
+  periodSelect.onchange = updateDateFields;
+
+  generateButton.onclick = generateReport;
+
+  updateDateFields();
+
+  // Générer automatiquement le rapport à l'ouverture.
+  await generateReport();
 }
 /* 3. NAVIGATION DU MENU */
 menuLinks.forEach(link => {
