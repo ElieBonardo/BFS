@@ -2988,8 +2988,8 @@ if (comparisonSaleIds.length > 0) {
     store.grossProfit += quantity * (price - cost);
   });
 });
+// AFFICHER LES CARTES DE COMPARAISON
 
-// Afficher les cartes de comparaison.
 const compareRevenueMain =
   document.getElementById("compareRevenueMain");
 
@@ -3020,83 +3020,80 @@ if (
   compareSalesSecond &&
   comparisonDetails
 ) {
-  comparisonData[1].revenue.toFixed(2) + " $";
 
-document.getElementById("compareRevenueSecond").textContent =
-  comparisonData[2].revenue.toFixed(2) + " $";
+  compareRevenueMain.textContent =
+    comparisonData[1].revenue.toFixed(2) + " $";
 
-document.getElementById("compareProfitMain").textContent =
-  comparisonData[1].grossProfit.toFixed(2) + " $";
+  compareRevenueSecond.textContent =
+    comparisonData[2].revenue.toFixed(2) + " $";
 
-document.getElementById("compareProfitSecond").textContent =
-  comparisonData[2].grossProfit.toFixed(2) + " $";
+  compareProfitMain.textContent =
+    comparisonData[1].grossProfit.toFixed(2) + " $";
 
-document.getElementById("compareSalesMain").textContent =
-  comparisonData[1].salesCount;
+  compareProfitSecond.textContent =
+    comparisonData[2].grossProfit.toFixed(2) + " $";
 
-document.getElementById("compareSalesSecond").textContent =
-  comparisonData[2].salesCount;
+  compareSalesMain.textContent =
+    comparisonData[1].salesCount;
 
-// Afficher le détail comparatif.
-const comparisonDetails = document.getElementById(
-  "storeComparisonDetails"
-);
+  compareSalesSecond.textContent =
+    comparisonData[2].salesCount;
 
-comparisonDetails.innerHTML = `
-  <div style="overflow-x:auto;">
-    <table>
-      <thead>
-        <tr>
-          <th>Indicateur</th>
-          <th>Boutique principale</th>
-          <th>Boutique 2</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Chiffre d'affaires</td>
-          <td>${comparisonData[1].revenue.toFixed(2)} $</td>
-          <td>${comparisonData[2].revenue.toFixed(2)} $</td>
-        </tr>
-        <tr>
-          <td>Coût d'achat connu</td>
-          <td>${comparisonData[1].knownCost.toFixed(2)} $</td>
-          <td>${comparisonData[2].knownCost.toFixed(2)} $</td>
-        </tr>
-        <tr>
-          <td>Bénéfice brut connu</td>
-          <td>${comparisonData[1].grossProfit.toFixed(2)} $</td>
-          <td>${comparisonData[2].grossProfit.toFixed(2)} $</td>
-        </tr>
-        <tr>
-          <td>Ventes physiques</td>
-          <td>${comparisonData[1].physicalRevenue.toFixed(2)} $</td>
-          <td>${comparisonData[2].physicalRevenue.toFixed(2)} $</td>
-        </tr>
-        <tr>
-          <td>Ventes en ligne</td>
-          <td>${comparisonData[1].websiteRevenue.toFixed(2)} $</td>
-          <td>${comparisonData[2].websiteRevenue.toFixed(2)} $</td>
-        </tr>
-        <tr>
-          <td>Ventes enregistrées</td>
-          <td>${comparisonData[1].salesCount}</td>
-          <td>${comparisonData[2].salesCount}</td>
-        </tr>
-        <tr>
-          <td>Lignes avec coût inconnu</td>
-          <td>${comparisonData[1].unknownCostLines}</td>
-          <td>${comparisonData[2].unknownCostLines}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <p>
-    Les bénéfices sont partiels lorsque certains coûts d'achat
-    ne sont pas encore renseignés. Les demandes clients non
-    enregistrées comme ventes sont exclues.
-  </p>
-`;
+  comparisonDetails.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Indicateur</th>
+            <th>Boutique principale</th>
+            <th>Boutique 2</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Chiffre d'affaires</td>
+            <td>${comparisonData[1].revenue.toFixed(2)} $</td>
+            <td>${comparisonData[2].revenue.toFixed(2)} $</td>
+          </tr>
+          <tr>
+            <td>Coût d'achat connu</td>
+            <td>${comparisonData[1].knownCost.toFixed(2)} $</td>
+            <td>${comparisonData[2].knownCost.toFixed(2)} $</td>
+          </tr>
+          <tr>
+            <td>Bénéfice brut connu</td>
+            <td>${comparisonData[1].grossProfit.toFixed(2)} $</td>
+            <td>${comparisonData[2].grossProfit.toFixed(2)} $</td>
+          </tr>
+          <tr>
+            <td>Ventes physiques</td>
+            <td>${comparisonData[1].physicalRevenue.toFixed(2)} $</td>
+            <td>${comparisonData[2].physicalRevenue.toFixed(2)} $</td>
+          </tr>
+          <tr>
+            <td>Ventes en ligne</td>
+            <td>${comparisonData[1].websiteRevenue.toFixed(2)} $</td>
+            <td>${comparisonData[2].websiteRevenue.toFixed(2)} $</td>
+          </tr>
+          <tr>
+            <td>Ventes enregistrées</td>
+            <td>${comparisonData[1].salesCount}</td>
+            <td>${comparisonData[2].salesCount}</td>
+          </tr>
+          <tr>
+            <td>Lignes avec coût inconnu</td>
+            <td>${comparisonData[1].unknownCostLines}</td>
+            <td>${comparisonData[2].unknownCostLines}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Les bénéfices sont partiels lorsque certains coûts d'achat
+      ne sont pas encore renseignés. Les demandes clients non
+      enregistrées comme ventes sont exclues.
+    </p>
+  `;
 }
       message.textContent =
         "Rapport généré : " + start + " au " + end + ".";
