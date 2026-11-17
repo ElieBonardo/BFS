@@ -4024,41 +4024,56 @@ function renderOrders() {
     container.appendChild(card);
   });
 }
-document
-  .getElementById("orderStatusFilter")
-  .addEventListener("change", renderOrders);
-  document
-  .getElementById("orderSearchInput")
-  .addEventListener("input", renderOrders);
-  
-refreshOrdersButton.addEventListener("click", async () => {
-  refreshOrdersButton.disabled = true;
-  try {
-    await loadAdminOrders();
-  } finally {
-    refreshOrdersButton.disabled = false;
-  }
-});
-/* 10. DECONNEXION */
-logoutButton.addEventListener("click", async () => {
-  
+const orderStatusFilter =
+document.getElementById(“orderStatusFilter”);
 
-  logoutButton.disabled = true;
-  try {
-    const { error } = await supabaseClient.auth.signOut();
-    if (error) throw error;
-    dashboard.style.display = "none";
-    dashboard.classList.remove("menu-open");
-    sidebarToggle.setAttribute("aria-expanded", "false");
-    loginSection.style.display = "block";
-    document.getElementById("password").value = "";
-    message.textContent = "";
-  } catch (error) {
-    alert("Erreur de déconnexion : " + error.message);
-  } finally {
-    logoutButton.disabled = false;
-  }
+if (orderStatusFilter) {
+orderStatusFilter.addEventListener(“change”, renderOrders);
+}
+
+const orderSearchInput =
+document.getElementById(“orderSearchInput”);
+
+if (orderSearchInput) {
+orderSearchInput.addEventListener(“input”, renderOrders);
+}
+
+if (refreshOrdersButton) {
+refreshOrdersButton.addEventListener(“click”, async () => {
+refreshOrdersButton.disabled = true;
+
+try {
+  await loadAdminOrders();
+} finally {
+  refreshOrdersButton.disabled = false;
+}
+
 });
+}
+
+/* 10. DECONNEXION */
+
+if (logoutButton) {
+logoutButton.addEventListener(“click”, async () => {
+logoutButton.disabled = true;
+
+try {
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) throw error;
+  dashboard.style.display = "none";
+  dashboard.classList.remove("menu-open");
+  sidebarToggle.setAttribute("aria-expanded", "false");
+  loginSection.style.display = "block";
+  document.getElementById("password").value = "";
+  message.textContent = "";
+} catch (error) {
+  alert("Erreur de déconnexion : " + error.message);
+} finally {
+  logoutButton.disabled = false;
+}
+
+});
+}
 /* 11. ETAT INITIAL */
 const sessionLoading =
   document.getElementById("sessionLoading");
