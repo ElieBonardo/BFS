@@ -2567,8 +2567,10 @@ saleItems.forEach(item => {
 
   if (!productResults.has(id)) {
     productResults.set(id, {
-      name: productNames.get(id) || "Produit #" + id,
-      quantity: 0,
+  reference: id === "unknown" ? "Non définie" : "BFS-" + id,
+  name: productNames.get(id) || "Produit #" + id,
+  quantity: 0,
+      
       revenue: 0,
       knownCost: 0,
       grossProfit: 0,
@@ -2809,9 +2811,10 @@ if (productsList.length === 0) {
         : product.grossProfit.toFixed(2) + " $";
 
       return `
-        <tr>
-          <td>${escapeHTML(product.name)}</td>
-          <td>${product.quantity}</td>
+  <tr>
+    <td>${escapeHTML(product.reference)}</td>
+    <td>${escapeHTML(product.name)}</td>
+    <td>${product.quantity}</td>
           <td>${product.revenue.toFixed(2)} $</td>
           <td>${costText}</td>
           <td>${profitText}</td>
@@ -2824,8 +2827,9 @@ if (productsList.length === 0) {
       <table>
         <thead>
           <tr>
-            <th>Produit</th>
-            <th>Quantité</th>
+          <th>Référence</th>
+              <th>Produit</th>
+              <th>Quantité</th>
             <th>Chiffre d'affaires</th>
             <th>Coût connu</th>
             <th>Bénéfice brut connu</th>
