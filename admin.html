@@ -2990,7 +2990,36 @@ if (comparisonSaleIds.length > 0) {
 });
 
 // Afficher les cartes de comparaison.
-document.getElementById("compareRevenueMain").textContent =
+const compareRevenueMain =
+  document.getElementById("compareRevenueMain");
+
+const compareRevenueSecond =
+  document.getElementById("compareRevenueSecond");
+
+const compareProfitMain =
+  document.getElementById("compareProfitMain");
+
+const compareProfitSecond =
+  document.getElementById("compareProfitSecond");
+
+const compareSalesMain =
+  document.getElementById("compareSalesMain");
+
+const compareSalesSecond =
+  document.getElementById("compareSalesSecond");
+
+const comparisonDetails =
+  document.getElementById("storeComparisonDetails");
+
+if (
+  compareRevenueMain &&
+  compareRevenueSecond &&
+  compareProfitMain &&
+  compareProfitSecond &&
+  compareSalesMain &&
+  compareSalesSecond &&
+  comparisonDetails
+) {
   comparisonData[1].revenue.toFixed(2) + " $";
 
 document.getElementById("compareRevenueSecond").textContent =
@@ -3068,6 +3097,7 @@ comparisonDetails.innerHTML = `
     enregistrées comme ventes sont exclues.
   </p>
 `;
+}
       message.textContent =
         "Rapport généré : " + start + " au " + end + ".";
 
