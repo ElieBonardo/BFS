@@ -3150,7 +3150,8 @@ menuLinks.forEach(link => {
   });
 }); 
 /* OUVRIR ET FERMER LE MENU LATÉRAL */
-sidebarToggle.addEventListener("click", () => {
+if (sidebarToggle) {
+  sidebarToggle.addEventListener("click", () => {
   const isOpen = dashboard.classList.toggle("menu-open");
 
   sidebarToggle.setAttribute(
@@ -3163,6 +3164,7 @@ sidebarToggle.addEventListener("click", () => {
     isOpen ? "Fermer le menu" : "Ouvrir le menu"
   );
 });
+}
 /* 4. CONNEXION */
 loginButton.addEventListener("click", async () => {
   const email = document.getElementById("email").value.trim();
