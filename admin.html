@@ -768,82 +768,7 @@
         <option value="year">Cette année</option>
         <option value="custom">Période personnalisée</option>
       </select>
-  <!-- GESTION DES DEPENSES -->
-<section id="expensesPanel" class="admin-panel">
 
-  <h2>Dépenses des boutiques</h2>
-
-  <p>Enregistrement et suivi des dépenses de chaque boutique BFS.</p>
-
-  <div class="form-group">
-    <label for="expenseStore">Boutique</label>
-    <select id="expenseStore">
-      <option value="1">BFS - Boutique principale</option>
-      <option value="2">BFS - Boutique 2</option>
-    </select>
-  </div>
-
-  <div class="form-group">
-    <label for="expenseDate">Date de la dépense</label>
-    <input type="date" id="expenseDate">
-  </div>
-
-  <div class="form-group">
-    <label for="expenseCategory">Catégorie</label>
-    <select id="expenseCategory">
-      <option value="">Choisir une catégorie</option>
-      <option value="Transport">Transport</option>
-      <option value="Loyer">Loyer</option>
-      <option value="Livraison">Livraison</option>
-      <option value="Électricité">Électricité</option>
-      <option value="Communication">Communication</option>
-      <option value="Salaires">Salaires</option>
-      <option value="Emballage">Emballage</option>
-      <option value="Autres">Autres</option>
-    </select>
-  </div>
-
-  <div class="form-group">
-    <label for="expenseDescription">Description</label>
-    <input
-      type="text"
-      id="expenseDescription"
-      placeholder="Description de la dépense"
-    >
-  </div>
-
-  <div class="form-group">
-    <label for="expenseAmount">Montant</label>
-    <input
-      type="number"
-      id="expenseAmount"
-      min="0.01"
-      step="0.01"
-      placeholder="0.00"
-    >
-  </div>
-
-  <div class="form-group">
-    <label for="expenseCurrency">Devise</label>
-    <select id="expenseCurrency">
-      <option value="USD">USD ($)</option>
-      <option value="CDF">CDF (FC)</option>
-    </select>
-  </div>
-
-  <button type="button" id="saveExpenseButton">
-    Enregistrer la dépense
-  </button>
-
-  <p id="expenseMessage"></p>
-
-  <h3>Historique des dépenses</h3>
-
-  <div id="expensesHistory">
-    Chargement des dépenses...
-  </div>
-
-</section>
     </div>
 
     <div>
@@ -990,6 +915,82 @@
 <div id="storeComparisonDetails">
   Les détails de comparaison apparaîtront ici.
 </div>
+</section>
+  <!-- GESTION DES DEPENSES -->
+<section id="expensesPanel" class="bfs-panel" hidden>
+
+  <h2>Dépenses des boutiques</h2>
+
+  <p>Enregistrement et suivi des dépenses de chaque boutique BFS.</p>
+
+  <div class="form-group">
+    <label for="expenseStore">Boutique</label>
+    <select id="expenseStore">
+      <option value="1">BFS - Boutique principale</option>
+      <option value="2">BFS - Boutique 2</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="expenseDate">Date de la dépense</label>
+    <input type="date" id="expenseDate">
+  </div>
+
+  <div class="form-group">
+    <label for="expenseCategory">Catégorie</label>
+    <select id="expenseCategory">
+      <option value="">Choisir une catégorie</option>
+      <option value="Transport">Transport</option>
+      <option value="Loyer">Loyer</option>
+      <option value="Livraison">Livraison</option>
+      <option value="Électricité">Électricité</option>
+      <option value="Communication">Communication</option>
+      <option value="Salaires">Salaires</option>
+      <option value="Emballage">Emballage</option>
+      <option value="Autres">Autres</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="expenseDescription">Description</label>
+    <input
+      type="text"
+      id="expenseDescription"
+      placeholder="Description de la dépense"
+    >
+  </div>
+
+  <div class="form-group">
+    <label for="expenseAmount">Montant</label>
+    <input
+      type="number"
+      id="expenseAmount"
+      min="0.01"
+      step="0.01"
+      placeholder="0.00"
+    >
+  </div>
+
+  <div class="form-group">
+    <label for="expenseCurrency">Devise</label>
+    <select id="expenseCurrency">
+      <option value="USD">USD ($)</option>
+      <option value="CDF">CDF (FC)</option>
+    </select>
+  </div>
+
+  <button type="button" id="saveExpenseButton">
+    Enregistrer la dépense
+  </button>
+
+  <p id="expenseMessage"></p>
+
+  <h3>Historique des dépenses</h3>
+
+  <div id="expensesHistory">
+    Chargement des dépenses...
+  </div>
+
 </section>
 
     <!-- GESTION DES PRODUITS -->
