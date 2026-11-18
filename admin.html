@@ -850,6 +850,11 @@
   <div id="reportSalesDetails">
     Les détails du rapport apparaîtront ici.
   </div>
+  <h2>Dépenses par catégorie</h2>
+
+<div id="reportExpensesByCategory">
+  Le détail des dépenses apparaîtra ici.
+</div>
 
 <!-- RENTABILITÉ PAR PRODUIT -->
 <h2>Rentabilité par produit</h2>
@@ -2828,32 +2833,73 @@ saleItems.forEach(item => {
 const { data: expenses, error: expensesError } =
   await supabaseClient
     .from("expenses")
-    .select("amount, currency, exchange_rate_cdf_per_usd")
+    .select("amount, currency, exchange_rate_cdf_per_usd, category")
     .eq("store_id", Number(currentStoreId))
     .gte("expense_date", start)
     .lte("expense_date", end);
 
 if (expensesError) throw expensesError;
 
-// Convertir toutes les dépenses en USD
+// Convertir et regrouper les dépenses par catégorie
 let totalExpensesUSD = 0;
 let expensesWithoutRate = 0;
+const expensesByCategory = {};
 
 (expenses || []).forEach(expense => {
   const amount = Number(expense.amount) || 0;
+  let amountUSD = 0;
 
   if (expense.currency === "USD") {
-    totalExpensesUSD += amount;
+    amountUSD = amount;
+
   } else if (expense.currency === "CDF") {
     const rate = Number(expense.exchange_rate_cdf_per_usd);
 
     if (Number.isFinite(rate) && rate > 0) {
-      totalExpensesUSD += amount / rate;
+      amountUSD = amount / rate;
     } else {
       expensesWithoutRate++;
+      return;
     }
   }
+
+  totalExpensesUSD += amountUSD;
+
+  const category = expense.category || "Autres";
+
+  expensesByCategory[category] =
+    (expensesByCategory[category] || 0) + amountUSD;
 });
+
+// Afficher les dépenses par catégorie
+const expensesCategoryContainer =
+  document.getElementById("reportExpensesByCategory");
+
+if (Object.keys(expensesByCategory).length === 0) {
+  expensesCategoryContainer.innerHTML =
+    "<p>Aucune dépense enregistrée sur cette période.</p>";
+} else {
+  expensesCategoryContainer.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Catégorie</th>
+          <th>Montant</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${Object.entries(expensesByCategory)
+          .sort((a, b) => b[1] - a[1])
+          .map(([category, amount]) => `
+            <tr>
+              <td>${category}</td>
+              <td>${amount.toFixed(2)} $</td>
+            </tr>
+          `).join("")}
+      </tbody>
+    </table>
+  `;
+}
 
 // Calcul du bénéfice net après dépenses
 const netProfit =
