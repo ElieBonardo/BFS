@@ -2810,6 +2810,69 @@ saleItems.forEach(item => {
           </div>
         `;
       }
+      // 8B. COMPARAISON FINANCIÈRE DES DEUX BOUTIQUES
+
+const comparisonContainer =
+  document.getElementById("storeComparisonDetails");
+
+if (comparisonContainer) {
+  comparisonContainer.textContent =
+    "Calcul de la comparaison des boutiques...";
+
+  const { data: comparisonSales, error: comparisonError } =
+    await supabaseClient
+      .from("sales")
+      .select("id, store_id, total, sale_source, created_at")
+      .in("store_id", [1, 2])
+      .gte("created_at", startISO)
+      .lt("created_at", endISO);
+
+  if (comparisonError) throw comparisonError;
+
+  const comparison = [1, 2].map(storeId => {
+    const storeSales = (comparisonSales || []).filter(
+      sale => Number(sale.store_id) === storeId
+    );
+
+    const revenue = storeSales.reduce(
+      (sum, sale) => sum + (Number(sale.total) || 0),
+      0
+    );
+
+    return {
+      storeId,
+      name: storeId === 1
+        ? "Boutique principale"
+        : "Boutique 2",
+      revenue,
+      salesCount: storeSales.length
+    };
+  });
+
+  comparisonContainer.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Boutique</th>
+            <th>Chiffre d'affaires</th>
+            <th>Nombre de ventes</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${comparison.map(store => `
+            <tr>
+              <td>${store.name}</td>
+              <td>${store.revenue.toFixed(2)} $</td>
+              <td>${store.salesCount}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+      
 // 9. Afficher la rentabilité par produit.
 const productCount = document.getElementById("reportProductCount");
 const productQuantity = document.getElementById("reportProductQuantity");
