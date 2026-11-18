@@ -978,6 +978,18 @@
       <option value="CDF">CDF (FC)</option>
     </select>
   </div>
+  <div class="form-group" id="expenseExchangeRateGroup" hidden>
+  <label for="expenseExchangeRate">
+    Taux de change (CDF pour 1 USD)
+  </label>
+  <input
+    type="number"
+    id="expenseExchangeRate"
+    min="1"
+    step="0.01"
+    placeholder="Exemple : 2800"
+  >
+</div>
 
   <button type="button" id="saveExpenseButton">
     Enregistrer la dépense
@@ -4306,14 +4318,32 @@ async function saveExpense() {
   const category = document.getElementById("expenseCategory").value;
   const description =
     document.getElementById("expenseDescription").value.trim();
+
   const amount = Number(
     document.getElementById("expenseAmount").value
   );
+
   const currency = document.getElementById("expenseCurrency").value;
 
-  if (!storeId || !date || !category || !amount || amount <= 0) {
+  const exchangeRateInput =
+    document.getElementById("expenseExchangeRate");
+
+  const exchangeRate = currency === "CDF"
+    ? Number(exchangeRateInput.value)
+    : null;
+
+  if (!storeId || !date || !category || !Number.isFinite(amount) || amount <= 0) {
     message.textContent =
-      "Veuillez remplir la boutique, la date, la catégorie et le montant.";
+      "Veuillez remplir la boutique, la date, la catégorie et un montant valide.";
+    return;
+  }
+
+  if (
+    currency === "CDF" &&
+    (!Number.isFinite(exchangeRate) || exchangeRate <= 0)
+  ) {
+    message.textContent =
+      "Veuillez saisir un taux de change CDF valide.";
     return;
   }
 
@@ -4325,6 +4355,7 @@ async function saveExpense() {
       await supabaseClient.auth.getUser();
 
     if (userError) throw userError;
+    if (!userData.user) throw new Error("Session utilisateur introuvable.");
 
     const { error } = await supabaseClient
       .from("expenses")
@@ -4335,6 +4366,7 @@ async function saveExpense() {
         description: description || null,
         amount: amount,
         currency: currency,
+        exchange_rate_cdf_per_usd: exchangeRate,
         created_by: userData.user.id
       });
 
@@ -4346,6 +4378,8 @@ async function saveExpense() {
     document.getElementById("expenseDescription").value = "";
     document.getElementById("expenseAmount").value = "";
 
+    if (exchangeRateInput) exchangeRateInput.value = "";
+
     await loadExpenses();
 
   } catch (error) {
@@ -4355,33 +4389,33 @@ async function saveExpense() {
     button.disabled = false;
   }
 }
+// AFFICHAGE DU TAUX DE CHANGE
+const expenseCurrency =
+  document.getElementById("expenseCurrency");
 
+const expenseExchangeRateGroup =
+  document.getElementById("expenseExchangeRateGroup");
+
+if (expenseCurrency && expenseExchangeRateGroup) {
+  const updateExpenseCurrencyFields = () => {
+    expenseExchangeRateGroup.hidden =
+      expenseCurrency.value !== "CDF";
+  };
+
+  expenseCurrency.addEventListener(
+    "change",
+    updateExpenseCurrencyFields
+  );
+
+  updateExpenseCurrencyFields();
+}
+
+// BOUTON D'ENREGISTREMENT
 const saveExpenseButton =
   document.getElementById("saveExpenseButton");
 
 if (saveExpenseButton) {
   saveExpenseButton.addEventListener("click", saveExpense);
-}
-
-// Date locale de Goma
-const expenseDateInput =
-  document.getElementById("expenseDate");
-
-if (expenseDateInput) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Africa/Lubumbashi",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).formatToParts(new Date());
-
-  const dateParts = {};
-  parts.forEach(part => {
-    dateParts[part.type] = part.value;
-  });
-
-  expenseDateInput.value =
-    `${dateParts.year}-${dateParts.month}-${dateParts.day}`;
 }
 </script>
 </body>
