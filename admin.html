@@ -812,6 +812,10 @@
       <span class="bfs-stat-label">Frais de paiement</span>
       <strong id="reportPaymentFees">0.00 $</strong>
     </div>
+    <div class="bfs-stat-card">
+  <span class="bfs-stat-label">Dépenses de fonctionnement</span>
+  <strong id="reportExpenses">0.00 $</strong>
+</div>
 
     <div class="bfs-stat-card">
       <span class="bfs-stat-label">Bénéfice net connu</span>
@@ -2820,7 +2824,40 @@ saleItems.forEach(item => {
         0
       );
 
-      const netProfit = grossProfit - paymentFees;
+   // 5A. RÉCUPÉRER LES DÉPENSES DE LA BOUTIQUE
+const { data: expenses, error: expensesError } =
+  await supabaseClient
+    .from("expenses")
+    .select("amount, currency, exchange_rate_cdf_per_usd")
+    .eq("store_id", Number(currentStoreId))
+    .gte("expense_date", start)
+    .lte("expense_date", end);
+
+if (expensesError) throw expensesError;
+
+// Convertir toutes les dépenses en USD
+let totalExpensesUSD = 0;
+let expensesWithoutRate = 0;
+
+(expenses || []).forEach(expense => {
+  const amount = Number(expense.amount) || 0;
+
+  if (expense.currency === "USD") {
+    totalExpensesUSD += amount;
+  } else if (expense.currency === "CDF") {
+    const rate = Number(expense.exchange_rate_cdf_per_usd);
+
+    if (Number.isFinite(rate) && rate > 0) {
+      totalExpensesUSD += amount / rate;
+    } else {
+      expensesWithoutRate++;
+    }
+  }
+});
+
+// Calcul du bénéfice net après dépenses
+const netProfit =
+  grossProfit - paymentFees - totalExpensesUSD;
 
       // 6. Afficher les résultats.
       document.getElementById("reportRevenue").textContent =
@@ -2834,7 +2871,9 @@ saleItems.forEach(item => {
 
       document.getElementById("reportPaymentFees").textContent =
         paymentFees.toFixed(2) + " $";
-
+        
+document.getElementById("reportExpenses").textContent =
+  totalExpensesUSD.toFixed(2) + " $";
       document.getElementById("reportNetProfit").textContent =
         netProfit.toFixed(2) + " $";
 
@@ -2848,10 +2887,26 @@ saleItems.forEach(item => {
         physicalRevenue.toFixed(2) + " $";
 
       // 7. Signaler les coûts inconnus.
-      document.getElementById("reportUnknownCosts").textContent =
-        unknownCostLines > 0
-          ? unknownCostLines + " ligne(s) d'articles ont un coût d'achat inconnu. Le bénéfice affiché est donc partiel."
-          : "Tous les articles vendus ont un coût d'achat renseigné.";
+      const warnings = [];
+
+if (unknownCostLines > 0) {
+  warnings.push(
+    unknownCostLines +
+    " ligne(s) d'articles ont un coût d'achat inconnu."
+  );
+}
+
+if (expensesWithoutRate > 0) {
+  warnings.push(
+    expensesWithoutRate +
+    " dépense(s) en CDF n'ont pas de taux de change et ne sont pas incluses dans le calcul."
+  );
+}
+
+document.getElementById("reportUnknownCosts").textContent =
+  warnings.length > 0
+    ? warnings.join(" ") + " Le bénéfice affiché est partiel."
+    : "Tous les coûts d'achat et les taux de conversion des dépenses sont renseignés.";
 
       // 8. Afficher les détails des ventes.
       const details = document.getElementById("reportSalesDetails");
