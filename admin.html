@@ -908,6 +908,35 @@
     <span class="bfs-stat-label">Bénéfice brut connu - Boutique 2</span>
     <strong id="compareProfitSecond">0.00 $</strong>
   </div>
+  <!-- DEPENSES -->
+<div class="bfs-stat-card">
+  <span class="bfs-stat-label">
+    Dépenses - Boutique principale
+  </span>
+  <strong id="compareExpensesMain">0.00 $</strong>
+</div>
+
+<div class="bfs-stat-card">
+  <span class="bfs-stat-label">
+    Dépenses - Boutique 2
+  </span>
+  <strong id="compareExpensesSecond">0.00 $</strong>
+</div>
+
+<!-- BENEFICE APRES DEPENSES -->
+<div class="bfs-stat-card">
+  <span class="bfs-stat-label">
+    Bénéfice après dépenses - Boutique principale
+  </span>
+  <strong id="compareNetMain">0.00 $</strong>
+</div>
+
+<div class="bfs-stat-card">
+  <span class="bfs-stat-label">
+    Bénéfice après dépenses - Boutique 2
+  </span>
+  <strong id="compareNetSecond">0.00 $</strong>
+</div>
 
   <div class="bfs-stat-card">
     <span class="bfs-stat-label">Ventes - Boutique principale</span>
@@ -3048,53 +3077,100 @@ if (comparisonContainer) {
   }
 
   // Calculer les résultats de chaque boutique
-  const comparison = [1, 2].map(storeId => {
-    const storeSales = (comparisonSales || []).filter(
-      sale => Number(sale.store_id) === storeId
-    );
+  // Récupérer les dépenses des deux boutiques
+const { data: comparisonExpenses, error: comparisonExpensesError } =
+  await supabaseClient
+    .from("expenses")
+    .select("store_id, amount, currency, exchange_rate_cdf_per_usd")
+    .in("store_id", [1, 2])
+    .gte("expense_date", start)
+    .lte("expense_date", end);
 
-    const storeSaleIds = new Set(
-      storeSales.map(sale => String(sale.id))
-    );
+if (comparisonExpensesError) {
+  throw comparisonExpensesError;
+}
 
-    const storeItems = comparisonItems.filter(
-      item => storeSaleIds.has(String(item.sale_id))
-    );
+// Comparer les deux boutiques
+const comparison = [1, 2].map(storeId => {
 
-    const revenue = storeSales.reduce(
-      (sum, sale) => sum + (Number(sale.total) || 0),
-      0
-    );
+  const storeSales = (comparisonSales || []).filter(
+    sale => Number(sale.store_id) === storeId
+  );
 
-    const profit = storeItems.reduce((sum, item) => {
-      if (
-        item.unit_cost === null ||
-        item.unit_cost === undefined
-      ) {
-        return sum;
+  const storeSaleIds = new Set(
+    storeSales.map(sale => String(sale.id))
+  );
+
+  const storeItems = comparisonItems.filter(
+    item => storeSaleIds.has(String(item.sale_id))
+  );
+
+  const revenue = storeSales.reduce(
+    (sum, sale) => sum + (Number(sale.total) || 0),
+    0
+  );
+
+  const profit = storeItems.reduce((sum, item) => {
+    if (
+      item.unit_cost === null ||
+      item.unit_cost === undefined
+    ) {
+      return sum;
+    }
+
+    return sum +
+      (Number(item.quantity) || 0) *
+      (
+        (Number(item.unit_price) || 0) -
+        Number(item.unit_cost)
+      );
+  }, 0);
+
+  // Calculer les dépenses de cette boutique en USD
+  const storeExpenses = (comparisonExpenses || []).filter(
+    expense => Number(expense.store_id) === storeId
+  );
+
+  let expensesUSD = 0;
+  let expensesWithoutRate = 0;
+
+  storeExpenses.forEach(expense => {
+    const amount = Number(expense.amount) || 0;
+
+    if (expense.currency === "USD") {
+      expensesUSD += amount;
+
+    } else if (expense.currency === "CDF") {
+      const rate = Number(
+        expense.exchange_rate_cdf_per_usd
+      );
+
+      if (Number.isFinite(rate) && rate > 0) {
+        expensesUSD += amount / rate;
+      } else {
+        expensesWithoutRate++;
       }
-
-      return sum +
-        (Number(item.quantity) || 0) *
-        (
-          (Number(item.unit_price) || 0) -
-          Number(item.unit_cost)
-        );
-    }, 0);
-
-    return {
-      storeId,
-      name: storeId === 1
-        ? "Boutique principale"
-        : "Boutique 2",
-      revenue,
-      profit,
-      salesCount: storeSales.length
-    };
+    }
   });
 
-  const mainStore = comparison[0];
-  const secondStore = comparison[1];
+  const profitAfterExpenses = profit - expensesUSD;
+
+  return {
+    storeId,
+    name: storeId === 1
+      ? "Boutique principale"
+      : "Boutique 2",
+    revenue,
+    profit,
+    expensesUSD,
+    profitAfterExpenses,
+    expensesWithoutRate,
+    salesCount: storeSales.length
+  };
+});
+
+const mainStore = comparison[0];
+const secondStore = comparison[1];
 
   // Mettre à jour les indicateurs
   document.getElementById("compareRevenueMain").textContent =
@@ -3108,6 +3184,19 @@ if (comparisonContainer) {
 
   document.getElementById("compareProfitSecond").textContent =
     secondStore.profit.toFixed(2) + " $";
+// Dépenses de fonctionnement
+document.getElementById("compareExpensesMain").textContent =
+  mainStore.expensesUSD.toFixed(2) + " $";
+
+document.getElementById("compareExpensesSecond").textContent =
+  secondStore.expensesUSD.toFixed(2) + " $";
+
+// Bénéfice après dépenses
+document.getElementById("compareNetMain").textContent =
+  mainStore.profitAfterExpenses.toFixed(2) + " $";
+
+document.getElementById("compareNetSecond").textContent =
+  secondStore.profitAfterExpenses.toFixed(2) + " $";
 
   document.getElementById("compareSalesMain").textContent =
     mainStore.salesCount;
@@ -3117,34 +3206,51 @@ if (comparisonContainer) {
 
   // Afficher le tableau
   comparisonContainer.innerHTML = `
-    <div style="overflow-x:auto;">
-      <table>
-        <thead>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>Boutique</th>
+          <th>Chiffre d'affaires</th>
+          <th>Bénéfice brut connu</th>
+          <th>Dépenses</th>
+          <th>Bénéfice connu après dépenses</th>
+          <th>Nombre de ventes</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${comparison.map(store => `
           <tr>
-            <th>Boutique</th>
-            <th>Chiffre d'affaires</th>
-            <th>Bénéfice brut connu</th>
-            <th>Nombre de ventes</th>
+            <td>${store.name}</td>
+            <td>${store.revenue.toFixed(2)} $</td>
+            <td>${store.profit.toFixed(2)} $</td>
+            <td>${store.expensesUSD.toFixed(2)} $</td>
+            <td>${store.profitAfterExpenses.toFixed(2)} $</td>
+            <td>${store.salesCount}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${comparison.map(store => `
-            <tr>
-              <td>${store.name}</td>
-              <td>${store.revenue.toFixed(2)} $</td>
-              <td>${store.profit.toFixed(2)} $</td>
-              <td>${store.salesCount}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-    <p>
-      Les bénéfices sont partiels lorsque certains coûts d'achat
-      des articles vendus sont inconnus.
+        `).join("")}
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    Le bénéfice après dépenses est calculé en soustrayant
+    les dépenses de fonctionnement du bénéfice brut connu.
+    Les frais de paiement ne sont pas encore déduits.
+  </p>
+
+  <p>
+    Les bénéfices sont partiels lorsque certains coûts d'achat
+    des articles vendus sont inconnus.
+  </p>
+
+  ${comparison.some(store => store.expensesWithoutRate > 0) ? `
+    <p style="color:#b7791f;">
+      Attention : certaines dépenses en CDF n'ont pas de taux
+      de conversion valide et ne sont pas incluses.
     </p>
-  `;
-}
+  ` : ""}
+`;
       
 // 9. Afficher la rentabilité par produit.
 const productCount = document.getElementById("reportProductCount");
