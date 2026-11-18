@@ -2819,6 +2819,7 @@ if (comparisonContainer) {
   comparisonContainer.textContent =
     "Calcul de la comparaison des boutiques...";
 
+  // Récupérer les ventes des deux boutiques
   const { data: comparisonSales, error: comparisonError } =
     await supabaseClient
       .from("sales")
@@ -2829,9 +2830,35 @@ if (comparisonContainer) {
 
   if (comparisonError) throw comparisonError;
 
+  const comparisonSaleIds =
+    (comparisonSales || []).map(sale => sale.id);
+
+  // Récupérer les articles vendus
+  let comparisonItems = [];
+
+  if (comparisonSaleIds.length > 0) {
+    const { data, error } = await supabaseClient
+      .from("sale_items")
+      .select("sale_id, quantity, unit_price, unit_cost")
+      .in("sale_id", comparisonSaleIds);
+
+    if (error) throw error;
+
+    comparisonItems = data || [];
+  }
+
+  // Calculer les résultats de chaque boutique
   const comparison = [1, 2].map(storeId => {
     const storeSales = (comparisonSales || []).filter(
       sale => Number(sale.store_id) === storeId
+    );
+
+    const storeSaleIds = new Set(
+      storeSales.map(sale => String(sale.id))
+    );
+
+    const storeItems = comparisonItems.filter(
+      item => storeSaleIds.has(String(item.sale_id))
     );
 
     const revenue = storeSales.reduce(
@@ -2839,16 +2866,56 @@ if (comparisonContainer) {
       0
     );
 
+    const profit = storeItems.reduce((sum, item) => {
+      if (
+        item.unit_cost === null ||
+        item.unit_cost === undefined
+      ) {
+        return sum;
+      }
+
+      return sum +
+        (Number(item.quantity) || 0) *
+        (
+          (Number(item.unit_price) || 0) -
+          Number(item.unit_cost)
+        );
+    }, 0);
+
     return {
       storeId,
       name: storeId === 1
         ? "Boutique principale"
         : "Boutique 2",
       revenue,
+      profit,
       salesCount: storeSales.length
     };
   });
 
+  const mainStore = comparison[0];
+  const secondStore = comparison[1];
+
+  // Mettre à jour les indicateurs
+  document.getElementById("compareRevenueMain").textContent =
+    mainStore.revenue.toFixed(2) + " $";
+
+  document.getElementById("compareRevenueSecond").textContent =
+    secondStore.revenue.toFixed(2) + " $";
+
+  document.getElementById("compareProfitMain").textContent =
+    mainStore.profit.toFixed(2) + " $";
+
+  document.getElementById("compareProfitSecond").textContent =
+    secondStore.profit.toFixed(2) + " $";
+
+  document.getElementById("compareSalesMain").textContent =
+    mainStore.salesCount;
+
+  document.getElementById("compareSalesSecond").textContent =
+    secondStore.salesCount;
+
+  // Afficher le tableau
   comparisonContainer.innerHTML = `
     <div style="overflow-x:auto;">
       <table>
@@ -2856,6 +2923,7 @@ if (comparisonContainer) {
           <tr>
             <th>Boutique</th>
             <th>Chiffre d'affaires</th>
+            <th>Bénéfice brut connu</th>
             <th>Nombre de ventes</th>
           </tr>
         </thead>
@@ -2864,12 +2932,17 @@ if (comparisonContainer) {
             <tr>
               <td>${store.name}</td>
               <td>${store.revenue.toFixed(2)} $</td>
+              <td>${store.profit.toFixed(2)} $</td>
               <td>${store.salesCount}</td>
             </tr>
           `).join("")}
         </tbody>
       </table>
     </div>
+    <p>
+      Les bénéfices sont partiels lorsque certains coûts d'achat
+      des articles vendus sont inconnus.
+    </p>
   `;
 }
       
