@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BFS Admin - Bonardo Fashion Store</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -786,6 +788,9 @@
     </button>
 
     <p id="reportMessage"></p>
+    <button type="button" id="exportReportPDFButton">
+  📄 Télécharger le rapport PDF
+</button>
 
   </div>
 
@@ -3418,7 +3423,115 @@ if (productsList.length === 0) {
   periodSelect.onchange = updateDateFields;
 
   generateButton.onclick = generateReport;
+// EXPORTER LE RAPPORT FINANCIER EN PDF
+const exportPDFButton =
+  document.getElementById("exportReportPDFButton");
 
+if (exportPDFButton) {
+  exportPDFButton.onclick = function () {
+
+    if (!message.textContent.startsWith("Rapport généré")) {
+      alert("Veuillez d'abord générer le rapport financier.");
+      return;
+    }
+
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      alert("La bibliothèque PDF n'est pas chargée. Actualisez la page.");
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const startDate =
+      document.getElementById("reportStartDate").value;
+
+    const endDate =
+      document.getElementById("reportEndDate").value;
+
+    const reportDate = message.textContent.replace(
+      "Rapport généré : ",
+      ""
+    );
+
+    doc.setFontSize(18);
+    doc.text("BONARDO FASHION STORE BFS", 14, 18);
+
+    doc.setFontSize(14);
+    doc.text("RAPPORT FINANCIER", 14, 29);
+
+    doc.setFontSize(10);
+    doc.text("Période : " + reportDate, 14, 38);
+
+    doc.text(
+      "Boutique active : " + currentStoreId,
+      14,
+      45
+    );
+
+    const getValue = id =>
+      document.getElementById(id)?.textContent || "0";
+
+    doc.autoTable({
+      startY: 53,
+      head: [["Indicateur", "Montant"]],
+      body: [
+        ["Chiffre d'affaires", getValue("reportRevenue")],
+        ["Coût d'achat connu", getValue("reportKnownCost")],
+        ["Bénéfice brut connu", getValue("reportGrossProfit")],
+        ["Frais de paiement", getValue("reportPaymentFees")],
+        ["Dépenses", getValue("reportExpenses")],
+        ["Bénéfice net connu", getValue("reportNetProfit")],
+        ["Nombre de ventes", getValue("reportSalesCount")],
+        ["Ventes en ligne", getValue("reportWebsiteRevenue")],
+        ["Ventes physiques", getValue("reportPhysicalRevenue")]
+      ]
+    });
+
+    let nextY = doc.lastAutoTable.finalY + 10;
+
+    doc.setFontSize(12);
+    doc.text("DÉTAILS DES VENTES", 14, nextY);
+
+    doc.autoTable({
+      html: "#reportSalesDetails table",
+      startY: nextY + 5,
+      theme: "grid"
+    });
+
+    nextY = doc.lastAutoTable.finalY + 10;
+
+    doc.text("DÉPENSES PAR CATÉGORIE", 14, nextY);
+
+    doc.autoTable({
+      html: "#reportExpensesByCategory table",
+      startY: nextY + 5,
+      theme: "grid"
+    });
+
+    nextY = doc.lastAutoTable.finalY + 10;
+
+    doc.text("RENTABILITÉ PAR PRODUIT", 14, nextY);
+
+    doc.autoTable({
+      html: "#reportProductProfitability table",
+      startY: nextY + 5,
+      theme: "grid"
+    });
+
+    nextY = doc.lastAutoTable.finalY + 10;
+
+    doc.text("COMPARAISON DES BOUTIQUES", 14, nextY);
+
+    doc.autoTable({
+      html: "#storeComparisonDetails table",
+      startY: nextY + 5,
+      theme: "grid"
+    });
+
+    doc.save("BFS-Rapport-Financier.pdf");
+  };
+}
   updateDateFields();
 
   // Générer automatiquement le rapport à l'ouverture.
