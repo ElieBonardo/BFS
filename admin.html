@@ -3788,6 +3788,23 @@ async function loadAdminProducts() {
       title.textContent = productName || "Nom du produit indisponible";
       card.appendChild(title);
 
+// Indicateur automatique de disponibilité
+const stockStatus = document.createElement("p");
+const availableStock = Number(item.quantity) || 0;
+
+if (availableStock > 0) {
+  stockStatus.textContent = "🟢 EN STOCK";
+  stockStatus.style.color = "#16803c";
+} else {
+  stockStatus.textContent = "🔴 RUPTURE DE STOCK";
+  stockStatus.style.color = "#c62828";
+}
+
+stockStatus.style.fontWeight = "bold";
+stockStatus.style.margin = "5px 0";
+
+card.appendChild(stockStatus);
+
       const imageUrl = String(
         product.image ?? product.image_url ?? ""
       ).trim().replace(/(%0A|%0D)+$/i, "");
