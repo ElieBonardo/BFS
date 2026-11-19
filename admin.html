@@ -3464,7 +3464,7 @@ logo.src = new URL(
   window.location.href
 ).href;
 function genererPDFAvecLogo(doc, logo) {
-  doc.addImage(logo, "PNG", 14, 8, 25, 25);
+  doc.addImage(logo, "PNG", 14, 8, 25, 25, undefined, "FAST");
     const startDate =
       document.getElementById("reportStartDate").value;
 
