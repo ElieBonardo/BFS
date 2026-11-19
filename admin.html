@@ -2450,6 +2450,21 @@ async function loadStoreInventory() {
       const quantity = document.createElement("p");
       quantity.textContent =
         "Quantité disponible : " + item.quantity;
+        
+        // Statut réel du stock de cette boutique
+const stockStatus = document.createElement("p");
+const availableStock = Number(item.quantity) || 0;
+
+if (availableStock > 0) {
+  stockStatus.textContent = "🟢 EN STOCK";
+  stockStatus.style.color = "#16803c";
+} else {
+  stockStatus.textContent = "🔴 RUPTURE DE STOCK";
+  stockStatus.style.color = "#c62828";
+}
+
+stockStatus.style.fontWeight = "bold";
+stockStatus.style.margin = "5px 0";
 
       const price = document.createElement("p");
       price.textContent =
@@ -2471,6 +2486,7 @@ async function loadStoreInventory() {
       }
 
       card.appendChild(quantity);
+      card.appendChild(stockStatus);
       card.appendChild(price);
       card.appendChild(category);
 
