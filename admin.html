@@ -923,31 +923,44 @@
   <strong id="compareExpensesSecond">0.00 $</strong>
 </div>
 
-<!-- BENEFICE APRES DEPENSES -->
+<!-- FRAIS DE PAIEMENT -->
 <div class="bfs-stat-card">
   <span class="bfs-stat-label">
-    Bénéfice après dépenses - Boutique principale
+    Frais de paiement - Boutique principale
+  </span>
+  <strong id="compareFeesMain">0.00 $</strong>
+</div>
+
+<div class="bfs-stat-card">
+  <span class="bfs-stat-label">
+    Frais de paiement - Boutique 2
+  </span>
+  <strong id="compareFeesSecond">0.00 $</strong>
+</div>
+
+<!-- BENEFICE NET CONNU -->
+<div class="bfs-stat-card">
+  <span class="bfs-stat-label">
+    Bénéfice net connu - Boutique principale
   </span>
   <strong id="compareNetMain">0.00 $</strong>
 </div>
 
 <div class="bfs-stat-card">
   <span class="bfs-stat-label">
-    Bénéfice après dépenses - Boutique 2
+    Bénéfice net connu - Boutique 2
   </span>
   <strong id="compareNetSecond">0.00 $</strong>
 </div>
 
-  <div class="bfs-stat-card">
-    <span class="bfs-stat-label">Ventes - Boutique principale</span>
-    <strong id="compareSalesMain">0</strong>
-  </div>
+<div class="bfs-stat-card">
+  <span class="bfs-stat-label">Ventes - Boutique principale</span>
+  <strong id="compareSalesMain">0</strong>
+</div>
 
-  <div class="bfs-stat-card">
-    <span class="bfs-stat-label">Ventes - Boutique 2</span>
-    <strong id="compareSalesSecond">0</strong>
-  </div>
-
+<div class="bfs-stat-card">
+  <span class="bfs-stat-label">Ventes - Boutique 2</span>
+  <strong id="compareSalesSecond">0</strong>
 </div>
 
 <div id="storeComparisonDetails">
@@ -3052,7 +3065,7 @@ if (comparisonContainer) {
   const { data: comparisonSales, error: comparisonError } =
     await supabaseClient
       .from("sales")
-      .select("id, store_id, total, sale_source, created_at")
+      .select("id, store_id, total, sale_source, order_id, created_at")
       .in("store_id", [1, 2])
       .gte("created_at", startISO)
       .lt("created_at", endISO);
@@ -3088,6 +3101,28 @@ const { data: comparisonExpenses, error: comparisonExpensesError } =
 
 if (comparisonExpensesError) {
   throw comparisonExpensesError;
+}
+// Récupérer les frais des commandes en ligne
+const comparisonOrderIds = [
+  ...new Set(
+    (comparisonSales || [])
+      .filter(sale => sale.sale_source === "website")
+      .map(sale => sale.order_id)
+      .filter(id => id !== null && id !== undefined)
+  )
+];
+
+let comparisonOrders = [];
+
+if (comparisonOrderIds.length > 0) {
+  const { data, error } = await supabaseClient
+    .from("orders")
+    .select("id, payment_fee")
+    .in("id", comparisonOrderIds);
+
+  if (error) throw error;
+
+  comparisonOrders = data || [];
 }
 
 // Comparer les deux boutiques
@@ -3153,17 +3188,34 @@ const comparison = [1, 2].map(storeId => {
     }
   });
 
-  const profitAfterExpenses = profit - expensesUSD;
+  // Calculer les frais de paiement de cette boutique
+const storeOrderIds = new Set(
+  storeSales
+    .filter(sale => sale.sale_source === "website")
+    .map(sale => String(sale.order_id))
+);
 
-  return {
+const storePaymentFees = comparisonOrders
+  .filter(order => storeOrderIds.has(String(order.id)))
+  .reduce(
+    (sum, order) => sum + (Number(order.payment_fee) || 0),
+    0
+  );
+
+// Bénéfice net connu après dépenses et frais
+const netProfitKnown =
+  profit - expensesUSD - storePaymentFees;
+
+return {
     storeId,
     name: storeId === 1
       ? "Boutique principale"
       : "Boutique 2",
     revenue,
     profit,
-    expensesUSD,
-    profitAfterExpenses,
+expensesUSD,
+paymentFees: storePaymentFees,
+netProfitKnown,
     expensesWithoutRate,
     salesCount: storeSales.length
   };
@@ -3185,24 +3237,33 @@ const secondStore = comparison[1];
   document.getElementById("compareProfitSecond").textContent =
     secondStore.profit.toFixed(2) + " $";
 // Dépenses de fonctionnement
+// Afficher les dépenses
 document.getElementById("compareExpensesMain").textContent =
   mainStore.expensesUSD.toFixed(2) + " $";
 
 document.getElementById("compareExpensesSecond").textContent =
   secondStore.expensesUSD.toFixed(2) + " $";
 
-// Bénéfice après dépenses
+// Afficher les frais de paiement
+document.getElementById("compareFeesMain").textContent =
+  mainStore.paymentFees.toFixed(2) + " $";
+
+document.getElementById("compareFeesSecond").textContent =
+  secondStore.paymentFees.toFixed(2) + " $";
+
+// Afficher le bénéfice net connu
 document.getElementById("compareNetMain").textContent =
-  mainStore.profitAfterExpenses.toFixed(2) + " $";
+  mainStore.netProfitKnown.toFixed(2) + " $";
 
 document.getElementById("compareNetSecond").textContent =
-  secondStore.profitAfterExpenses.toFixed(2) + " $";
+  secondStore.netProfitKnown.toFixed(2) + " $";
 
-  document.getElementById("compareSalesMain").textContent =
-    mainStore.salesCount;
+// Afficher le nombre de ventes
+document.getElementById("compareSalesMain").textContent =
+  mainStore.salesCount;
 
-  document.getElementById("compareSalesSecond").textContent =
-    secondStore.salesCount;
+document.getElementById("compareSalesSecond").textContent =
+  secondStore.salesCount;
 
   // Afficher le tableau
   comparisonContainer.innerHTML = `
