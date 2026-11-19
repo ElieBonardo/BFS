@@ -3444,15 +3444,25 @@ if (exportPDFButton) {
 const doc = new jsPDF();
 
 const logo = new Image();
-logo.src = "2B9CD460-6536-4582-A364-76DF6EC42CB4.png";
+logo.crossOrigin = "anonymous";
 
 logo.onload = function () {
-  genererPDFAvecLogo(doc, logo);
+  try {
+    genererPDFAvecLogo(doc, logo);
+  } catch (error) {
+    console.error("Erreur PDF BFS :", error);
+    alert("Erreur pendant la création du PDF : " + error.message);
+  }
 };
 
 logo.onerror = function () {
   alert("Impossible de charger le logo BFS.");
 };
+
+logo.src = new URL(
+  "2B9CD460-6536-4582-A364-76DF6EC42CB4.png",
+  window.location.href
+).href;
 function genererPDFAvecLogo(doc, logo) {
   doc.addImage(logo, "PNG", 14, 8, 25, 25);
     const startDate =
