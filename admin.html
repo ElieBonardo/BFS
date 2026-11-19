@@ -3286,7 +3286,7 @@ document.getElementById("compareSalesSecond").textContent =
             <td>${store.revenue.toFixed(2)} $</td>
             <td>${store.profit.toFixed(2)} $</td>
             <td>${store.expensesUSD.toFixed(2)} $</td>
-            <td>${store.profitAfterExpenses.toFixed(2)} $</td>
+        <td>${store.netProfitKnown.toFixed(2)} $</td>
             <td>${store.salesCount}</td>
           </tr>
         `).join("")}
@@ -3294,11 +3294,11 @@ document.getElementById("compareSalesSecond").textContent =
     </table>
   </div>
 
-  <p>
-    Le bénéfice après dépenses est calculé en soustrayant
-    les dépenses de fonctionnement du bénéfice brut connu.
-    Les frais de paiement ne sont pas encore déduits.
-  </p>
+ <p>
+  Le bénéfice net connu est calculé en soustrayant
+  les dépenses de fonctionnement et les frais de paiement
+  du bénéfice brut connu.
+</p>
 
   <p>
     Les bénéfices sont partiels lorsque certains coûts d'achat
