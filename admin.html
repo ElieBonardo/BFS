@@ -3441,8 +3441,20 @@ if (exportPDFButton) {
     }
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+const doc = new jsPDF();
 
+const logo = new Image();
+logo.src = "2B9CD460-6536-4582-A364-76DF6EC42CB4.png";
+
+logo.onload = function () {
+  genererPDFAvecLogo(doc, logo);
+};
+
+logo.onerror = function () {
+  alert("Impossible de charger le logo BFS.");
+};
+function genererPDFAvecLogo(doc, logo) {
+  doc.addImage(logo, "PNG", 14, 8, 25, 25);
     const startDate =
       document.getElementById("reportStartDate").value;
 
@@ -3454,26 +3466,35 @@ if (exportPDFButton) {
       ""
     );
 
-    doc.setFontSize(18);
-    doc.text("BONARDO FASHION STORE BFS", 14, 18);
+    // EN-TÊTE PROFESSIONNEL BFS
+doc.setFontSize(17);
+doc.setFont("helvetica", "bold");
+doc.text("BONARDO FASHION STORE BFS", 45, 15);
 
-    doc.setFontSize(14);
-    doc.text("RAPPORT FINANCIER", 14, 29);
+doc.setFontSize(10);
+doc.setFont("helvetica", "normal");
+doc.text("Élégance • Qualité • Propreté", 45, 23);
+doc.text("Goma - République démocratique du Congo", 45, 30);
 
-    doc.setFontSize(10);
-    doc.text("Période : " + reportDate, 14, 38);
+doc.setFontSize(14);
+doc.setFont("helvetica", "bold");
+doc.text("RAPPORT FINANCIER", 14, 43);
 
-    doc.text(
-      "Boutique active : " + currentStoreId,
-      14,
-      45
-    );
+doc.setFontSize(10);
+doc.setFont("helvetica", "normal");
+doc.text("Période : " + reportDate, 14, 51);
+
+const storeName = Number(currentStoreId) === 1
+  ? "BFS - Boutique principale"
+  : "BFS - Boutique 2";
+
+doc.text("Boutique : " + storeName, 14, 58);
 
     const getValue = id =>
       document.getElementById(id)?.textContent || "0";
 
     doc.autoTable({
-      startY: 53,
+      startY: 65,
       head: [["Indicateur", "Montant"]],
       body: [
         ["Chiffre d'affaires", getValue("reportRevenue")],
@@ -3530,6 +3551,7 @@ if (exportPDFButton) {
     });
 
     doc.save("BFS-Rapport-Financier.pdf");
+    }
   };
 }
   updateDateFields();
