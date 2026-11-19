@@ -3803,25 +3803,6 @@ stockStatus.style.fontWeight = "bold";
 stockStatus.style.margin = "5px 0";
 
 card.appendChild(stockStatus);
-// Indicateur automatique de disponibilité
-const stockStatus = document.createElement("p");
-
-const availableStock = Number(
-  product.quantity ?? product.stock ?? 0
-);
-
-if (availableStock > 0) {
-  stockStatus.textContent = "🟢 EN STOCK";
-  stockStatus.style.color = "#16803c";
-} else {
-  stockStatus.textContent = "🔴 RUPTURE DE STOCK";
-  stockStatus.style.color = "#c62828";
-}
-
-stockStatus.style.fontWeight = "bold";
-stockStatus.style.margin = "5px 0";
-
-card.appendChild(stockStatus);
 
       const imageUrl = String(
         product.image ?? product.image_url ?? ""
