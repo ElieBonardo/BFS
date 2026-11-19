@@ -2102,6 +2102,7 @@ async function loadSalesHistory() {
   container.textContent = "Chargement des ventes...";
 
   try {
+    // 1. Charger les ventes physiques
     const { data: sales, error } = await supabaseClient
       .from("sales")
       .select(`
@@ -2133,6 +2134,33 @@ async function loadSalesHistory() {
       return;
     }
 
+    // 2. Charger les mouvements associés aux ventes
+    const saleIds = sales.map(sale => sale.id);
+
+    const { data: movements, error: movementsError } =
+      await supabaseClient
+        .from("stock_movements")
+        .select(`
+          sale_id,
+          product_id,
+          stock_before,
+          stock_after
+        `)
+        .in("sale_id", saleIds);
+
+    if (movementsError) throw movementsError;
+
+    // 3. Préparer les mouvements
+    const movementMap = new Map();
+
+    (movements || []).forEach(movement => {
+      const key =
+        movement.sale_id + "_" + movement.product_id;
+
+      movementMap.set(key, movement);
+    });
+
+    // 4. Afficher les ventes
     sales.forEach(sale => {
       const card = document.createElement("div");
 
@@ -2149,34 +2177,99 @@ async function loadSalesHistory() {
 
       card.append(title, dateText);
 
+      // Regrouper les lignes d'un même produit
+      const groupedItems = new Map();
+
       (sale.sale_items || []).forEach(item => {
+        const key = String(item.product_id);
+
+        if (!groupedItems.has(key)) {
+          groupedItems.set(key, {
+            product_id: item.product_id,
+            quantity: 0,
+            unit_price: Number(item.unit_price) || 0,
+            products: item.products || {}
+          });
+        }
+
+        groupedItems.get(key).quantity +=
+          Number(item.quantity) || 0;
+      });
+
+      groupedItems.forEach(item => {
         const product = item.products || {};
 
         const row = document.createElement("div");
+
         row.style.cssText =
-          "display:flex;align-items:center;gap:12px;margin:12px 0;";
+          "display:flex;align-items:center;gap:12px;margin:12px 0;flex-wrap:wrap;";
 
         if (product.image_url) {
           const img = document.createElement("img");
+
           img.src = product.image_url;
           img.alt = product.Name || "Produit";
+
           img.style.cssText =
             "width:65px;height:65px;object-fit:cover;border-radius:8px;";
+
           row.appendChild(img);
         }
 
-        const details = document.createElement("p");
-        details.textContent =
-          (product.Name || "Produit") +
-          " — Quantité : " + item.quantity +
-          " — Prix unitaire : " + item.unit_price;
+        const details = document.createElement("div");
+
+        const movementKey =
+          sale.id + "_" + item.product_id;
+
+        const movement = movementMap.get(movementKey);
+
+        const stockBefore = movement &&
+          movement.stock_before !== null
+          ? movement.stock_before
+          : "Non disponible";
+
+        const stockAfter = movement &&
+          movement.stock_after !== null
+          ? movement.stock_after
+          : "Non disponible";
+
+        details.innerHTML = "";
+
+        const productName = document.createElement("strong");
+        productName.textContent = product.Name || "Produit";
+
+        const quantityText = document.createElement("p");
+        quantityText.textContent =
+          "Quantité vendue : " + item.quantity;
+
+        const priceText = document.createElement("p");
+        priceText.textContent =
+          "Prix unitaire : " + item.unit_price;
+
+        const beforeText = document.createElement("p");
+        beforeText.textContent =
+          "Stock avant : " + stockBefore;
+
+        const afterText = document.createElement("p");
+        afterText.textContent =
+          "Stock restant : " + stockAfter;
+
+        details.append(
+          productName,
+          quantityText,
+          priceText,
+          beforeText,
+          afterText
+        );
 
         row.appendChild(details);
         card.appendChild(row);
       });
 
       const total = document.createElement("strong");
-      total.textContent = "Total : " + sale.total;
+
+      total.textContent =
+        "Total : " + Number(sale.total).toFixed(2);
 
       card.appendChild(total);
       container.appendChild(card);
@@ -2184,6 +2277,7 @@ async function loadSalesHistory() {
 
   } catch (error) {
     console.error("Erreur historique des ventes :", error);
+
     container.textContent =
       "Erreur de chargement : " + error.message;
   }
