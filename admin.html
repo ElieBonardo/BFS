@@ -3789,7 +3789,7 @@ async function loadAdminProducts() {
       card.appendChild(title);
 // Statut du stock de la boutique sélectionnée
 const stockStatus = document.createElement("p");
-const availableStock = Number(item.quantity) || 0;
+const availableStock = Number(product.stock) || 0;
 
 if (availableStock > 0) {
   stockStatus.textContent = "🟢 EN STOCK";
