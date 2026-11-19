@@ -3790,7 +3790,10 @@ async function loadAdminProducts() {
 
 // Indicateur automatique de disponibilité
 const stockStatus = document.createElement("p");
-const availableStock = Number(item.quantity) || 0;
+
+const availableStock = Number(
+  product.quantity ?? product.stock ?? 0
+);
 
 if (availableStock > 0) {
   stockStatus.textContent = "🟢 EN STOCK";
