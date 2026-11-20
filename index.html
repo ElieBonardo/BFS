@@ -1766,7 +1766,25 @@ async function loadProducts() {
     }
 
     window.bfsProducts = data || [];
+const { data: inventoryData, error: inventoryError } =
+  await supabaseClient
+    .from("store_inventory")
+    .select("product_id, quantity")
+    .eq("store_id", 1);
 
+if (inventoryError) throw inventoryError;
+
+const publicStockMap = new Map(
+  (inventoryData || []).map(item => [
+    String(item.product_id),
+    Number(item.quantity) || 0
+  ])
+);
+
+window.bfsProducts = window.bfsProducts.map(product => ({
+  ...product,
+  stock: publicStockMap.get(String(product.id)) ?? 0
+}));
     categoryFilter.innerHTML =
       '<option value="">Toutes les catégories</option>';
 
