@@ -4058,17 +4058,13 @@ async function loadAdminProducts() {
       type="search"
       id="adminProductSearch"
       placeholder="🔎 Rechercher un produit par son nom..."
-      style="
-        width:100%;
-        padding:14px;
-        border:1px solid #ccc;
-        border-radius:9px;
-        font-size:16px;
-        box-sizing:border-box;
-      "
+      style="width:100%;padding:14px;border:1px solid #ccc;border-radius:9px;font-size:16px;box-sizing:border-box;"
     >
   </div>
-  <p id="adminProductsLoading">Chargement des produits...</p>
+
+  <div id="adminProductsList">
+    <p id="adminProductsLoading">Chargement des produits...</p>
+  </div>
 `;
 
   try {
@@ -4080,16 +4076,19 @@ async function loadAdminProducts() {
     if (error) throw error;
 
     const products = data || [];
-
+    const productsList = document.getElementById("adminProductsList");
     document.getElementById("statTotalProducts").textContent =
       products.length;
 
     if (products.length === 0) {
-      container.textContent = "Aucun produit disponible.";
+     productsList.textContent = "Aucun produit disponible.";
       return;
     }
 
-    container.innerHTML = "";
+    const loadingMessage =
+  document.getElementById("adminProductsLoading");
+
+if (loadingMessage) loadingMessage.remove();
 
     products.forEach(product => {
       const card = document.createElement("div");
@@ -4307,7 +4306,7 @@ card.appendChild(photoButton);
 
         let visibleCount = 0;
 
-        container.querySelectorAll(".admin-product").forEach(card => {
+        productsList.querySelectorAll(".admin-product").forEach(card => {
           const productName = card.dataset.productName || "";
           const matches = productName.includes(searchText);
 
@@ -4673,7 +4672,7 @@ if (loadingMessage) {
 }
 
 // Nettoyer les anciennes fiches sans supprimer la recherche
-container.querySelectorAll(".admin-product").forEach(card => {
+productsList.querySelectorAll(".admin-product").forEach(card => {
   card.remove();
 });
 
@@ -4909,7 +4908,7 @@ container.querySelectorAll(".admin-product").forEach(card => {
     card.appendChild(orderStatusLabel);
     card.appendChild(statusMessage);
 
-    container.appendChild(card);
+    productsList.appendChild(noResults);
   });
 }
 const orderStatusFilter =
