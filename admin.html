@@ -2864,7 +2864,7 @@ console.log("Stock et statistiques chargés.");
         card.appendChild(actions);
       }
 
-      container.appendChild(card);
+     productsList.appendChild(card);
     });
 
   } catch (error) {
@@ -4287,7 +4287,7 @@ card.appendChild(photoButton);
       });
 
       card.appendChild(deleteButton);
-      container.appendChild(card);
+    productsList.appendChild(card);
     });
         // RECHERCHE INSTANTANÉE DES PRODUITS
 const searchInput = document.getElementById("adminProductSearch");
@@ -4297,7 +4297,7 @@ if (searchInput) {
   noResults.textContent = "Aucun produit trouvé.";
   noResults.style.display = "none";
   noResults.style.padding = "12px";
-  productsList.appendChild(noResults);
+  container.appendChild(card);
 
   function filterAdminProducts() {
     const searchText = searchInput.value
@@ -4327,7 +4327,12 @@ if (searchInput) {
 
   searchInput.addEventListener("input", filterAdminProducts);
 }
-
+  } catch (error) {
+    console.error("Erreur chargement produits :", error);
+    container.textContent =
+      "Erreur de chargement des produits : " + error.message;
+  }
+}
 /* Modifier la photo d'un produit */
 async function changeProductPhoto(product) {
   const input = document.createElement("input");
@@ -4664,17 +4669,8 @@ function renderOrders() {
     ? searchInput.value.toLowerCase().trim()
     : "";
 
-  // Retirer uniquement le message de chargement
-// et conserver la barre de recherche
-const loadingMessage =
-  document.getElementById("adminProductsLoading");
-
-if (loadingMessage) {
-  loadingMessage.remove();
-}
-
-// Nettoyer les anciennes fiches sans supprimer la recherche
-productsList.querySelectorAll(".admin-product").forEach(card => {
+  // Nettoyer uniquement les anciennes commandes
+container.querySelectorAll(".admin-product").forEach(card => {
   card.remove();
 });
 
