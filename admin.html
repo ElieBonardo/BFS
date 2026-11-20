@@ -4508,7 +4508,7 @@ if (addProductForm) {
 
       const { error: uploadError } = await supabaseClient
         .storage
-        .from("Products")
+        .from("products")
         .upload(filePath, file, {
           upsert: false,
           contentType: file.type
