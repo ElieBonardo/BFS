@@ -4134,8 +4134,10 @@ stockStatus.style.margin = "5px 0";
 card.appendChild(stockStatus);
 
       const imageUrl = String(
-        product.image ?? product.image_url ?? ""
-      ).trim().replace(/(%0A|%0D)+$/i, "");
+  product.image_url ?? product.image ?? ""
+).trim();
+
+console.log("Photo du produit :", product.Name, imageUrl);
 
       if (imageUrl) {
         const img = document.createElement("img");
