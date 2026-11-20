@@ -4663,7 +4663,19 @@ function renderOrders() {
     ? searchInput.value.toLowerCase().trim()
     : "";
 
-  container.innerHTML = "";
+  // Retirer uniquement le message de chargement
+// et conserver la barre de recherche
+const loadingMessage =
+  document.getElementById("adminProductsLoading");
+
+if (loadingMessage) {
+  loadingMessage.remove();
+}
+
+// Nettoyer les anciennes fiches sans supprimer la recherche
+container.querySelectorAll(".admin-product").forEach(card => {
+  card.remove();
+});
 
   const filteredOrders = currentOrders.filter(order => {
     const matchesStatus =
