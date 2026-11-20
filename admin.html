@@ -1942,6 +1942,31 @@ async function loadSalesProducts() {
   const productSelect = document.getElementById("saleProduct");
   const preview = document.getElementById("saleProductPreview");
 
+  // Créer le champ de recherche s'il n'existe pas
+  let searchInput = document.getElementById("saleProductSearch");
+
+  if (!searchInput) {
+    searchInput = document.createElement("input");
+    searchInput.id = "saleProductSearch";
+    searchInput.type = "search";
+    searchInput.placeholder = "🔎 Rechercher un produit...";
+    searchInput.style.cssText = `
+      width:100%;
+      padding:12px;
+      margin:10px 0;
+      border:1px solid #ccc;
+      border-radius:8px;
+      font-size:15px;
+      box-sizing:border-box;
+    `;
+
+    productSelect.parentNode.insertBefore(
+      searchInput,
+      productSelect
+    );
+  }
+
+  searchInput.value = "";
   productSelect.innerHTML =
     '<option value="">Chargement des produits...</option>';
 
@@ -1971,22 +1996,42 @@ async function loadSalesProducts() {
       ])
     );
 
-    productSelect.innerHTML =
-      '<option value="">Sélectionner un produit</option>';
+    function displayProducts(search = "") {
+      const selectedSearch = search.toLowerCase().trim();
 
-    (products || []).forEach(product => {
-      const option = document.createElement("option");
+      productSelect.innerHTML =
+        '<option value="">Sélectionner un produit</option>';
 
-      option.value = product.id;
-      option.textContent = product.Name;
-      option.dataset.image = product.image_url || "";
-      option.dataset.price = product.Price;
-      option.dataset.stock =
-        stockMap.get(Number(product.id)) ?? 0;
+      (products || [])
+        .filter(product =>
+          String(product.Name || "")
+            .toLowerCase()
+            .includes(selectedSearch)
+        )
+        .forEach(product => {
+          const option = document.createElement("option");
 
-      productSelect.appendChild(option);
-    });
+          option.value = product.id;
+          option.textContent = product.Name;
+          option.dataset.image = product.image_url || "";
+          option.dataset.price = product.Price;
+          option.dataset.stock =
+            stockMap.get(Number(product.id)) ?? 0;
 
+          productSelect.appendChild(option);
+        });
+
+      preview.innerHTML = "";
+    }
+
+    displayProducts();
+
+    // Recherche automatique
+    searchInput.oninput = function () {
+      displayProducts(searchInput.value);
+    };
+
+    // Afficher les informations du produit sélectionné
     productSelect.onchange = function () {
       const option =
         productSelect.options[productSelect.selectedIndex];
