@@ -4290,40 +4290,42 @@ card.appendChild(photoButton);
       container.appendChild(card);
     });
         // RECHERCHE INSTANTANÉE DES PRODUITS
-    const searchInput = document.getElementById("adminProductSearch");
+const searchInput = document.getElementById("adminProductSearch");
 
-    if (searchInput) {
-      const noResults = document.createElement("p");
-      noResults.textContent = "Aucun produit trouvé.";
-      noResults.style.display = "none";
-      noResults.style.padding = "12px";
-      container.appendChild(noResults);
+if (searchInput) {
+  const noResults = document.createElement("p");
+  noResults.textContent = "Aucun produit trouvé.";
+  noResults.style.display = "none";
+  noResults.style.padding = "12px";
+  productsList.appendChild(noResults);
 
-      searchInput.addEventListener("input", function () {
-        const searchText = this.value
-          .trim()
-          .toLocaleLowerCase();
+  function filterAdminProducts() {
+    const searchText = searchInput.value
+      .trim()
+      .toLocaleLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
 
-        let visibleCount = 0;
+    let visibleCount = 0;
 
-        productsList.querySelectorAll(".admin-product").forEach(card => {
-          const productName = card.dataset.productName || "";
-          const matches = productName.includes(searchText);
+    productsList.querySelectorAll(".admin-product").forEach(card => {
+      const productName = (card.dataset.productName || "")
+        .toLocaleLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
 
-          card.style.display = matches ? "" : "none";
+      const matches = productName.includes(searchText);
 
-          if (matches) visibleCount++;
-        });
+      card.style.display = matches ? "" : "none";
 
-        noResults.style.display =
-          visibleCount === 0 ? "block" : "none";
-      });
-    }
-  } catch (error) {
-    console.error("Erreur produits :", error);
-    container.textContent =
-      "Erreur de chargement des produits : " + error.message;
+      if (matches) visibleCount++;
+    });
+
+    noResults.style.display =
+      visibleCount === 0 ? "block" : "none";
   }
+
+  searchInput.addEventListener("input", filterAdminProducts);
 }
 
 /* Modifier la photo d'un produit */
