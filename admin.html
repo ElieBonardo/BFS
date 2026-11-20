@@ -4094,7 +4094,7 @@ const inventoryMap = new Map(
     productsList.style.display = "grid";
 productsList.style.gridTemplateColumns = "repeat(2, minmax(0, 1fr))";
 productsList.style.gap = "12px";
-productsList.style.alignItems = "start";
+productsList.style.alignItems = "stretch";
     document.getElementById("statTotalProducts").textContent =
       products.length;
 
@@ -4328,7 +4328,18 @@ card.appendChild(photoButton);
       });
 
       card.appendChild(deleteButton);
+      card.querySelectorAll("button").forEach(button => {
+  button.style.width = "100%";
+  button.style.maxWidth = "100%";
+  button.style.minHeight = "44px";
+  button.style.padding = "10px 8px";
+  button.style.fontSize = "14px";
+  button.style.marginTop = "8px";
+  button.style.boxSizing = "border-box";
+  button.style.borderRadius = "8px";
+});
     productsList.appendChild(card);
+    
     });
         // RECHERCHE INSTANTANÉE DES PRODUITS
 const searchInput = document.getElementById("adminProductSearch");
