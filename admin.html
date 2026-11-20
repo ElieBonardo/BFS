@@ -4076,6 +4076,20 @@ async function loadAdminProducts() {
     if (error) throw error;
 
     const products = data || [];
+    const { data: inventoryData, error: inventoryError } =
+  await supabaseClient
+    .from("store_inventory")
+    .select("product_id, quantity")
+    .eq("store_id", currentStoreId);
+
+if (inventoryError) throw inventoryError;
+
+const inventoryMap = new Map(
+  (inventoryData || []).map(item => [
+    String(item.product_id),
+    Number(item.quantity) || 0
+  ])
+);
     const productsList = document.getElementById("adminProductsList");
     document.getElementById("statTotalProducts").textContent =
       products.length;
@@ -4103,7 +4117,8 @@ card.dataset.productName = String(productName).toLocaleLowerCase();
       card.appendChild(title);
 // Statut du stock de la boutique sélectionnée
 const stockStatus = document.createElement("p");
-const availableStock = Number(product.stock) || 0;
+const availableStock =
+  inventoryMap.get(String(product.id)) ?? 0;
 
 if (availableStock > 0) {
   stockStatus.textContent = "🟢 EN STOCK";
