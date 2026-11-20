@@ -1188,9 +1188,33 @@
 
   <h2>Historique des ventes</h2>
 
-  <div id="salesHistory">
-    Chargement des ventes...
-  </div>
+<!-- CLÔTURE JOURNALIÈRE -->
+<div style="margin:20px 0;padding:18px;background:#fff;border:1px solid #ddd;border-radius:12px;">
+
+  <h3 style="margin-top:0;">📊 Clôture de la journée</h3>
+
+  <p>
+    Consultez le bilan de vos ventes physiques et enregistrez
+    le rapport journalier de cette boutique.
+  </p>
+
+  <button
+    id="closeSalesDayButton"
+    type="button"
+    style="background:#b58b35;color:white;padding:13px 18px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;">
+    Clôturer la journée
+  </button>
+
+  <div id="dailyClosureMessage" style="margin-top:12px;"></div>
+
+  <div id="dailyClosureHistory" style="margin-top:20px;"></div>
+
+</div>
+
+<!-- HISTORIQUE DES VENTES -->
+<div id="salesHistory">
+  Chargement des ventes...
+</div>
 
 </section>
   </main>
@@ -2139,13 +2163,221 @@ if (recordSaleButton) {
     }
   });
 }
+// CHARGER L'HISTORIQUE DES CLÔTURES
+async function loadDailyClosureHistory() {
+  const container =
+    document.getElementById("dailyClosureHistory");
+
+  const button =
+    document.getElementById("closeSalesDayButton");
+
+  if (!container) return;
+
+  container.textContent = "Chargement des rapports...";
+
+  try {
+    const { data: closures, error } = await supabaseClient
+      .from("daily_sales_closures")
+      .select("*")
+      .eq("store_id", Number(currentStoreId))
+      .order("report_date", { ascending: false });
+
+    if (error) throw error;
+
+    container.innerHTML = "";
+
+    const dateParts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Africa/Lubumbashi",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(new Date());
+
+    const today =
+      dateParts.find(p => p.type === "year").value + "-" +
+      dateParts.find(p => p.type === "month").value + "-" +
+      dateParts.find(p => p.type === "day").value;
+
+    const alreadyClosed = (closures || []).some(
+      closure => closure.report_date === today
+    );
+
+    if (button) {
+      button.disabled = alreadyClosed;
+      button.textContent = alreadyClosed
+        ? "Journée déjà clôturée"
+        : "Clôturer la journée";
+
+      button.style.opacity = alreadyClosed ? "0.6" : "1";
+    }
+
+    if (!closures || closures.length === 0) {
+      container.textContent = "Aucune clôture enregistrée.";
+      return;
+    }
+
+    const heading = document.createElement("h3");
+    heading.textContent = "📁 Historique des clôtures";
+    container.appendChild(heading);
+
+    closures.forEach(closure => {
+      const card = document.createElement("div");
+
+      card.style.cssText =
+        "padding:15px;margin:12px 0;border:1px solid #ddd;border-radius:10px;background:#fafafa;";
+
+      const title = document.createElement("h4");
+      title.textContent = "Clôture du " + closure.report_date;
+
+      const total = document.createElement("p");
+      total.textContent =
+        "💰 Total des ventes : " +
+        Number(closure.total_sales).toFixed(2);
+
+      const count = document.createElement("p");
+      count.textContent =
+        "Nombre de ventes : " + closure.sales_count;
+
+      const quantity = document.createElement("p");
+      quantity.textContent =
+        "Produits vendus : " + closure.total_quantity;
+
+      const detailsButton = document.createElement("button");
+      detailsButton.textContent = "Voir le rapport";
+
+      detailsButton.style.cssText =
+        "padding:10px 15px;background:#b58b35;color:white;border:0;border-radius:7px;cursor:pointer;";
+
+      const details = document.createElement("div");
+      details.style.display = "none";
+
+      detailsButton.onclick = function () {
+        const isHidden = details.style.display === "none";
+
+        details.style.display = isHidden ? "block" : "none";
+
+        detailsButton.textContent = isHidden
+          ? "Masquer le rapport"
+          : "Voir le rapport";
+      };
+
+      (closure.report_data || []).forEach(item => {
+        const row = document.createElement("div");
+
+        row.style.cssText =
+          "display:flex;align-items:center;gap:10px;margin:12px 0;flex-wrap:wrap;";
+
+        if (item.image_url) {
+          const img = document.createElement("img");
+          img.src = item.image_url;
+          img.alt = item.name || "Produit";
+
+          img.style.cssText =
+            "width:60px;height:60px;object-fit:cover;border-radius:8px;";
+
+          row.appendChild(img);
+        }
+
+        const textInfo = document.createElement("div");
+
+        const name = document.createElement("strong");
+        name.textContent = item.name || "Produit";
+
+        const qty = document.createElement("p");
+        qty.textContent = "Quantité : " + item.quantity;
+
+        const price = document.createElement("p");
+        price.textContent =
+          "Prix unitaire : " + Number(item.unit_price).toFixed(2);
+
+        const lineTotal = document.createElement("p");
+        lineTotal.textContent =
+          "Total : " + Number(item.total).toFixed(2);
+
+        textInfo.append(name, qty, price, lineTotal);
+        row.appendChild(textInfo);
+        details.appendChild(row);
+      });
+
+      card.append(
+        title,
+        total,
+        count,
+        quantity,
+        detailsButton,
+        details
+      );
+
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("Erreur historique des clôtures :", error);
+    container.textContent =
+      "Erreur de chargement des rapports : " + error.message;
+  }
+}
+
+
+// ENREGISTRER LA CLÔTURE DE LA JOURNÉE
+const closeSalesDayButton =
+  document.getElementById("closeSalesDayButton");
+
+if (closeSalesDayButton) {
+  closeSalesDayButton.addEventListener("click", async function () {
+    const message =
+      document.getElementById("dailyClosureMessage");
+
+    const confirmed = confirm(
+      "Voulez-vous vraiment clôturer la journée de cette boutique ?\n\nAprès la clôture, les nouvelles ventes physiques seront bloquées jusqu'au lendemain."
+    );
+
+    if (!confirmed) return;
+
+    closeSalesDayButton.disabled = true;
+    closeSalesDayButton.textContent = "Clôture en cours...";
+
+    message.textContent = "Calcul et enregistrement du rapport...";
+
+    try {
+      const { data, error } = await supabaseClient.rpc(
+        "bfs_close_physical_sales_day",
+        {
+          p_store_id: Number(currentStoreId)
+        }
+      );
+
+      if (error) throw error;
+
+      if (!data || !data.success) {
+        throw new Error("La clôture n'a pas été confirmée.");
+      }
+
+      message.textContent =
+        "✅ Journée clôturée ! Total : " +
+        Number(data.total_sales).toFixed(2) +
+        " | Ventes : " + data.sales_count +
+        " | Produits : " + data.total_quantity;
+
+      await loadDailyClosureHistory();
+
+    } catch (error) {
+      console.error("Erreur clôture journalière :", error);
+
+      message.textContent =
+        "Échec de la clôture : " + error.message;
+
+      await loadDailyClosureHistory();
+
+    }
+  });
+}
 
 // CHARGER L'HISTORIQUE DES VENTES PHYSIQUES
 async function loadSalesHistory() {
   const container = document.getElementById("salesHistory");
-
   container.textContent = "Chargement des ventes...";
-
+  await loadDailyClosureHistory();
   try {
     // 1. Charger les ventes physiques
     const { data: sales, error } = await supabaseClient
