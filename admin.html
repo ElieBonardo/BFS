@@ -4146,8 +4146,14 @@ console.log("Photo du produit :", product.Name, imageUrl);
         img.loading = "lazy";
 
         img.onerror = () => {
-          img.style.display = "none";
-        };
+  console.error("Échec du chargement de la photo :", img.src);
+
+  const photoError = document.createElement("p");
+  photoError.textContent = "Photo inaccessible : " + img.src;
+  photoError.style.color = "red";
+
+  img.replaceWith(photoError);
+};
 
         card.appendChild(img);
       } else {
