@@ -4378,7 +4378,9 @@ async function saveProductChanges(
   category,
   stock
 ) {
-  const savedScrollPosition = window.scrollY;
+const savedScrollPosition = window.scrollY;
+const savedSearchText =
+  document.getElementById("adminProductSearch")?.value || "";
 
   try {
     if (currentStoreId === null || currentStoreId === undefined) {
@@ -4419,9 +4421,17 @@ async function saveProductChanges(
 
     // 3. Actualiser les affichages
     await Promise.all([
-      loadAdminProducts(),
-      loadStoreInventory()
-    ]);
+  loadAdminProducts(),
+  loadStoreInventory()
+]);
+
+// Restaurer automatiquement la recherche
+const searchInput = document.getElementById("adminProductSearch");
+
+if (searchInput) {
+  searchInput.value = savedSearchText;
+  searchInput.dispatchEvent(new Event("input"));
+}
 
     // 4. Restaurer la position de la page
     requestAnimationFrame(() => {
