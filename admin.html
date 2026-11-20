@@ -4542,9 +4542,9 @@ if (addProductForm) {
       uploadedPath = filePath;
 
       const { data: publicData } = supabaseClient
-        .storage
-        .from("Products")
-        .getPublicUrl(filePath);
+  .storage
+  .from("products")
+  .getPublicUrl(filePath);
 
       const { data: product, error: insertError } =
         await supabaseClient
