@@ -4144,7 +4144,17 @@ console.log("Photo du produit :", product.Name, imageUrl);
         img.src = imageUrl;
         img.alt = productName || "Produit BFS";
         img.loading = "lazy";
-
+img.style.display = "block";
+img.style.width = "100%";
+img.style.maxWidth = "220px";
+img.style.height = "230px";
+img.style.objectFit = "contain";
+img.style.objectPosition = "center";
+img.style.background = "#f4f4f4";
+img.style.padding = "8px";
+img.style.boxSizing = "border-box";
+img.style.borderRadius = "8px";
+img.style.margin = "12px auto";
         img.onerror = () => {
   console.error("Échec du chargement de la photo :", img.src);
 
