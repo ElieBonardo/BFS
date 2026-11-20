@@ -4348,12 +4348,12 @@ async function changeProductPhoto(product) {
         `${product.id}/${Date.now()}.${extension}`;
       const { error: uploadError } = await supabaseClient
         .storage
-        .from("products")
+       .from("products")
       .upload(filePath, file, { upsert: false });
       if (uploadError) throw uploadError;
       const { data: publicData } = supabaseClient
         .storage
-        .from("products")
+       .from("products")
         .getPublicUrl(filePath);
       const { error: updateError } = await supabaseClient
         .from("products")
