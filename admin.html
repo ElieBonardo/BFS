@@ -4091,6 +4091,10 @@ const inventoryMap = new Map(
   ])
 );
     const productsList = document.getElementById("adminProductsList");
+    productsList.style.display = "grid";
+productsList.style.gridTemplateColumns = "repeat(2, minmax(0, 1fr))";
+productsList.style.gap = "12px";
+productsList.style.alignItems = "start";
     document.getElementById("statTotalProducts").textContent =
       products.length;
 
@@ -4107,7 +4111,11 @@ if (loadingMessage) loadingMessage.remove();
     products.forEach(product => {
       const card = document.createElement("div");
       card.className = "admin-product";
-
+card.style.minWidth = "0";
+card.style.boxSizing = "border-box";
+card.style.padding = "10px";
+card.style.borderRadius = "10px";
+card.style.overflow = "hidden";
       // Accepte plusieurs variantes du nom de colonne.
       const productName =
         product.name ?? product.Name ?? product.nom ?? "";
