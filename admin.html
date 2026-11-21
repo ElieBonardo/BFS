@@ -1251,24 +1251,39 @@
   </p>
 
   <!-- STATISTIQUES -->
-  <div class="bfs-stats-grid">
+ <div class="bfs-stats-grid">
 
-    <div class="bfs-stat-card">
-      <span class="bfs-stat-label">Total des dettes</span>
-      <strong id="debtsTotal">0,00 $</strong>
-    </div>
-
-    <div class="bfs-stat-card">
-      <span class="bfs-stat-label">Total récupéré</span>
-      <strong id="debtsPaid">0,00 $</strong>
-    </div>
-
-    <div class="bfs-stat-card">
-      <span class="bfs-stat-label">Reste à récupérer</span>
-      <strong id="debtsRemaining">0,00 $</strong>
-    </div>
-
+  <div class="bfs-stat-card">
+    <span class="bfs-stat-label">Dettes initiales (USD)</span>
+    <strong id="debtsTotalUSD">0.00 $</strong>
   </div>
+
+  <div class="bfs-stat-card">
+    <span class="bfs-stat-label">Récupéré (USD)</span>
+    <strong id="debtsPaidUSD">0.00 $</strong>
+  </div>
+
+  <div class="bfs-stat-card">
+    <span class="bfs-stat-label">Reste à récupérer (USD)</span>
+    <strong id="debtsRemainingUSD">0.00 $</strong>
+  </div>
+
+  <div class="bfs-stat-card">
+    <span class="bfs-stat-label">Dettes initiales (CDF)</span>
+    <strong id="debtsTotalCDF">0 FC</strong>
+  </div>
+
+  <div class="bfs-stat-card">
+    <span class="bfs-stat-label">Récupéré (CDF)</span>
+    <strong id="debtsPaidCDF">0 FC</strong>
+  </div>
+
+  <div class="bfs-stat-card">
+    <span class="bfs-stat-label">Reste à récupérer (CDF)</span>
+    <strong id="debtsRemainingCDF">0 FC</strong>
+  </div>
+
+</div>
 
   <!-- NOUVELLE DETTE -->
   <div class="sales-form">
@@ -1296,7 +1311,13 @@
       <option value="merchandise">Dette sur marchandise</option>
     </select>
 
-    <label for="debtAmount">Montant dû ($)</label>
+    <label for="debtCurrency">Devise</label>
+<select id="debtCurrency">
+  <option value="USD">Dollar américain ($)</option>
+  <option value="CDF">Franc congolais (FC)</option>
+</select>
+
+<label for="debtAmount">Montant dû</label>
     <input
       type="number"
       id="debtAmount"
@@ -3097,8 +3118,11 @@ async function loadClientDebts() {
       payments = data || [];
     }
 
-    let totalDebts = 0;
-    let totalPaid = 0;
+    let totalDebtsUSD = 0;
+let totalPaidUSD = 0;
+
+let totalDebtsCDF = 0;
+let totalPaidCDF = 0;
 
     container.innerHTML = "";
 
@@ -3119,9 +3143,15 @@ async function loadClientDebts() {
 
       const original = Number(debt.original_amount);
       const remaining = Math.max(0, original - paid);
-
-      totalDebts += original;
-      totalPaid += paid;
+const currencyLabel =
+  debt.currency === "CDF" ? " FC" : " $";
+      if (debt.currency === "CDF") {
+  totalDebtsCDF += original;
+  totalPaidCDF += paid;
+} else {
+  totalDebtsUSD += original;
+  totalPaidUSD += paid;
+}
 
       const card = document.createElement("div");
 
@@ -3140,9 +3170,9 @@ async function loadClientDebts() {
       const details = document.createElement("p");
 
       details.textContent =
-        "Dette initiale : " + original.toFixed(2) + " $"
-        + " | Payé : " + paid.toFixed(2) + " $"
-        + " | Reste : " + remaining.toFixed(2) + " $";
+  "Dette initiale : " + original.toLocaleString("fr-FR") + currencyLabel
+  + " | Payé : " + paid.toLocaleString("fr-FR") + currencyLabel
+  + " | Reste : " + remaining.toLocaleString("fr-FR") + currencyLabel;
 
       const date = document.createElement("p");
 
@@ -3185,7 +3215,7 @@ async function loadClientDebts() {
           const line = document.createElement("p");
 
           line.textContent =
-            Number(payment.amount).toFixed(2) + " $ — " +
+          Number(payment.amount).toLocaleString("fr-FR") + currencyLabel + " — " +
             new Date(payment.created_at).toLocaleString("fr-FR", {
               timeZone: "Africa/Lubumbashi"
             });
@@ -3202,7 +3232,7 @@ async function loadClientDebts() {
         input.type = "number";
         input.min = "0.01";
         input.step = "0.01";
-        input.placeholder = "Montant reçu ($)";
+      input.placeholder = "Montant reçu (" + currencyLabel.trim() + ")";
         input.id = "paymentAmount_" + debt.id;
         input.style.cssText =
           "width:100%;padding:12px;box-sizing:border-box;margin-top:12px;";
@@ -3223,15 +3253,25 @@ async function loadClientDebts() {
       container.appendChild(card);
     });
 
-    // STATISTIQUES
-    document.getElementById("debtsTotal").textContent =
-      totalDebts.toFixed(2) + " $";
+    // STATISTIQUES EN DOLLARS
+document.getElementById("debtsTotalUSD").textContent =
+  totalDebtsUSD.toFixed(2) + " $";
 
-    document.getElementById("debtsPaid").textContent =
-      totalPaid.toFixed(2) + " $";
+document.getElementById("debtsPaidUSD").textContent =
+  totalPaidUSD.toFixed(2) + " $";
 
-    document.getElementById("debtsRemaining").textContent =
-      Math.max(0, totalDebts - totalPaid).toFixed(2) + " $";
+document.getElementById("debtsRemainingUSD").textContent =
+  Math.max(0, totalDebtsUSD - totalPaidUSD).toFixed(2) + " $";
+
+// STATISTIQUES EN FRANCS CONGOLAIS
+document.getElementById("debtsTotalCDF").textContent =
+  totalDebtsCDF.toLocaleString("fr-FR") + " FC";
+
+document.getElementById("debtsPaidCDF").textContent =
+  totalPaidCDF.toLocaleString("fr-FR") + " FC";
+
+document.getElementById("debtsRemainingCDF").textContent =
+  Math.max(0, totalDebtsCDF - totalPaidCDF).toLocaleString("fr-FR") + " FC";
 
   } catch (error) {
 
@@ -3283,16 +3323,17 @@ if (saveDebtButton) {
     try {
 
       const { data, error } = await supabaseClient.rpc(
-        "bfs_create_client_debt",
-        {
-          p_store_id: Number(currentStoreId),
-          p_client_name: clientName,
-          p_client_phone: clientPhone || null,
-          p_debt_type: debtType,
-          p_amount: amount,
-          p_notes: notes || null
-        }
-      );
+  "bfs_create_client_debt",
+  {
+    p_store_id: Number(currentStoreId),
+    p_client_name: clientName,
+    p_client_phone: clientPhone || null,
+    p_debt_type: debtType,
+    p_amount: amount,
+    p_currency: document.getElementById("debtCurrency").value,
+    p_notes: notes || null
+  }
+);
 
       if (error) throw error;
 
