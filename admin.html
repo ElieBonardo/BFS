@@ -1170,6 +1170,25 @@
       step="1"
       placeholder="Quantité"
     >
+    <label for="saleActualPrice">Prix réellement vendu ($)</label>
+
+<input
+  type="number"
+  id="saleActualPrice"
+  min="0"
+  step="0.01"
+  placeholder="Saisir le prix de vente"
+  required
+  style="width:100%;padding:12px;box-sizing:border-box;"
+>
+
+<button
+  type="button"
+  id="useSitePriceButton"
+  style="width:100%;padding:12px;margin:8px 0;background:#c49a45;color:#000;border:0;border-radius:8px;font-weight:bold;"
+>
+  Prix du site
+</button>
 
     <label for="salePaymentMethod">Mode de paiement</label>
     <select id="salePaymentMethod">
@@ -2072,6 +2091,13 @@ async function loadSalesProducts() {
 
       const image = option.dataset.image;
       const price = option.dataset.price;
+      const actualPriceInput =
+  document.getElementById("saleActualPrice");
+
+if (actualPriceInput) {
+  actualPriceInput.value = price || "";
+}
+      
       const stock = option.dataset.stock;
 
       preview.innerHTML = `
@@ -2097,6 +2123,28 @@ async function loadSalesProducts() {
       '<option value="">Erreur de chargement</option>';
   }
 }
+// REPRENDRE LE PRIX DU SITE
+const useSitePriceButton =
+  document.getElementById("useSitePriceButton");
+
+if (useSitePriceButton) {
+  useSitePriceButton.onclick = function () {
+    const productSelect =
+      document.getElementById("saleProduct");
+
+    const option =
+      productSelect.options[productSelect.selectedIndex];
+
+    if (!productSelect.value) {
+      document.getElementById("saleMessage").textContent =
+        "Sélectionnez d'abord un produit.";
+      return;
+    }
+
+    document.getElementById("saleActualPrice").value =
+      option.dataset.price || "";
+  };
+}
 
 // ENREGISTRER UNE VENTE PHYSIQUE
 const recordSaleButton =
@@ -2112,7 +2160,9 @@ if (recordSaleButton) {
     const quantity = Number(
       document.getElementById("saleQuantity").value
     );
-
+const actualPrice = Number(
+  document.getElementById("saleActualPrice").value
+);
     const message = document.getElementById("saleMessage");
 
     if (!productId) {
@@ -2124,7 +2174,10 @@ if (recordSaleButton) {
       message.textContent = "Saisissez une quantité valide.";
       return;
     }
-
+if (!Number.isFinite(actualPrice) || actualPrice < 0) {
+  message.textContent = "Saisissez un prix de vente valide.";
+  return;
+}
     recordSaleButton.disabled = true;
     recordSaleButton.textContent = "Enregistrement...";
 
@@ -2134,10 +2187,11 @@ if (recordSaleButton) {
         {
           p_store_id: Number(currentStoreId),
           p_items: [
-            {
-              product_id: productId,
-              quantity: quantity
-            }
+       {
+  product_id: productId,
+  quantity: quantity,
+  unit_price: actualPrice
+}
           ]
         }
       );
@@ -2152,7 +2206,7 @@ if (recordSaleButton) {
         "Vente enregistrée ! Total : " + data.total;
 
       document.getElementById("saleQuantity").value = "";
-
+document.getElementById("saleActualPrice").value = "";
       await loadSalesProducts();
       await loadStoreInventory();
       await loadSalesHistory();
