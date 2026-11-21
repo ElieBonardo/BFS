@@ -415,6 +415,10 @@
       Ventes physiques
     </a>
 
+    <a href="#" class="admin-menu-link" data-panel="debtsPanel">
+      Dettes clients
+    </a>
+
   </nav>
 
   <a href="./index.html" class="back-to-shop">
@@ -1234,6 +1238,94 @@
 <div id="salesHistory">
   Chargement des ventes...
 </div>
+
+</section>
+<!-- DETTES CLIENTS -->
+<section id="debtsPanel" class="bfs-panel" hidden>
+
+  <h1>Dettes clients</h1>
+
+  <p>
+    Gérez les prêts d'argent et les dettes sur marchandises.
+    Chaque dette possède son propre historique.
+  </p>
+
+  <!-- STATISTIQUES -->
+  <div class="bfs-stats-grid">
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Total des dettes</span>
+      <strong id="debtsTotal">0,00 $</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Total récupéré</span>
+      <strong id="debtsPaid">0,00 $</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Reste à récupérer</span>
+      <strong id="debtsRemaining">0,00 $</strong>
+    </div>
+
+  </div>
+
+  <!-- NOUVELLE DETTE -->
+  <div class="sales-form">
+
+    <h2>Enregistrer une nouvelle dette</h2>
+
+    <label for="debtClientName">Nom du client</label>
+    <input
+      type="text"
+      id="debtClientName"
+      placeholder="Nom complet du client"
+      required
+    >
+
+    <label for="debtClientPhone">Téléphone (facultatif)</label>
+    <input
+      type="tel"
+      id="debtClientPhone"
+      placeholder="Numéro de téléphone"
+    >
+
+    <label for="debtType">Origine de la dette</label>
+    <select id="debtType">
+      <option value="loan">Prêt d'argent</option>
+      <option value="merchandise">Dette sur marchandise</option>
+    </select>
+
+    <label for="debtAmount">Montant dû ($)</label>
+    <input
+      type="number"
+      id="debtAmount"
+      min="0.01"
+      step="0.01"
+      placeholder="Exemple : 200"
+      required
+    >
+
+    <label for="debtNotes">Commentaire (facultatif)</label>
+    <textarea
+      id="debtNotes"
+      placeholder="Détails sur cette dette..."
+    ></textarea>
+
+    <button id="saveDebtButton" type="button">
+      Enregistrer la dette
+    </button>
+
+    <p id="debtMessage"></p>
+
+  </div>
+
+  <!-- LISTE DES DETTES -->
+  <h2>Liste des dettes clients</h2>
+
+  <div id="clientDebtsList">
+    Chargement des dettes...
+  </div>
 
 </section>
   </main>
@@ -2892,8 +2984,14 @@ const salesPanel = document.getElementById("salesPanel");
 if (salesPanel && !salesPanel.hidden) {
   await loadSalesProducts();
   await loadSalesHistory();
+  
 }
+// ACTUALISER LES DETTES DE LA BOUTIQUE ACTIVE
+const debtsPanel = document.getElementById("debtsPanel");
 
+if (debtsPanel && !debtsPanel.hidden) {
+  await loadClientDebts();
+}
 console.log("Stock et statistiques chargés.");
           } catch (error) {
             console.error("Erreur modification stock :", error);
@@ -2960,18 +3058,351 @@ document
 
     console.log("Boutique active :", allowedStore.name);
   });
+/* CHARGEMENT DES DETTES CLIENTS */
+
+async function loadClientDebts() {
+
+  const container = document.getElementById("clientDebtsList");
+
+  container.textContent = "Chargement des dettes...";
+
+  try {
+
+    // RÉCUPÉRER LES DETTES DE LA BOUTIQUE ACTIVE
+    const { data: debts, error: debtsError } =
+      await supabaseClient
+        .from("client_debts")
+        .select("*")
+        .eq("store_id", Number(currentStoreId))
+        .order("created_at", { ascending: false });
+
+    if (debtsError) throw debtsError;
+
+    const debtIds = (debts || []).map(debt => debt.id);
+
+    // RÉCUPÉRER TOUS LES PAIEMENTS
+    let payments = [];
+
+    if (debtIds.length > 0) {
+
+      const { data, error } =
+        await supabaseClient
+          .from("client_debt_payments")
+          .select("*")
+          .in("debt_id", debtIds)
+          .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      payments = data || [];
+    }
+
+    let totalDebts = 0;
+    let totalPaid = 0;
+
+    container.innerHTML = "";
+
+    if (!debts || debts.length === 0) {
+      container.textContent = "Aucune dette enregistrée.";
+    }
+
+    (debts || []).forEach(debt => {
+
+      const debtPayments = payments.filter(
+        payment => Number(payment.debt_id) === Number(debt.id)
+      );
+
+      const paid = debtPayments.reduce(
+        (sum, payment) => sum + Number(payment.amount),
+        0
+      );
+
+      const original = Number(debt.original_amount);
+      const remaining = Math.max(0, original - paid);
+
+      totalDebts += original;
+      totalPaid += paid;
+
+      const card = document.createElement("div");
+
+      card.style.cssText =
+        "background:#fff;padding:16px;margin:12px 0;border:1px solid #ddd;border-radius:12px;";
+
+      const title = document.createElement("h3");
+      title.textContent = debt.client_name;
+
+      const type = document.createElement("p");
+      type.textContent =
+        debt.debt_type === "loan"
+          ? "Prêt d'argent"
+          : "Dette sur marchandise";
+
+      const details = document.createElement("p");
+
+      details.textContent =
+        "Dette initiale : " + original.toFixed(2) + " $"
+        + " | Payé : " + paid.toFixed(2) + " $"
+        + " | Reste : " + remaining.toFixed(2) + " $";
+
+      const date = document.createElement("p");
+
+      date.textContent =
+        "Enregistrée le : " +
+        new Date(debt.created_at).toLocaleString("fr-FR", {
+          timeZone: "Africa/Lubumbashi"
+        });
+
+      const status = document.createElement("strong");
+
+      status.textContent =
+        remaining <= 0
+          ? "Dette soldée"
+          : paid > 0
+            ? "Partiellement payée"
+            : "Non payée";
+
+      status.style.color =
+        remaining <= 0 ? "green" : "#b58b35";
+
+      card.append(title, type, details, date, status);
+
+      // HISTORIQUE DES PAIEMENTS
+      const historyTitle = document.createElement("h4");
+      historyTitle.textContent = "Historique des paiements";
+
+      card.appendChild(historyTitle);
+
+      if (debtPayments.length === 0) {
+
+        const empty = document.createElement("p");
+        empty.textContent = "Aucun paiement enregistré.";
+        card.appendChild(empty);
+
+      } else {
+
+        debtPayments.forEach(payment => {
+
+          const line = document.createElement("p");
+
+          line.textContent =
+            Number(payment.amount).toFixed(2) + " $ — " +
+            new Date(payment.created_at).toLocaleString("fr-FR", {
+              timeZone: "Africa/Lubumbashi"
+            });
+
+          card.appendChild(line);
+        });
+      }
+
+      // FORMULAIRE DE PAIEMENT
+      if (remaining > 0) {
+
+        const input = document.createElement("input");
+
+        input.type = "number";
+        input.min = "0.01";
+        input.step = "0.01";
+        input.placeholder = "Montant reçu ($)";
+        input.id = "paymentAmount_" + debt.id;
+        input.style.cssText =
+          "width:100%;padding:12px;box-sizing:border-box;margin-top:12px;";
+
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.textContent = "Enregistrer un paiement";
+        button.dataset.debtId = debt.id;
+        button.className = "recordDebtPaymentButton";
+
+        button.style.cssText =
+          "width:100%;padding:12px;margin-top:8px;background:#c49a45;color:#000;border:0;border-radius:8px;font-weight:bold;";
+
+        card.append(input, button);
+      }
+
+      container.appendChild(card);
+    });
+
+    // STATISTIQUES
+    document.getElementById("debtsTotal").textContent =
+      totalDebts.toFixed(2) + " $";
+
+    document.getElementById("debtsPaid").textContent =
+      totalPaid.toFixed(2) + " $";
+
+    document.getElementById("debtsRemaining").textContent =
+      Math.max(0, totalDebts - totalPaid).toFixed(2) + " $";
+
+  } catch (error) {
+
+    console.error("Erreur chargement dettes :", error);
+
+    container.textContent =
+      "Erreur de chargement : " + error.message;
+  }
+}
+/* ENREGISTRER UNE NOUVELLE DETTE */
+
+const saveDebtButton = document.getElementById("saveDebtButton");
+
+if (saveDebtButton) {
+
+  saveDebtButton.addEventListener("click", async () => {
+
+    const clientName =
+      document.getElementById("debtClientName").value.trim();
+
+    const clientPhone =
+      document.getElementById("debtClientPhone").value.trim();
+
+    const debtType =
+      document.getElementById("debtType").value;
+
+    const amount =
+      Number(document.getElementById("debtAmount").value);
+
+    const notes =
+      document.getElementById("debtNotes").value.trim();
+
+    const message =
+      document.getElementById("debtMessage");
+
+    if (!clientName) {
+      message.textContent = "Saisissez le nom du client.";
+      return;
+    }
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      message.textContent = "Saisissez un montant valide.";
+      return;
+    }
+
+    saveDebtButton.disabled = true;
+    saveDebtButton.textContent = "Enregistrement...";
+
+    try {
+
+      const { data, error } = await supabaseClient.rpc(
+        "bfs_create_client_debt",
+        {
+          p_store_id: Number(currentStoreId),
+          p_client_name: clientName,
+          p_client_phone: clientPhone || null,
+          p_debt_type: debtType,
+          p_amount: amount,
+          p_notes: notes || null
+        }
+      );
+
+      if (error) throw error;
+
+      if (!data || !data.success) {
+        throw new Error("La dette n'a pas été confirmée.");
+      }
+
+      message.textContent = "Dette enregistrée avec succès.";
+
+      document.getElementById("debtClientName").value = "";
+      document.getElementById("debtClientPhone").value = "";
+      document.getElementById("debtAmount").value = "";
+      document.getElementById("debtNotes").value = "";
+
+      await loadClientDebts();
+
+    } catch (error) {
+
+      console.error("Erreur enregistrement dette :", error);
+
+      message.textContent =
+        "Erreur : " + error.message;
+
+    } finally {
+
+      saveDebtButton.disabled = false;
+      saveDebtButton.textContent = "Enregistrer la dette";
+    }
+  });
+}
+/* ENREGISTRER UN PAIEMENT CLIENT */
+
+const clientDebtsList =
+  document.getElementById("clientDebtsList");
+
+if (clientDebtsList) {
+
+  clientDebtsList.addEventListener("click", async event => {
+
+    const button = event.target.closest(
+      ".recordDebtPaymentButton"
+    );
+
+    if (!button) return;
+
+    const debtId = Number(button.dataset.debtId);
+
+    const input = document.getElementById(
+      "paymentAmount_" + debtId
+    );
+
+    const amount = Number(input.value);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      alert("Saisissez un montant de paiement valide.");
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Enregistrement...";
+
+    try {
+
+      const { data, error } = await supabaseClient.rpc(
+        "bfs_record_client_debt_payment",
+        {
+          p_debt_id: debtId,
+          p_amount: amount,
+          p_notes: null
+        }
+      );
+
+      if (error) throw error;
+
+      if (!data || !data.success) {
+        throw new Error("Le paiement n'a pas été confirmé.");
+      }
+
+      alert(
+        "Paiement enregistré !\n\n" +
+        "Total payé : " + Number(data.total_paid).toFixed(2) + " $\n" +
+        "Reste à payer : " + Number(data.remaining).toFixed(2) + " $"
+      );
+
+      await loadClientDebts();
+
+    } catch (error) {
+
+      console.error("Erreur paiement client :", error);
+
+      alert("Erreur : " + error.message);
+
+      button.disabled = false;
+      button.textContent = "Enregistrer un paiement";
+    }
+  });
+}
 
 /* NAVIGATION DES PANNEAUX */
 function showPanel(panelId) {
 
   // Le gestionnaire accède uniquement au stock et aux ventes physiques.
-  if (
-    currentRole === "manager" &&
-    panelId !== "inventoryPanel" &&
-    panelId !== "salesPanel"
-  ) {
-    return;
-  }
+ if (
+  currentRole === "manager" &&
+  panelId !== "inventoryPanel" &&
+  panelId !== "salesPanel" &&
+  panelId !== "debtsPanel"
+) {
+  return;
+}
 
  // Les transferts, achats et rapports sont réservés au propriétaire.
 if (
@@ -3031,7 +3462,15 @@ if (
         "Erreur : " + error.message;
     });
   }
+// DETTES CLIENTS
+if (panelId === "debtsPanel") {
+  loadClientDebts().catch(error => {
+    console.error("Erreur de chargement des dettes :", error);
 
+    document.getElementById("debtMessage").textContent =
+      "Erreur : " + error.message;
+  });
+}
   // RAPPORTS FINANCIERS
   if (panelId === "reportsPanel") {
     if (typeof loadFinancialReports === "function") {
@@ -4022,13 +4461,14 @@ menuLinks.forEach(link => {
 
     const panelId = link.dataset.panel;
 
-    if (
-  currentRole === "manager" &&
-  panelId !== "inventoryPanel" &&
-  panelId !== "salesPanel"
-) {
-  return;
-}
+  if (
+    currentRole === "manager" &&
+    panelId !== "inventoryPanel" &&
+    panelId !== "salesPanel" &&
+    panelId !== "debtsPanel"
+  ) {
+    return;
+  }
 
     localStorage.setItem("bfsAdminPanel", panelId);
     showPanel(panelId);
