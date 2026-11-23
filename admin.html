@@ -2015,13 +2015,17 @@ async function loadTransferHistory() {
         notes,
         created_at,
         stock_transfer_items (
-          product_id,
-          quantity,
-          products (
-            Name,
-            image_url
-          )
-        )
+  product_id,
+  quantity,
+  source_stock_before,
+  source_stock_after,
+  destination_stock_before,
+  destination_stock_after,
+  products (
+    Name,
+    image_url
+  )
+)
       `)
       .order("created_at", { ascending: false });
 
@@ -2059,10 +2063,22 @@ async function loadTransferHistory() {
                     style="width:55px;height:55px;object-fit:cover;border-radius:6px;">`
                 : ""
             }
-            <span>
-              ${item.products?.Name || "Produit"}
-              — Quantité : ${item.quantity}
-            </span>
+           <div style="display:flex;flex-direction:column;gap:5px;">
+  <strong>${item.products?.Name || "Produit"}</strong>
+
+  <span>Quantité transférée : ${item.quantity}</span>
+
+  <span style="color:#b45309;">
+    Boutique source : ${item.source_stock_before ?? "Ancien transfert"}
+    → ${item.source_stock_after ?? "—"}
+  </span>
+
+  <span style="color:#15803d;">
+    Boutique destinataire :
+    ${item.destination_stock_before ?? "Ancien transfert"}
+    → ${item.destination_stock_after ?? "—"}
+  </span>
+</div>
           </div>
         `).join("");
 
