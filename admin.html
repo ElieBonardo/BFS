@@ -550,8 +550,16 @@
   <select id="transferDestination"></select>
 </div>
 <div>
-  <label for="transferProduct">Produit à transférer</label>
-  <select id="transferProduct">
+<label for="transferSearch">Rechercher un produit</label>
+<input
+  type="search"
+  id="transferSearch"
+  placeholder="Nom du produit ou référence..."
+  autocomplete="off"
+>
+
+<label for="transferProduct">Produit à transférer</label>
+<select id="transferProduct">
     <option value="">Sélectionner un produit</option>
   </select>
   <div id="transferProductPreview" style="margin-top:12px;">
@@ -1484,6 +1492,7 @@ async function loadTransferForm() {
   const source = document.getElementById("transferSource");
   const destination = document.getElementById("transferDestination");
   const productSelect = document.getElementById("transferProduct");
+  const transferSearch = document.getElementById("transferSearch");
   const preview = document.getElementById("transferProductPreview");
 
   source.innerHTML = "";
@@ -1527,7 +1536,29 @@ async function loadTransferForm() {
 
     productSelect.appendChild(option);
   });
+transferSearch.oninput = function () {
+  const search = this.value.trim().toLowerCase();
 
+  productSelect.innerHTML =
+    '<option value="">Sélectionner un produit</option>';
+
+  const filteredProducts = (products || []).filter(product =>
+    String(product.Name || "").toLowerCase().includes(search) ||
+    String(product.id).includes(search)
+  );
+
+  filteredProducts.forEach(product => {
+    const option = document.createElement("option");
+
+    option.value = product.id;
+    option.textContent = product.Name;
+    option.dataset.image = product.image_url || "";
+
+    productSelect.appendChild(option);
+  });
+
+  preview.innerHTML = "";
+};
   productSelect.onchange = function () {
     const selectedOption =
       productSelect.options[productSelect.selectedIndex];
