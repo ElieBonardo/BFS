@@ -415,9 +415,19 @@
       Ventes physiques
     </a>
 
+  <div class="admin-menu-group">
+  <button type="button" class="admin-menu-link" id="debtsMenuToggle">
+    📂 Dettes BFS <span id="debtsMenuArrow">▼</span>
+  </button>
+  <div id="debtsSubmenu" style="display:none;padding-left:15px;">
     <a href="#" class="admin-menu-link" data-panel="debtsPanel">
-      Dettes clients
+      💰 Clients qui doivent à BFS
     </a>
+<a href="#" class="admin-menu-link" data-panel="payableDebtsPanel">
+  💸 Personnes à qui BFS doit
+</a>
+  </div>
+</div>
 
   </nav>
 
@@ -1357,6 +1367,116 @@
   </div>
 
 </section>
+<!-- DETTES QUE BFS DOIT PAYER -->
+<section id="payableDebtsPanel" class="bfs-panel" hidden>
+
+  <h1>Personnes à qui BFS doit</h1>
+
+  <p>
+    Gérez les prêts reçus et les dettes de BFS envers ses fournisseurs
+    ou d'autres personnes.
+  </p>
+
+  <!-- STATISTIQUES -->
+  <div class="bfs-stats-grid">
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Total à payer (USD)</span>
+      <strong id="payableTotalUSD">0.00 $</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Déjà payé (USD)</span>
+      <strong id="payablePaidUSD">0.00 $</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Reste à payer (USD)</span>
+      <strong id="payableRemainingUSD">0.00 $</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Total à payer (CDF)</span>
+      <strong id="payableTotalCDF">0 FC</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Déjà payé (CDF)</span>
+      <strong id="payablePaidCDF">0 FC</strong>
+    </div>
+
+    <div class="bfs-stat-card">
+      <span class="bfs-stat-label">Reste à payer (CDF)</span>
+      <strong id="payableRemainingCDF">0 FC</strong>
+    </div>
+
+  </div>
+
+  <!-- NOUVELLE DETTE -->
+  <div class="sales-form">
+
+    <h2>Enregistrer une nouvelle dette de BFS</h2>
+
+    <label for="payableDebtPersonName">Nom du créancier</label>
+    <input
+      type="text"
+      id="payableDebtPersonName"
+      placeholder="Nom de la personne ou du fournisseur"
+      required
+    >
+
+    <label for="payableDebtPersonPhone">Téléphone (facultatif)</label>
+    <input
+      type="tel"
+      id="payableDebtPersonPhone"
+      placeholder="Numéro de téléphone"
+    >
+
+    <label for="payableDebtType">Origine de la dette</label>
+    <select id="payableDebtType">
+      <option value="loan">Prêt reçu</option>
+      <option value="merchandise">Marchandises achetées à crédit</option>
+    </select>
+
+    <label for="payableDebtCurrency">Devise</label>
+    <select id="payableDebtCurrency">
+      <option value="USD">Dollar américain ($)</option>
+      <option value="CDF">Franc congolais (FC)</option>
+    </select>
+
+    <label for="payableDebtAmount">Montant à payer</label>
+    <input
+      type="number"
+      id="payableDebtAmount"
+      min="0.01"
+      step="0.01"
+      placeholder="Exemple : 200"
+      required
+    >
+
+    <label for="payableDebtNotes">Commentaire (facultatif)</label>
+    <textarea
+      id="payableDebtNotes"
+      placeholder="Détails sur cette dette..."
+    ></textarea>
+
+    <button id="savePayableDebtButton" type="button">
+      Enregistrer la dette
+    </button>
+
+    <p id="payableDebtMessage"></p>
+
+  </div>
+
+  <!-- HISTORIQUE -->
+  <h2>Liste des dettes de BFS</h2>
+
+  <div id="payableDebtsList">
+    Chargement des dettes...
+  </div>
+
+</section>
+
   </main>
 </div>
 <script>
@@ -3160,27 +3280,50 @@ document
   });
 /* CHARGEMENT DES DETTES CLIENTS */
 
-async function loadClientDebts() {
+async function loadClientDebts(direction = "receivable") {
 
-  const container = document.getElementById("clientDebtsList");
+  const isPayable = direction === "payable";
+
+  const container = document.getElementById(
+    isPayable ? "payableDebtsList" : "clientDebtsList"
+  );
+
+  const statIds = isPayable
+    ? {
+        totalUSD: "payableTotalUSD",
+        paidUSD: "payablePaidUSD",
+        remainingUSD: "payableRemainingUSD",
+        totalCDF: "payableTotalCDF",
+        paidCDF: "payablePaidCDF",
+        remainingCDF: "payableRemainingCDF"
+      }
+    : {
+        totalUSD: "debtsTotalUSD",
+        paidUSD: "debtsPaidUSD",
+        remainingUSD: "debtsRemainingUSD",
+        totalCDF: "debtsTotalCDF",
+        paidCDF: "debtsPaidCDF",
+        remainingCDF: "debtsRemainingCDF"
+      };
+
+  if (!container) return;
 
   container.textContent = "Chargement des dettes...";
 
   try {
 
-    // RÉCUPÉRER LES DETTES DE LA BOUTIQUE ACTIVE
     const { data: debts, error: debtsError } =
       await supabaseClient
         .from("client_debts")
         .select("*")
         .eq("store_id", Number(currentStoreId))
+        .eq("debt_direction", direction)
         .order("created_at", { ascending: false });
 
     if (debtsError) throw debtsError;
 
     const debtIds = (debts || []).map(debt => debt.id);
 
-    // RÉCUPÉRER TOUS LES PAIEMENTS
     let payments = [];
 
     if (debtIds.length > 0) {
@@ -3198,10 +3341,9 @@ async function loadClientDebts() {
     }
 
     let totalDebtsUSD = 0;
-let totalPaidUSD = 0;
-
-let totalDebtsCDF = 0;
-let totalPaidCDF = 0;
+    let totalPaidUSD = 0;
+    let totalDebtsCDF = 0;
+    let totalPaidCDF = 0;
 
     container.innerHTML = "";
 
@@ -3222,15 +3364,17 @@ let totalPaidCDF = 0;
 
       const original = Number(debt.original_amount);
       const remaining = Math.max(0, original - paid);
-const currencyLabel =
-  debt.currency === "CDF" ? " FC" : " $";
+
+      const currencyLabel =
+        debt.currency === "CDF" ? " FC" : " $";
+
       if (debt.currency === "CDF") {
-  totalDebtsCDF += original;
-  totalPaidCDF += paid;
-} else {
-  totalDebtsUSD += original;
-  totalPaidUSD += paid;
-}
+        totalDebtsCDF += original;
+        totalPaidCDF += paid;
+      } else {
+        totalDebtsUSD += original;
+        totalPaidUSD += paid;
+      }
 
       const card = document.createElement("div");
 
@@ -3241,17 +3385,24 @@ const currencyLabel =
       title.textContent = debt.client_name;
 
       const type = document.createElement("p");
+
       type.textContent =
         debt.debt_type === "loan"
-          ? "Prêt d'argent"
-          : "Dette sur marchandise";
+          ? (isPayable ? "Prêt reçu" : "Prêt d'argent")
+          : (isPayable
+              ? "Marchandises achetées à crédit"
+              : "Dette sur marchandise");
 
       const details = document.createElement("p");
 
       details.textContent =
-  "Dette initiale : " + original.toLocaleString("fr-FR") + currencyLabel
-  + " | Payé : " + paid.toLocaleString("fr-FR") + currencyLabel
-  + " | Reste : " + remaining.toLocaleString("fr-FR") + currencyLabel;
+        "Montant initial : " +
+        original.toLocaleString("fr-FR") + currencyLabel +
+        " | " +
+        (isPayable ? "Payé : " : "Récupéré : ") +
+        paid.toLocaleString("fr-FR") + currencyLabel +
+        " | Reste : " +
+        remaining.toLocaleString("fr-FR") + currencyLabel;
 
       const date = document.createElement("p");
 
@@ -3275,7 +3426,6 @@ const currencyLabel =
 
       card.append(title, type, details, date, status);
 
-      // HISTORIQUE DES PAIEMENTS
       const historyTitle = document.createElement("h4");
       historyTitle.textContent = "Historique des paiements";
 
@@ -3294,7 +3444,8 @@ const currencyLabel =
           const line = document.createElement("p");
 
           line.textContent =
-          Number(payment.amount).toLocaleString("fr-FR") + currencyLabel + " — " +
+            Number(payment.amount).toLocaleString("fr-FR") +
+            currencyLabel + " — " +
             new Date(payment.created_at).toLocaleString("fr-FR", {
               timeZone: "Africa/Lubumbashi"
             });
@@ -3303,7 +3454,6 @@ const currencyLabel =
         });
       }
 
-      // FORMULAIRE DE PAIEMENT
       if (remaining > 0) {
 
         const input = document.createElement("input");
@@ -3311,15 +3461,21 @@ const currencyLabel =
         input.type = "number";
         input.min = "0.01";
         input.step = "0.01";
-      input.placeholder = "Montant reçu (" + currencyLabel.trim() + ")";
+        input.placeholder =
+          (isPayable ? "Montant payé (" : "Montant reçu (") +
+          currencyLabel.trim() + ")";
+
         input.id = "paymentAmount_" + debt.id;
+
         input.style.cssText =
           "width:100%;padding:12px;box-sizing:border-box;margin-top:12px;";
 
         const button = document.createElement("button");
 
         button.type = "button";
-        button.textContent = "Enregistrer un paiement";
+        button.textContent =
+          isPayable ? "Enregistrer un remboursement" : "Enregistrer un paiement";
+
         button.dataset.debtId = debt.id;
         button.className = "recordDebtPaymentButton";
 
@@ -3332,25 +3488,23 @@ const currencyLabel =
       container.appendChild(card);
     });
 
-    // STATISTIQUES EN DOLLARS
-document.getElementById("debtsTotalUSD").textContent =
-  totalDebtsUSD.toFixed(2) + " $";
+    document.getElementById(statIds.totalUSD).textContent =
+      totalDebtsUSD.toFixed(2) + " $";
 
-document.getElementById("debtsPaidUSD").textContent =
-  totalPaidUSD.toFixed(2) + " $";
+    document.getElementById(statIds.paidUSD).textContent =
+      totalPaidUSD.toFixed(2) + " $";
 
-document.getElementById("debtsRemainingUSD").textContent =
-  Math.max(0, totalDebtsUSD - totalPaidUSD).toFixed(2) + " $";
+    document.getElementById(statIds.remainingUSD).textContent =
+      Math.max(0, totalDebtsUSD - totalPaidUSD).toFixed(2) + " $";
 
-// STATISTIQUES EN FRANCS CONGOLAIS
-document.getElementById("debtsTotalCDF").textContent =
-  totalDebtsCDF.toLocaleString("fr-FR") + " FC";
+    document.getElementById(statIds.totalCDF).textContent =
+      totalDebtsCDF.toLocaleString("fr-FR") + " FC";
 
-document.getElementById("debtsPaidCDF").textContent =
-  totalPaidCDF.toLocaleString("fr-FR") + " FC";
+    document.getElementById(statIds.paidCDF).textContent =
+      totalPaidCDF.toLocaleString("fr-FR") + " FC";
 
-document.getElementById("debtsRemainingCDF").textContent =
-  Math.max(0, totalDebtsCDF - totalPaidCDF).toLocaleString("fr-FR") + " FC";
+    document.getElementById(statIds.remainingCDF).textContent =
+      Math.max(0, totalDebtsCDF - totalPaidCDF).toLocaleString("fr-FR") + " FC";
 
   } catch (error) {
 
@@ -3360,114 +3514,30 @@ document.getElementById("debtsRemainingCDF").textContent =
       "Erreur de chargement : " + error.message;
   }
 }
-/* ENREGISTRER UNE NOUVELLE DETTE */
+/* ENREGISTRER LES DETTES BFS */
 
-const saveDebtButton = document.getElementById("saveDebtButton");
+async function saveDebtForm(config) {
 
-if (saveDebtButton) {
+  const button = document.getElementById(config.button);
+  if (!button) return;
 
-  saveDebtButton.addEventListener("click", async () => {
+  button.addEventListener("click", async () => {
 
-    const clientName =
-      document.getElementById("debtClientName").value.trim();
+    const name = document.getElementById(config.name).value.trim();
+    const phone = document.getElementById(config.phone).value.trim();
+    const type = document.getElementById(config.type).value;
+    const currency = document.getElementById(config.currency).value;
+    const amount = Number(document.getElementById(config.amount).value);
+    const notes = document.getElementById(config.notes).value.trim();
+    const message = document.getElementById(config.message);
 
-    const clientPhone =
-      document.getElementById("debtClientPhone").value.trim();
-
-    const debtType =
-      document.getElementById("debtType").value;
-
-    const amount =
-      Number(document.getElementById("debtAmount").value);
-
-    const notes =
-      document.getElementById("debtNotes").value.trim();
-
-    const message =
-      document.getElementById("debtMessage");
-
-    if (!clientName) {
-      message.textContent = "Saisissez le nom du client.";
+    if (!name) {
+      message.textContent = "Saisissez le nom.";
       return;
     }
 
     if (!Number.isFinite(amount) || amount <= 0) {
       message.textContent = "Saisissez un montant valide.";
-      return;
-    }
-
-    saveDebtButton.disabled = true;
-    saveDebtButton.textContent = "Enregistrement...";
-
-    try {
-
-      const { data, error } = await supabaseClient.rpc(
-  "bfs_create_client_debt",
-  {
-    p_store_id: Number(currentStoreId),
-    p_client_name: clientName,
-    p_client_phone: clientPhone || null,
-    p_debt_type: debtType,
-    p_amount: amount,
-    p_currency: document.getElementById("debtCurrency").value,
-    p_notes: notes || null
-  }
-);
-
-      if (error) throw error;
-
-      if (!data || !data.success) {
-        throw new Error("La dette n'a pas été confirmée.");
-      }
-
-      message.textContent = "Dette enregistrée avec succès.";
-
-      document.getElementById("debtClientName").value = "";
-      document.getElementById("debtClientPhone").value = "";
-      document.getElementById("debtAmount").value = "";
-      document.getElementById("debtNotes").value = "";
-
-      await loadClientDebts();
-
-    } catch (error) {
-
-      console.error("Erreur enregistrement dette :", error);
-
-      message.textContent =
-        "Erreur : " + error.message;
-
-    } finally {
-
-      saveDebtButton.disabled = false;
-      saveDebtButton.textContent = "Enregistrer la dette";
-    }
-  });
-}
-/* ENREGISTRER UN PAIEMENT CLIENT */
-
-const clientDebtsList =
-  document.getElementById("clientDebtsList");
-
-if (clientDebtsList) {
-
-  clientDebtsList.addEventListener("click", async event => {
-
-    const button = event.target.closest(
-      ".recordDebtPaymentButton"
-    );
-
-    if (!button) return;
-
-    const debtId = Number(button.dataset.debtId);
-
-    const input = document.getElementById(
-      "paymentAmount_" + debtId
-    );
-
-    const amount = Number(input.value);
-
-    if (!Number.isFinite(amount) || amount <= 0) {
-      alert("Saisissez un montant de paiement valide.");
       return;
     }
 
@@ -3477,37 +3547,160 @@ if (clientDebtsList) {
     try {
 
       const { data, error } = await supabaseClient.rpc(
-        "bfs_record_client_debt_payment",
+        "bfs_create_debt",
         {
-          p_debt_id: debtId,
+          p_store_id: Number(currentStoreId),
+          p_debt_direction: config.direction,
+          p_person_name: name,
+          p_person_phone: phone || null,
+          p_debt_type: type,
           p_amount: amount,
-          p_notes: null
+          p_currency: currency,
+          p_notes: notes || null
         }
       );
 
       if (error) throw error;
 
       if (!data || !data.success) {
-        throw new Error("Le paiement n'a pas été confirmé.");
+        throw new Error("La dette n'a pas été confirmée.");
       }
 
-      alert(
-        "Paiement enregistré !\n\n" +
-        "Total payé : " + Number(data.total_paid).toFixed(2) + " $\n" +
-        "Reste à payer : " + Number(data.remaining).toFixed(2) + " $"
-      );
+      message.textContent = "Dette enregistrée avec succès.";
 
-      await loadClientDebts();
+      document.getElementById(config.name).value = "";
+      document.getElementById(config.phone).value = "";
+      document.getElementById(config.amount).value = "";
+      document.getElementById(config.notes).value = "";
+
+      await loadClientDebts(config.direction);
 
     } catch (error) {
 
-      console.error("Erreur paiement client :", error);
+      console.error("Erreur enregistrement dette :", error);
+      message.textContent = "Erreur : " + error.message;
 
-      alert("Erreur : " + error.message);
+    } finally {
 
       button.disabled = false;
-      button.textContent = "Enregistrer un paiement";
+      button.textContent = config.buttonText;
     }
+  });
+}
+
+
+// DETTES DES CLIENTS ENVERS BFS
+saveDebtForm({
+  direction: "receivable",
+  name: "debtClientName",
+  phone: "debtClientPhone",
+  type: "debtType",
+  currency: "debtCurrency",
+  amount: "debtAmount",
+  notes: "debtNotes",
+  message: "debtMessage",
+  button: "saveDebtButton",
+  buttonText: "Enregistrer la dette"
+});
+
+
+// DETTES DE BFS ENVERS LES AUTRES
+saveDebtForm({
+  direction: "payable",
+  name: "payableDebtPersonName",
+  phone: "payableDebtPersonPhone",
+  type: "payableDebtType",
+  currency: "payableDebtCurrency",
+  amount: "payableDebtAmount",
+  notes: "payableDebtNotes",
+  message: "payableDebtMessage",
+  button: "savePayableDebtButton",
+  buttonText: "Enregistrer la dette"
+});
+/* ENREGISTRER LES PAIEMENTS ET REMBOURSEMENTS */
+
+async function handleDebtPayment(event, direction) {
+
+  const button = event.target.closest(".recordDebtPaymentButton");
+
+  if (!button) return;
+
+  const debtId = Number(button.dataset.debtId);
+
+  const input = document.getElementById(
+    "paymentAmount_" + debtId
+  );
+
+  const amount = Number(input.value);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert("Saisissez un montant valide.");
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Enregistrement...";
+
+  try {
+
+    const { data, error } = await supabaseClient.rpc(
+      "bfs_record_client_debt_payment",
+      {
+        p_debt_id: debtId,
+        p_amount: amount,
+        p_notes: null
+      }
+    );
+
+    if (error) throw error;
+
+    if (!data || !data.success) {
+      throw new Error("L'opération n'a pas été confirmée.");
+    }
+
+    alert(
+      (direction === "payable"
+        ? "Remboursement enregistré !"
+        : "Paiement reçu enregistré !") +
+      "\n\nTotal payé : " +
+      Number(data.total_paid).toLocaleString("fr-FR") +
+      "\nReste : " +
+      Number(data.remaining).toLocaleString("fr-FR")
+    );
+
+    await loadClientDebts(direction);
+
+  } catch (error) {
+
+    console.error("Erreur paiement dette :", error);
+
+    alert("Erreur : " + error.message);
+
+    button.disabled = false;
+    button.textContent =
+      direction === "payable"
+        ? "Enregistrer un remboursement"
+        : "Enregistrer un paiement";
+  }
+}
+
+
+// PAIEMENTS DES CLIENTS
+const clientDebtsList = document.getElementById("clientDebtsList");
+
+if (clientDebtsList) {
+  clientDebtsList.addEventListener("click", event => {
+    handleDebtPayment(event, "receivable");
+  });
+}
+
+
+// REMBOURSEMENTS DE BFS
+const payableDebtsList = document.getElementById("payableDebtsList");
+
+if (payableDebtsList) {
+  payableDebtsList.addEventListener("click", event => {
+    handleDebtPayment(event, "payable");
   });
 }
 
@@ -3582,32 +3775,28 @@ if (
         "Erreur : " + error.message;
     });
   }
-// DETTES CLIENTS
+// DETTES CLIENTS : CLIENTS QUI DOIVENT À BFS
 if (panelId === "debtsPanel") {
-  loadClientDebts().catch(error => {
-    console.error("Erreur de chargement des dettes :", error);
+
+  loadClientDebts("receivable").catch(error => {
+    console.error("Erreur de chargement des dettes clients :", error);
 
     document.getElementById("debtMessage").textContent =
       "Erreur : " + error.message;
   });
+
 }
-  // RAPPORTS FINANCIERS
-  if (panelId === "reportsPanel") {
-    if (typeof loadFinancialReports === "function") {
-      loadFinancialReports();
-    }
-  }
-if (panelId === "expensesPanel") {
-  if (typeof loadExpenses === "function") {
-    loadExpenses();
-  }
-}
-  menuLinks.forEach(link => {
-    link.classList.toggle(
-      "active",
-      link.dataset.panel === panelId
-    );
+
+// DETTES DE BFS : PERSONNES À QUI BFS DOIT
+if (panelId === "payableDebtsPanel") {
+
+  loadClientDebts("payable").catch(error => {
+    console.error("Erreur de chargement des dettes de BFS :", error);
+
+    document.getElementById("payableDebtMessage").textContent =
+      "Erreur : " + error.message;
   });
+
 }
 
 /* =================================================
@@ -4581,14 +4770,15 @@ menuLinks.forEach(link => {
 
     const panelId = link.dataset.panel;
 
-  if (
-    currentRole === "manager" &&
-    panelId !== "inventoryPanel" &&
-    panelId !== "salesPanel" &&
-    panelId !== "debtsPanel"
-  ) {
-    return;
-  }
+if (
+  currentRole === "manager" &&
+  panelId !== "inventoryPanel" &&
+  panelId !== "salesPanel" &&
+  panelId !== "debtsPanel" &&
+  panelId !== "payableDebtsPanel"
+) {
+  return;
+}
 
     localStorage.setItem("bfsAdminPanel", panelId);
     showPanel(panelId);
@@ -4597,6 +4787,22 @@ menuLinks.forEach(link => {
     sidebarToggle.setAttribute("aria-expanded", "false");
   });
 }); 
+// OUVRIR ET FERMER LE SOUS-MENU DETTES BFS
+const debtsMenuToggle = document.getElementById("debtsMenuToggle");
+const debtsSubmenu = document.getElementById("debtsSubmenu");
+const debtsMenuArrow = document.getElementById("debtsMenuArrow");
+
+if (debtsMenuToggle && debtsSubmenu) {
+  debtsMenuToggle.addEventListener("click", () => {
+    const isOpen = debtsSubmenu.style.display === "block";
+
+    debtsSubmenu.style.display = isOpen ? "none" : "block";
+
+    if (debtsMenuArrow) {
+      debtsMenuArrow.textContent = isOpen ? "▼" : "▲";
+    }
+  });
+}
 /* OUVRIR ET FERMER LE MENU LATÉRAL */
 if (sidebarToggle) {
   sidebarToggle.addEventListener("click", () => {
