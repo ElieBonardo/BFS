@@ -2465,8 +2465,8 @@ function renderClosures() {
   closuresList.innerHTML = "";
 
   const visibleClosures = showAllClosures
-    ? closures
-    : closures.slice(0, 5);
+  ? closures
+  : closures.slice(0, 1);
 
   visibleClosures.forEach(closure => {
       const card = document.createElement("div");
