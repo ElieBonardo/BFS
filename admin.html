@@ -1360,11 +1360,18 @@
   </div>
 
   <!-- LISTE DES DETTES -->
+  <input
+  type="search"
+  id="clientDebtsSearch"
+  placeholder="🔎 Rechercher un client par nom ou téléphone..."
+  style="width:100%; padding:12px; margin:12px 0; border-radius:8px;"
+>
   <h2>Liste des dettes clients</h2>
 
-  <div id="clientDebtsList">
-    Chargement des dettes...
-  </div>
+ <div id="clientDebtsList"
+     style="max-height:400px; overflow-y:auto; padding:8px;">
+  Chargement des dettes...
+</div>
 
 </section>
 <!-- DETTES QUE BFS DOIT PAYER -->
@@ -1469,11 +1476,18 @@
   </div>
 
   <!-- HISTORIQUE -->
+  <input
+  type="search"
+  id="payableDebtsSearch"
+  placeholder="🔎 Rechercher un créancier par nom ou téléphone..."
+  style="width:100%; padding:12px; margin:12px 0; border-radius:8px;"
+>
   <h2>Liste des dettes de BFS</h2>
 
-  <div id="payableDebtsList">
-    Chargement des dettes...
-  </div>
+ <div id="payableDebtsList"
+     style="max-height:400px; overflow-y:auto; padding:8px;">
+  Chargement des dettes...
+</div>
 
 </section>
 
@@ -1933,7 +1947,9 @@ if (loadingMessage) {
 
       container.appendChild(card);
     });
-
+  
+  
+  
   } catch (error) {
     console.error("Erreur historique des achats :", error);
     container.textContent =
@@ -3377,7 +3393,11 @@ async function loadClientDebts(direction = "receivable") {
       }
 
       const card = document.createElement("div");
-
+card.dataset.searchText = [
+  debt.client_name || "",
+  debt.client_phone || "",
+  debt.person_phone || ""
+].join(" ").toLowerCase();
       card.style.cssText =
         "background:#fff;padding:16px;margin:12px 0;border:1px solid #ddd;border-radius:12px;";
 
@@ -3487,6 +3507,28 @@ async function loadClientDebts(direction = "receivable") {
 
       container.appendChild(card);
     });
+// RECHERCHE INSTANTANÉE DES DETTES
+const searchInput = document.getElementById(
+  isPayable ? "payableDebtsSearch" : "clientDebtsSearch"
+);
+
+if (searchInput) {
+
+  searchInput.oninput = () => {
+
+    const term = searchInput.value.trim().toLowerCase();
+
+    Array.from(container.children).forEach(card => {
+
+      const text = card.dataset.searchText || "";
+
+      card.hidden = !text.includes(term);
+
+    });
+  };
+
+  searchInput.oninput();
+}
 
     document.getElementById(statIds.totalUSD).textContent =
       totalDebtsUSD.toFixed(2) + " $";
