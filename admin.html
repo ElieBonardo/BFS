@@ -3749,29 +3749,35 @@ if (payableDebtsList) {
 /* NAVIGATION DES PANNEAUX */
 function showPanel(panelId) {
 
-  // Le gestionnaire accède uniquement au stock et aux ventes physiques.
- if (
-  currentRole === "manager" &&
-  panelId !== "inventoryPanel" &&
-  panelId !== "salesPanel" &&
-  panelId !== "debtsPanel"
-) {
-  return;
-}
+  // Accès du gestionnaire
+  if (
+    currentRole === "manager" &&
+    panelId !== "inventoryPanel" &&
+    panelId !== "salesPanel" &&
+    panelId !== "debtsPanel" &&
+    panelId !== "payableDebtsPanel"
+  ) {
+    return;
+  }
 
- // Les transferts, achats et rapports sont réservés au propriétaire.
-if (
-  ["transfersPanel", "purchasesPanel", "reportsPanel"].includes(panelId) &&
-  currentRole !== "owner"
-) {
-  return;
-}
+  // Panneaux réservés au propriétaire
+  if (
+    [
+      "transfersPanel",
+      "purchasesPanel",
+      "reportsPanel",
+      "expensesPanel"
+    ].includes(panelId) &&
+    currentRole !== "owner"
+  ) {
+    return;
+  }
 
+  // Afficher le panneau sélectionné
   panels.forEach(panel => {
     panel.hidden = panel.id !== panelId;
   });
 
-  // Mémoriser le dernier panneau ouvert.
   localStorage.setItem("bfsAdminPanel", panelId);
 
   // TRANSFERTS
@@ -3779,8 +3785,7 @@ if (
     loadTransferForm()
       .then(() => loadTransferHistory())
       .catch(error => {
-        console.error("Erreur de chargement des transferts :", error);
-
+        console.error("Erreur transferts :", error);
         document.getElementById("transferMessage").textContent =
           "Erreur : " + error.message;
       });
@@ -3789,7 +3794,7 @@ if (
   // COMMANDES CLIENTS
   if (panelId === "ordersPanel") {
     loadAdminOrders().catch(error => {
-      console.error("Erreur de chargement des commandes :", error);
+      console.error("Erreur commandes :", error);
     });
   }
 
@@ -3798,48 +3803,55 @@ if (
     loadSalesProducts()
       .then(() => loadSalesHistory())
       .catch(error => {
-        console.error("Erreur de chargement des ventes :", error);
-
+        console.error("Erreur ventes :", error);
         document.getElementById("saleMessage").textContent =
           "Erreur : " + error.message;
       });
   }
 
-    // ACHATS
+  // ACHATS
   if (panelId === "purchasesPanel") {
     Promise.all([
       loadPurchaseForm(),
       loadPurchaseHistory()
     ]).catch(error => {
-      console.error("Erreur de chargement des achats :", error);
-
+      console.error("Erreur achats :", error);
       document.getElementById("purchaseMessage").textContent =
         "Erreur : " + error.message;
     });
   }
-// DETTES CLIENTS : CLIENTS QUI DOIVENT À BFS
-if (panelId === "debtsPanel") {
 
-  loadClientDebts("receivable").catch(error => {
-    console.error("Erreur de chargement des dettes clients :", error);
+  // DETTES CLIENTS
+  if (panelId === "debtsPanel") {
+    loadClientDebts("receivable");
+  }
 
-    document.getElementById("debtMessage").textContent =
-      "Erreur : " + error.message;
+  // DETTES DE BFS
+  if (panelId === "payableDebtsPanel") {
+    loadClientDebts("payable");
+  }
+
+  // RAPPORTS FINANCIERS
+  if (panelId === "reportsPanel") {
+    loadFinancialReports().catch(error => {
+      console.error("Erreur rapports :", error);
+      document.getElementById("reportMessage").textContent =
+        "Erreur : " + error.message;
+    });
+  }
+
+  // DÉPENSES DES BOUTIQUES
+  if (panelId === "expensesPanel") {
+    loadExpenses();
+  }
+
+  // INDICATEUR VISUEL DU MENU ACTIF
+  menuLinks.forEach(link => {
+    link.classList.toggle(
+      "active",
+      link.dataset.panel === panelId
+    );
   });
-
-}
-
-// DETTES DE BFS : PERSONNES À QUI BFS DOIT
-if (panelId === "payableDebtsPanel") {
-
-  loadClientDebts("payable").catch(error => {
-    console.error("Erreur de chargement des dettes de BFS :", error);
-
-    document.getElementById("payableDebtMessage").textContent =
-      "Erreur : " + error.message;
-  });
-
-}
 }
 /* =================================================
    4. RAPPORTS FINANCIERS BFS
