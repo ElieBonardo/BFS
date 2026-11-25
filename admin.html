@@ -2436,10 +2436,39 @@ async function loadDailyClosureHistory() {
     }
 
     const heading = document.createElement("h3");
-    heading.textContent = "📁 Historique des clôtures";
-    container.appendChild(heading);
+heading.textContent = "📁 Historique des clôtures";
+container.appendChild(heading);
 
-    closures.forEach(closure => {
+const closuresList = document.createElement("div");
+container.appendChild(closuresList);
+
+const toggleButton = document.createElement("button");
+toggleButton.textContent = "Voir toutes les clôtures";
+toggleButton.style.cssText =
+  "padding:10px 15px;margin:10px 0;background:#b58b35;color:white;border:0;border-radius:7px;cursor:pointer;";
+
+let showAllClosures = false;
+
+toggleButton.onclick = function () {
+  showAllClosures = !showAllClosures;
+
+  renderClosures();
+
+  toggleButton.textContent = showAllClosures
+    ? "Réduire l'historique"
+    : "Voir toutes les clôtures";
+};
+
+container.appendChild(toggleButton);
+
+function renderClosures() {
+  closuresList.innerHTML = "";
+
+  const visibleClosures = showAllClosures
+    ? closures
+    : closures.slice(0, 5);
+
+  visibleClosures.forEach(closure => {
       const card = document.createElement("div");
 
       card.style.cssText =
@@ -2527,8 +2556,11 @@ async function loadDailyClosureHistory() {
         details
       );
 
-      container.appendChild(card);
+         closuresList.appendChild(card);
     });
+  }
+  
+  renderClosures();
 
   } catch (error) {
     console.error("Erreur historique des clôtures :", error);
