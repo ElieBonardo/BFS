@@ -3480,11 +3480,29 @@ card.dataset.searchText = [
   debt.client_phone || "",
   debt.person_phone || ""
 ].join(" ").toLowerCase();
-      card.style.cssText =
-        "background:#fff;padding:16px;margin:12px 0;border:1px solid #ddd;border-radius:12px;";
+      card.style.cssText = `
+  background: #ffffff;
+  padding: 20px;
+  margin: 16px 0;
+  border: 1px solid #e5d7ad;
+  border-left: 5px solid #d4af37;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  overflow-wrap: anywhere;
+`;
 
       const title = document.createElement("h3");
-      title.textContent = debt.client_name;
+
+title.textContent = debt.client_name;
+
+title.style.cssText = `
+  color: #171717;
+  font-size: 19px;
+  font-weight: 800;
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5d7ad;
+`;
 
       const type = document.createElement("p");
 
@@ -3505,7 +3523,16 @@ card.dataset.searchText = [
         paid.toLocaleString("fr-FR") + currencyLabel +
         " | Reste : " +
         remaining.toLocaleString("fr-FR") + currencyLabel;
-
+details.style.cssText = `
+  color: #333333;
+  font-size: 14px;
+  line-height: 1.8;
+  background: #f8f6ef;
+  padding: 12px;
+  border-radius: 9px;
+  border: 1px solid #eee4c9;
+  margin: 12px 0;
+`;
       const date = document.createElement("p");
 
       date.textContent =
@@ -3523,13 +3550,30 @@ card.dataset.searchText = [
             ? "Partiellement payée"
             : "Non payée";
 
-      status.style.color =
-        remaining <= 0 ? "green" : "#b58b35";
+      status.style.cssText = `
+  display: inline-block;
+  padding: 7px 13px;
+  margin: 8px 0;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  background: ${remaining <= 0 ? "#e5f5e9" : paid > 0 ? "#fff3d6" : "#f1f1f1"};
+  color: ${remaining <= 0 ? "#187a35" : paid > 0 ? "#9a6500" : "#555555"};
+`;
 
       card.append(title, type, details, date, status);
 
       const historyTitle = document.createElement("h4");
-      historyTitle.textContent = "Historique des paiements";
+
+historyTitle.textContent = "Historique des paiements";
+
+historyTitle.style.cssText = `
+  color: #8a6a18;
+  font-size: 15px;
+  margin: 18px 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5d7ad;
+`;
 
       card.appendChild(historyTitle);
 
@@ -3543,18 +3587,27 @@ card.dataset.searchText = [
 
         debtPayments.forEach(payment => {
 
-          const line = document.createElement("p");
+       const line = document.createElement("p");
 
-          line.textContent =
-            Number(payment.amount).toLocaleString("fr-FR") +
-            currencyLabel + " — " +
-            new Date(payment.created_at).toLocaleString("fr-FR", {
-              timeZone: "Africa/Lubumbashi"
-            });
+line.textContent =
+  "✓ " +
+  Number(payment.amount).toLocaleString("fr-FR") +
+  currencyLabel + " — " +
+  new Date(payment.created_at).toLocaleString("fr-FR", {
+    timeZone: "Africa/Lubumbashi"
+  });
 
-          card.appendChild(line);
+line.style.cssText = `
+  background: #f7f7f7;
+  padding: 10px 12px;
+  margin: 6px 0;
+  border-radius: 8px;
+  color: #333;
+  font-size: 13px;
+`;
+
+card.appendChild(line);
         });
-      }
 
       if (remaining > 0) {
 
@@ -3569,8 +3622,18 @@ card.dataset.searchText = [
 
         input.id = "paymentAmount_" + debt.id;
 
-        input.style.cssText =
-          "width:100%;padding:12px;box-sizing:border-box;margin-top:12px;";
+        input.style.cssText = `
+  width: 100%;
+  padding: 13px;
+  box-sizing: border-box;
+  margin-top: 12px;
+  border: 1px solid #d4af37;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #222222;
+  font-size: 15px;
+  outline: none;
+`;
 
         const button = document.createElement("button");
 
@@ -3581,8 +3644,19 @@ card.dataset.searchText = [
         button.dataset.debtId = debt.id;
         button.className = "recordDebtPaymentButton";
 
-        button.style.cssText =
-          "width:100%;padding:12px;margin-top:8px;background:#c49a45;color:#000;border:0;border-radius:8px;font-weight:bold;";
+        button.style.cssText = `
+  width: 100%;
+  padding: 13px;
+  margin-top: 10px;
+  background: linear-gradient(135deg, #d4af37, #b58b35);
+  color: #171717;
+  border: 0;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+`;
 
         card.append(input, button);
       }
