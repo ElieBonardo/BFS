@@ -5568,7 +5568,7 @@ function applyProductPermissions() {
     element.hidden = currentRole !== "owner";
   });
 
-  // Tableau de bord global réservé au propriétaire
+  // Tableau de bord global
   const dashboardLink = document.querySelector(
     '[data-panel="dashboardStats"]'
   );
@@ -5583,7 +5583,7 @@ function applyProductPermissions() {
     dashboardPanel.hidden = true;
   }
 
-  // Dettes que BFS doit payer : propriétaire uniquement
+  // Dettes que BFS doit payer
   const payableDebtsLink = document.querySelector(
     '[data-panel="payableDebtsPanel"]'
   );
@@ -5603,13 +5603,14 @@ function applyProductPermissions() {
       expenseStore.disabled = false;
     }
   }
-}
-// Prix personnalisé : propriétaire uniquement
-const customSalePriceSection =
-  document.getElementById("customSalePriceSection");
 
-if (customSalePriceSection) {
-  customSalePriceSection.hidden = currentRole !== "owner";
+  // Prix personnalisé : propriétaire uniquement
+  const customSalePriceSection =
+    document.getElementById("customSalePriceSection");
+
+  if (customSalePriceSection) {
+    customSalePriceSection.hidden = currentRole !== "owner";
+  }
 }
 
 /* 8. CHARGEMENT DES COMMANDES ET STATISTIQUES */
