@@ -478,10 +478,7 @@
 >
   Rapports financiers
 </a>
-<a href="#expensesPanel"
-   data-panel="expensesPanel"
-   data-owner-only="true"
->
+<a href="#expensesPanel" data-panel="expensesPanel">
   Dépenses des boutiques
 </a>
 
@@ -1085,10 +1082,10 @@
 
   <div class="form-group">
     <label for="expenseStore">Boutique</label>
-    <select id="expenseStore">
-      <option value="1">BFS - Boutique principale</option>
-      <option value="2">BFS - Boutique 2</option>
-    </select>
+  <select id="expenseStore">
+  <option value="1">BFS - Boutique principale</option>
+  <option value="2">BFS - Boutique 2</option>
+</select>
   </div>
 
   <div class="form-group">
@@ -1276,30 +1273,32 @@
     >
     <label for="saleActualPrice">Prix réellement vendu ($)</label>
 
-<input
-  type="number"
-  id="saleActualPrice"
-  min="0"
-  step="0.01"
-  placeholder="Saisir le prix de vente"
-  required
-  style="width:100%;padding:12px;box-sizing:border-box;"
->
+<div id="customSalePriceSection">
+  <input
+    type="number"
+    id="saleActualPrice"
+    min="0"
+    step="0.01"
+    placeholder="Saisir le prix de vente"
+    required
+    style="width:100%;padding:12px;box-sizing:border-box;"
+  >
 
-<button
-  type="button"
-  id="useSitePriceButton"
-  style="width:100%;padding:12px;margin:8px 0;background:#c49a45;color:#000;border:0;border-radius:8px;font-weight:bold;"
->
-  Prix du site
-</button>
+  <button
+    type="button"
+    id="useSitePriceButton"
+    style="width:100%;padding:12px;margin:8px 0;background:#c49a45;color:#000;border:0;border-radius:8px;font-weight:bold;"
+  >
+    Prix du site
+  </button>
+</div>
 
-    <label for="salePaymentMethod">Mode de paiement</label>
-    <select id="salePaymentMethod">
-      <option value="cash">Espèces</option>
-      <option value="mobile_money">Mobile Money</option>
-      <option value="other">Autre</option>
-    </select>
+<label for="salePaymentMethod">Mode de paiement</label>
+<select id="salePaymentMethod">
+  <option value="cash">Espèces</option>
+  <option value="mobile_money">Mobile Money</option>
+  <option value="other">Autre</option>
+</select>
 
     <button id="recordSaleButton" type="button">
       Enregistrer la vente
@@ -1321,8 +1320,9 @@
     le rapport journalier de cette boutique.
   </p>
 
-  <button
+<button
     id="closeSalesDayButton"
+    data-owner-only="true"
     type="button"
     style="background:#b58b35;color:white;padding:13px 18px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;">
     Clôturer la journée
@@ -3236,8 +3236,8 @@ stockStatus.style.margin = "5px 0";
       card.appendChild(price);
       card.appendChild(category);
 
-      // Modification réservée au gestionnaire
-      if (currentRole === "manager") {
+    // Modification réservée au propriétaire
+if (currentRole === "owner") {
 
         const actions = document.createElement("div");
 
@@ -3905,13 +3905,18 @@ if (payableDebtsList) {
 /* NAVIGATION DES PANNEAUX */
 function showPanel(panelId) {
 
-  // Accès du gestionnaire
+  // Panneaux autorisés au gestionnaire
+  const managerAllowedPanels = [
+    "inventoryPanel",
+    "productsPanel",
+    "salesPanel",
+    "debtsPanel",
+    "expensesPanel"
+  ];
+
   if (
     currentRole === "manager" &&
-    panelId !== "inventoryPanel" &&
-    panelId !== "salesPanel" &&
-    panelId !== "debtsPanel" &&
-    panelId !== "payableDebtsPanel"
+    !managerAllowedPanels.includes(panelId)
   ) {
     return;
   }
@@ -3922,13 +3927,14 @@ function showPanel(panelId) {
       "transfersPanel",
       "purchasesPanel",
       "reportsPanel",
-      "expensesPanel"
+      "payableDebtsPanel"
     ].includes(panelId) &&
     currentRole !== "owner"
   ) {
     return;
   }
-
+// Appliquer les permissions des produits
+applyProductPermissions();
   // Afficher le panneau sélectionné
   panels.forEach(panel => {
     panel.hidden = panel.id !== panelId;
@@ -4980,15 +4986,32 @@ menuLinks.forEach(link => {
 
     const panelId = link.dataset.panel;
 
-if (
-  currentRole === "manager" &&
-  panelId !== "inventoryPanel" &&
-  panelId !== "salesPanel" &&
-  panelId !== "debtsPanel" &&
-  panelId !== "payableDebtsPanel"
-) {
-  return;
-}
+    const managerAllowedPanels = [
+      "inventoryPanel",
+      "productsPanel",
+      "salesPanel",
+      "debtsPanel",
+      "expensesPanel"
+    ];
+
+    if (
+      currentRole === "manager" &&
+      !managerAllowedPanels.includes(panelId)
+    ) {
+      return;
+    }
+
+    if (
+      currentRole !== "owner" &&
+      [
+        "transfersPanel",
+        "purchasesPanel",
+        "reportsPanel",
+        "payableDebtsPanel"
+      ].includes(panelId)
+    ) {
+      return;
+    }
 
     localStorage.setItem("bfsAdminPanel", panelId);
     showPanel(panelId);
@@ -4996,7 +5019,7 @@ if (
     dashboard.classList.remove("menu-open");
     sidebarToggle.setAttribute("aria-expanded", "false");
   });
-}); 
+});
 // OUVRIR ET FERMER LE SOUS-MENU DETTES BFS
 const debtsMenuToggle = document.getElementById("debtsMenuToggle");
 const debtsSubmenu = document.getElementById("debtsSubmenu");
@@ -5230,7 +5253,8 @@ const description = document.createElement("p");
 description.textContent = product.description || "";
 card.appendChild(description);
 
-
+if (currentRole === "owner") {
+  
     // Bouton Modifier
 const editButton = document.createElement("button");
 editButton.type = "button";
@@ -5358,6 +5382,7 @@ card.appendChild(photoButton);
       });
 
       card.appendChild(deleteButton);
+      }
       card.querySelectorAll("button").forEach(button => {
   button.style.width = "100%";
   button.style.maxWidth = "100%";
@@ -5530,130 +5555,61 @@ if (searchInput) {
   }
 }
 /* AJOUTER UN NOUVEAU PRODUIT */
+// PROTECTION DU FORMULAIRE PRODUITS
+function applyProductPermissions() {
+  const addForm = document.getElementById("addProductForm");
 
-const addProductForm = document.getElementById("addProductForm");
+  if (addForm) {
+    addForm.hidden = currentRole === "manager";
+  }
 
-if (addProductForm) {
-  addProductForm.addEventListener("submit", async event => {
-    event.preventDefault();
-
-    const form = addProductForm;
-    const button = form.querySelector('button[type="submit"]');
-    const message = document.getElementById("addProductMessage");
-
-    const name = document.getElementById("productName").value.trim();
-    const price = Number(document.getElementById("productPrice").value);
-    const description =
-      document.getElementById("productDescription").value.trim();
-    const category =
-      document.getElementById("productCategory").value.trim();
-    const stock = Number(document.getElementById("productStock").value);
-    const file = document.getElementById("productImage").files[0];
-
-    if (currentRole !== "owner") {
-      message.textContent =
-        "Seul le propriétaire peut ajouter un produit.";
-      return;
-    }
-
-    if (currentStoreId === null || currentStoreId === undefined) {
-      message.textContent = "Veuillez sélectionner une boutique.";
-      return;
-    }
-
-    if (
-      !name ||
-      !Number.isFinite(price) ||
-      price < 0 ||
-      !Number.isInteger(stock) ||
-      stock < 0 ||
-      !file
-    ) {
-      message.textContent = "Veuillez vérifier les informations du produit.";
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      message.textContent = "Veuillez sélectionner une image valide.";
-      return;
-    }
-
-    button.disabled = true;
-    message.textContent = "Enregistrement du produit...";
-
-    let uploadedPath = null;
-
-    try {
-      const extension = file.name.split(".").pop().toLowerCase();
-      const filePath =
-        `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
-
-      const { error: uploadError } = await supabaseClient
-        .storage
-        .from("products")
-        .upload(filePath, file, {
-          upsert: false,
-          contentType: file.type
-        });
-
-      if (uploadError) throw uploadError;
-
-      uploadedPath = filePath;
-
-      const { data: publicData } = supabaseClient
-  .storage
-  .from("products")
-  .getPublicUrl(filePath);
-
-      const { data: product, error: insertError } =
-        await supabaseClient
-          .from("products")
-          .insert({
-            Name: name,
-            Price: price,
-            Description: description,
-            category: category,
-            image_url: publicData.publicUrl
-          })
-          .select("id")
-          .single();
-
-      if (insertError) throw insertError;
-
-      const { error: stockError } = await supabaseClient.rpc(
-        "bfs_set_store_stock",
-        {
-          p_store_id: currentStoreId,
-          p_product_id: product.id,
-          p_quantity: stock
-        }
-      );
-
-      if (stockError) {
-        throw new Error(
-          "Produit créé, mais le stock n'a pas été enregistré : " +
-          stockError.message
-        );
-      }
-
-      message.textContent = "Produit ajouté avec succès.";
-
-      form.reset();
-
-      await Promise.all([
-        loadAdminProducts(),
-        loadStoreInventory()
-      ]);
-
-    } catch (error) {
-      console.error("Erreur ajout produit :", error);
-
-      message.textContent = "Erreur : " + error.message;
-
-    } finally {
-      button.disabled = false;
-    }
+  // Menus réservés au propriétaire
+  document.querySelectorAll("[data-owner-only='true']").forEach(element => {
+    element.hidden = currentRole !== "owner";
   });
+
+  // Tableau de bord global réservé au propriétaire
+  const dashboardLink = document.querySelector(
+    '[data-panel="dashboardStats"]'
+  );
+
+  const dashboardPanel = document.getElementById("dashboardStats");
+
+  if (dashboardLink) {
+    dashboardLink.hidden = currentRole !== "owner";
+  }
+
+  if (dashboardPanel && currentRole === "manager") {
+    dashboardPanel.hidden = true;
+  }
+
+  // Dettes que BFS doit payer : propriétaire uniquement
+  const payableDebtsLink = document.querySelector(
+    '[data-panel="payableDebtsPanel"]'
+  );
+
+  if (payableDebtsLink) {
+    payableDebtsLink.hidden = currentRole !== "owner";
+  }
+
+  // Sélecteur des dépenses
+  const expenseStore = document.getElementById("expenseStore");
+
+  if (expenseStore) {
+    if (currentRole === "manager") {
+      expenseStore.value = String(currentStoreId);
+      expenseStore.disabled = true;
+    } else {
+      expenseStore.disabled = false;
+    }
+  }
+}
+// Prix personnalisé : propriétaire uniquement
+const customSalePriceSection =
+  document.getElementById("customSalePriceSection");
+
+if (customSalePriceSection) {
+  customSalePriceSection.hidden = currentRole !== "owner";
 }
 
 /* 8. CHARGEMENT DES COMMANDES ET STATISTIQUES */
@@ -6357,7 +6313,9 @@ async function saveExpense() {
   const button = document.getElementById("saveExpenseButton");
   const message = document.getElementById("expenseMessage");
 
-  const storeId = document.getElementById("expenseStore").value;
+  const storeId = currentRole === "manager"
+  ? String(currentStoreId)
+  : document.getElementById("expenseStore").value;
   const date = document.getElementById("expenseDate").value;
   const category = document.getElementById("expenseCategory").value;
   const description =
