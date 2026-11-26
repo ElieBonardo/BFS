@@ -5554,6 +5554,118 @@ if (searchInput) {
     alert("Erreur de modification : " + error.message);
   }
 }
+// AJOUTER UN NOUVEAU PRODUIT
+const addProductForm = document.getElementById("addProductForm");
+
+if (addProductForm) {
+  addProductForm.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const button = addProductForm.querySelector(
+      'button[type="submit"]'
+    );
+
+    const message = document.getElementById("addProductMessage");
+
+    if (currentRole !== "owner") {
+      message.textContent = "Accès réservé au propriétaire.";
+      return;
+    }
+
+    const name = document.getElementById("productName").value.trim();
+    const price = Number(document.getElementById("productPrice").value);
+    const description = document.getElementById("productDescription").value.trim();
+    const category = document.getElementById("productCategory").value.trim();
+    const stock = Number(document.getElementById("productStock").value);
+    const file = document.getElementById("productImage").files[0];
+
+    if (!name || !file || !Number.isFinite(price) || price < 0 ||
+        !Number.isInteger(stock) || stock < 0) {
+      message.textContent = "Vérifiez les informations du produit.";
+      return;
+    }
+
+    if (!currentStoreId) {
+      message.textContent = "Aucune boutique sélectionnée.";
+      return;
+    }
+
+    button.disabled = true;
+    message.textContent = "Enregistrement du produit...";
+
+    let uploadedPath = null;
+
+    try {
+      const extension = file.name.split(".").pop() || "jpg";
+      const filePath = `new-products/${Date.now()}.${extension}`;
+
+      // 1. Envoyer la photo
+      const { error: uploadError } = await supabaseClient
+        .storage
+        .from("products")
+        .upload(filePath, file, { upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      uploadedPath = filePath;
+
+      // 2. Obtenir l'adresse publique de la photo
+      const { data: publicData } = supabaseClient
+        .storage
+        .from("products")
+        .getPublicUrl(filePath);
+
+      // 3. Créer le produit
+      const { data: product, error: productError } =
+        await supabaseClient
+          .from("products")
+          .insert({
+            Name: name,
+            Price: price,
+            Description: description,
+            category: category,
+            image_url: publicData.publicUrl
+          })
+          .select("id")
+          .single();
+
+      if (productError) throw productError;
+
+      // 4. Initialiser le stock dans la boutique sélectionnée
+      const { error: stockError } = await supabaseClient.rpc(
+        "bfs_set_store_stock",
+        {
+          p_store_id: currentStoreId,
+          p_product_id: product.id,
+          p_quantity: stock
+        }
+      );
+
+      if (stockError) {
+        throw new Error(
+          "Produit créé, mais le stock n'a pas été initialisé : " +
+          stockError.message
+        );
+      }
+
+      message.textContent = "Produit ajouté avec succès.";
+
+      addProductForm.reset();
+
+      await Promise.all([
+        loadAdminProducts(),
+        loadStoreInventory()
+      ]);
+
+    } catch (error) {
+      console.error("Erreur ajout produit :", error);
+
+      message.textContent = "Erreur : " + error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
 /* AJOUTER UN NOUVEAU PRODUIT */
 // PROTECTION DU FORMULAIRE PRODUITS
 function applyProductPermissions() {
